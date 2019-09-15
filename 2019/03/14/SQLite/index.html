@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="最近的项目开发过程中，由于对 SQLite 的一些细节的疏忽，导致数据库升级发生异常问题，引起笔者对 SQLite 基础知识的重视。本文将对 SQLite 中涉及的一些易疏忽点进行介绍。">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="临到 “坑” 时方恨少的 SQLite 细节知识">
+<meta property="og:url" content="http://yoursite.com/2019/03/14/SQLite/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="最近的项目开发过程中，由于对 SQLite 的一些细节的疏忽，导致数据库升级发生异常问题，引起笔者对 SQLite 基础知识的重视。本文将对 SQLite 中涉及的一些易疏忽点进行介绍。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-04-01-113954.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-04-01-114154.png">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-04-01-114221.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-04-01-114703.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-04-01-114916.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.781Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="临到 “坑” 时方恨少的 SQLite 细节知识">
+<meta name="twitter:description" content="最近的项目开发过程中，由于对 SQLite 的一些细节的疏忽，导致数据库升级发生异常问题，引起笔者对 SQLite 基础知识的重视。本文将对 SQLite 中涉及的一些易疏忽点进行介绍。">
+<meta name="twitter:image" content="https://cdn.wuhaojie.top/2019-04-01-113954.jpg">
+  <link rel="canonical" href="http://yoursite.com/2019/03/14/SQLite/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>临到 “坑” 时方恨少的 SQLite 细节知识 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/03/14/SQLite/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">临到 “坑” 时方恨少的 SQLite 细节知识
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-03-14 14:00:00" itemprop="dateCreated datePublished" datetime="2019-03-14T14:00:00+08:00">2019-03-14</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>最近的项目开发过程中，由于对 <code>SQLite</code> 的一些细节的疏忽，导致数据库升级发生异常问题，引起笔者对 <code>SQLite</code> 基础知识的重视。本文将对 <code>SQLite</code> 中涉及的一些易疏忽点进行介绍。</p>
+<a id="more"></a>
+
+
+<h1 id="如何修改表结构"><a href="#如何修改表结构" class="headerlink" title="如何修改表结构"></a>如何修改表结构</h1><p>在 <code>SQLite</code> 中，如果让你删除 <code>PERSON</code> 表中的 <code>Birthday</code> 列，熟悉 <code>SQL</code> 语句的你会不会毫不犹豫地输入下列语句，然后按下回车呢？</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> Person</span><br><span class="line"><span class="keyword">DROP</span> <span class="keyword">COLUMN</span> Birthday</span><br></pre></td></tr></table></figure>
+
+<p>如果是的，那么恭喜你，挂了。事实上，<code>SQLite</code> 对表的修改有诸多限制，我们来看看。</p>
+<p><img src="https://cdn.wuhaojie.top/2019-04-01-113954.jpg" alt="ALTER TABLE 有限子集"></p>
+<p><code>SQLite</code> 仅支持 <code>ALTER TABLE</code> 操作的 <strong>有限子集</strong>。<code>SQLite</code> 中的 <code>ALTER TABLE</code> 命令只允许用户重命名表、重命名表中的列、或将新列添加到现有表。</p>
+<blockquote>
+<p>不支持 <code>DROP COLUMN</code> 删除一列、<code>ALTER COLUMN</code> 修改某列的数据类型，甚至在版本 3.25.0（2018-09-15）之后，重命名表操作才会对外键约束、视图引用进行修改。</p>
+</blockquote>
+<p>那么，如果一定要对表结构进行复杂的修改，应该如何做呢？最佳答案是，不要这么做！</p>
+<p>开玩笑的，<code>SQLite</code> 官方告诉了我们一种较为可靠的方式，聪明的你拍一下脑袋也能想到，即: 创建新表，复制数据后再丢弃旧表。</p>
+<p><img src="https://cdn.wuhaojie.top/2019-04-01-114154.png" alt="image-20190401194154638"></p>
+<p>可是，有两种方案可供选择，应该如何选择呢？</p>
+<p>乍眼看过去，没有多大区别，无非是方案一的事务锁粒度可以更小，更加安全可靠，这当然没错，是一个原因。事实上，也应该 <strong>选择方案一</strong>，避免使用方案二。</p>
+<p>然而，更重要的原因是: 在 SQLite 3.25.0 版本后，方案二中第一步的重命名表操作，会将 Old 表引用的触发器、视图、外键约束等引用进行重命名操作，这将导致严重错误。</p>
+<blockquote>
+<p>在 3.25.0 版本以上，可通过 PRAGMA legacy_alter_table=ON 启动兼容特性，当然，不推荐该方式。</p>
+</blockquote>
+<p>附: Android 版本对应的 SQLite 版本 <a href="https://developer.android.com/reference/android/database/sqlite/package-summary.html" target="_blank" rel="noopener">https://developer.android.com/reference/android/database/sqlite/package-summary.html</a></p>
+<p>从 Android 5.0 开始，SQLite 版本几乎伴随 Android 版本进行升级:</p>
+<p><img src="https://cdn.wuhaojie.top/2019-04-01-114221.jpg" alt="Update"></p>
+<p>最后，对应的操作顺序如下（参考 SQLite 官方提供的方法）:</p>
+<p><strong>1、禁用外键约束</strong></p>
+<p>使用 <code>PRAGMA foreign_keys = OFF</code> 禁用它们</p>
+<p><strong>2、开启事务</strong></p>
+<p><strong>3、记住与 Old 表关联的所有索引和触发器的格式</strong></p>
+<p>下面的步骤 8 中将需要此信息，可通过 SQL 语句查询: </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">SELECT</span> <span class="keyword">type</span>, <span class="keyword">sql</span> <span class="keyword">FROM</span> sqlite_master <span class="keyword">WHERE</span> tbl_name=<span class="string">'Old'</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>4、使用 CREATE TABLE 创建一个新表 New</strong></p>
+<p>新表的 <code>Scheme</code> 和旧表一致，同时，确保 New 名称不会与任何现有的表名冲突</p>
+<p><strong>5、复制插入数据</strong></p>
+<p>使用如下 SQL 语句将内容从 Old 传输到 New: </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> <span class="keyword">New</span> <span class="keyword">SELECT</span> ... <span class="keyword">FROM</span> <span class="keyword">Old</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>6、删除旧表 Old</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">DROP</span> <span class="keyword">TABLE</span> <span class="keyword">Old</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>7、对新表 New 进行重命名</strong></p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">ALTER</span> <span class="keyword">TABLE</span> <span class="keyword">New</span> <span class="keyword">RENAME</span> <span class="keyword">TO</span> <span class="keyword">Old</span></span><br></pre></td></tr></table></figure>
+
+<p><strong>8、重建索引和触发器</strong></p>
+<p>使用 <code>CREATE INDEX</code> 和 <code>CREATE TRIGGER</code> 重建与 Old 表关联的索引和触发器，参考第 3 步中保存的结果</p>
+<p><strong>9、重建 View 视图</strong></p>
+<p>如果有引用该表的 View 视图，要根据 Scheme 分析是否需要重建视图，使用 <code>DROP VIEW</code> 和 <code>CREATE VIEW</code> 命令</p>
+<p><strong>10、检查外键约束</strong></p>
+<p>如果最初启用了外键约束，则运行 <code>PRAGMA foreign_key_check</code> 验证表结构更改未破坏任何外键约束</p>
+<p><strong>11、提交事务</strong></p>
+<p>提交在步骤 2 中启动的事务</p>
+<p><strong>12、重新启用外键约束</strong></p>
+<p>使用 <code>PRAGMA foreign_keys=ON</code> 重新启用外键约束</p>
+<h1 id="关于数据类型的那些事"><a href="#关于数据类型的那些事" class="headerlink" title="关于数据类型的那些事"></a>关于数据类型的那些事</h1><p>先提出几个问题，大家可以在心中思考后回答，之后再对基础知识进行讲解。</p>
+<p>前提，假设在 <code>SQLite</code> 中有一张表是这样的:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">create</span> <span class="keyword">table</span> person(</span><br><span class="line">	<span class="keyword">id</span> <span class="built_in">integer</span> primary <span class="keyword">key</span>,</span><br><span class="line">	<span class="keyword">name</span> <span class="built_in">varchar</span>,</span><br><span class="line">	age <span class="built_in">integer</span></span><br><span class="line">);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>为了便于阅读，此处将 SQL 语句全部小写。</p>
+</blockquote>
+<p>那么问题来了，Come on:</p>
+<ul>
+<li>age 是 integer 类型的，放入 18 自然是没有问题的，那如果我放入 18.5 会报错吗</li>
+<li>如果不报错，结果是 18 还是 19 呢</li>
+<li>如果我放入一个包含单引号字符串形式 「18.5」 呢</li>
+<li>最后暴躁了，单引号字符串形式放入时，如果不小心多输入一个小数点，为「18..5」又如何呢</li>
+</ul>
+<p>如果上面的问题都能解决，就，别急，还有问题:</p>
+<ul>
+<li><p>如果我不是将数据放入 age，而是放入 integer primary key 类型的 id 列，上述的情况又如何呢？</p>
+</li>
+<li><p>name 是 varchar 类型，如果修改为 varchar(20)，那我放入一个长度大于 20 的字符串会怎么样？如果是标准 SQL 呢？</p>
+</li>
+<li><p>如果有一条数据的 name 列刚好是字符串「name」，那么下面的 SQL 语句为什么不能查询出期望的结果？</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">select</span> * <span class="keyword">from</span> person <span class="keyword">where</span> <span class="keyword">name</span>=<span class="string">"name"</span>;</span><br></pre></td></tr></table></figure>
+
+<p><img src="https://cdn.wuhaojie.top/2019-04-01-114703.jpg" alt="SQL"></p>
+</li>
+</ul>
+<p>OK，暂时问这么多问题，你都回答上来了吗？它们中是否总有几个出乎你意料的答案，接下来就来详细讲解 <code>SQLite</code> 这些知识吧。</p>
+<h2 id="SQLite-的动态类型"><a href="#SQLite-的动态类型" class="headerlink" title="SQLite 的动态类型"></a>SQLite 的动态类型</h2><p>大多数 <code>SQL</code> 数据库引擎都使用静态，严格的类型。使用静态类型时，值的数据类型由其容器（存储值的特定列）确定，而 <code>SQLite</code> 使用更通用的 <strong>动态类型</strong> 系统。</p>
+<p>在存储时，会存储为以下形式 <code>INTEGER</code>、<code>REAL</code>、<code>TEXT</code>、<code>BLOB</code> 或 <code>NULL</code>。</p>
+<p>所以在插入数据的时候，任意列可以放入上述任意类型的数据，不会受到 Scheme 的强制约束，<code>SQLite</code> 都将会将其存入数据库文件中。</p>
+<blockquote>
+<p>但是，唯有 <code>INTEGER PRIMARY KEY</code> 列只能放入 64 位的整型数字，否则会抛 Error: datatype mismatch 异常</p>
+</blockquote>
+<p>而在其它 <code>SQL</code> 数据库引擎中，如 <code>MySQL</code>，如果放入不匹配类型的数据，通常会先尝试类型转换，如 integer 列放入 18.5 会转换为 19，再进行放入，如果转换失败，则直接报错。</p>
+<h2 id="字符串长度的问题"><a href="#字符串长度的问题" class="headerlink" title="字符串长度的问题"></a>字符串长度的问题</h2><p>众所周知，在大多数 <code>SQL</code> 数据库引擎中，varchar 表示的是可变长字符串，而 varchar(n) 伴随的参数 n 通常代表的是该字符串列的最大长度。</p>
+<blockquote>
+<p>此处提一下 SQL 基础知识中 integer(n) 和 varchar(n) 的区别，避免混淆，前者的 n 是指数字显示宽度，和存储空间无关，后者的 n 才是指最大存储长度，和存储空间有关</p>
+</blockquote>
+<p>可是，在 <code>SQLite</code> 中却不是这样: </p>
+<p><code>SQLite</code> 中将无视 varchar(n) 的参数 n，其会将 varchar(n) 翻译为 TEXT 类型，尽管在 Scheme 中指定 varchar(10)，也可以在该列放入长度为 5 亿的字符串。</p>
+<h2 id="单引号和双引号"><a href="#单引号和双引号" class="headerlink" title="单引号和双引号"></a>单引号和双引号</h2><p>关于单引号和双引号，其实是 SQL 标准的内容，但不同数据库的实现都有差异（如 MySQL），给很多开发者造成了误导，而 SQLite 是严格按照 SQL 标准实现的。</p>
+<p>SQL 标准中规定 <strong>单引号</strong> 用于包裹字符串，而 <strong>双引号</strong> 用于转义包含关键字的语句。如: </p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment"># 单引号</span></span><br><span class="line"><span class="keyword">INSERT</span> <span class="keyword">INTO</span> T(t) <span class="keyword">VALUES</span>(<span class="string">'5 O''clock'</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment"># 双引号</span></span><br><span class="line"><span class="keyword">SELECT</span> <span class="string">"column"</span> <span class="keyword">FROM</span> T <span class="keyword">WHERE</span> foo = <span class="string">"bar"</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Backticks 反引号「`」在 SQL 中等同于双引号</p>
+</blockquote>
+<p>StackOverFlow 上有个助记的方法: </p>
+<p><img src="https://cdn.wuhaojie.top/2019-04-01-114916.jpg" alt="StackOverFlow"></p>
+<h1 id="工程化中关心的问题"><a href="#工程化中关心的问题" class="headerlink" title="工程化中关心的问题"></a>工程化中关心的问题</h1><h2 id="INSERT-数据速度慢"><a href="#INSERT-数据速度慢" class="headerlink" title="INSERT 数据速度慢"></a>INSERT 数据速度慢</h2><p>SQLite 官方给出的数据 INSERT 速度可以达到 5w 次 / 秒，而在实际工程开发中，会发现 INSERT 非常慢。如，在 7200 转的机械硬盘最高只能达到 60 次 / 秒。</p>
+<p>事实上，在 SQLite 中，每一个 INSERT 语句中包含了一个事务，在每一次 INSERT 中，会经历开启事务、写入数据、提交事务过程。而事务的操作会造成多次读写，耗费性能，故性能极低。</p>
+<p>解决方案就是在 INSERT 批处理语句的外层，整体使用事务包裹，就能够批量 INSERT 只开启一个事务，避免每一个 INSERT 都开启一个事务。</p>
+<h2 id="SQLite-的-Free-List"><a href="#SQLite-的-Free-List" class="headerlink" title="SQLite 的 Free-List"></a>SQLite 的 Free-List</h2><p>在实际工程中，删除大量 SQLite 数据库数据时，数据库文件的大小并不会减少。</p>
+<p>因为 SQLite 存在 Free-List 机制，在删除数据时，空闲的空间会移交给 Free-List 供下次写入数据使用，而不会交给操作系统。</p>
+<blockquote>
+<p>可以通过 VACUUM 命令或者启用 auto_vacuum 模式对数据进行重建整理</p>
+</blockquote>
+<h1 id="结语"><a href="#结语" class="headerlink" title="结语"></a>结语</h1><p>本文介绍的 SQLite 疏忽点希望大家都已掌握，避免在日常开发中犯此类错误。还有一些其它的差异点，在平时的 Android 开发中可能不太遇得到，可以参考腾讯云的一篇文章 <a href="https://cloud.tencent.com/info/2995ee1dd7d51a602d9de6836541baa2.html" target="_blank" rel="noopener">这些SQLite与SQL差异问题，你遇到过吗</a>。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/01/10/FlutterPractice/" rel="next" title="Flutter 实践心路历程">
+                  <i class="fa fa-chevron-left"></i> Flutter 实践心路历程
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/06/12/xcrash/" rel="prev" title="xCrash 实现简析">
+                  xCrash 实现简析 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#如何修改表结构"><span class="nav-number">1.</span> <span class="nav-text">如何修改表结构</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#关于数据类型的那些事"><span class="nav-number">2.</span> <span class="nav-text">关于数据类型的那些事</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#SQLite-的动态类型"><span class="nav-number">2.1.</span> <span class="nav-text">SQLite 的动态类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#字符串长度的问题"><span class="nav-number">2.2.</span> <span class="nav-text">字符串长度的问题</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#单引号和双引号"><span class="nav-number">2.3.</span> <span class="nav-text">单引号和双引号</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#工程化中关心的问题"><span class="nav-number">3.</span> <span class="nav-text">工程化中关心的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#INSERT-数据速度慢"><span class="nav-number">3.1.</span> <span class="nav-text">INSERT 数据速度慢</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#SQLite-的-Free-List"><span class="nav-number">3.2.</span> <span class="nav-text">SQLite 的 Free-List</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结语"><span class="nav-number">4.</span> <span class="nav-text">结语</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Vue 作为一款优秀的前端框架，火了有很久一阵了。前两天给一个开源的 Chrome 插件 划词翻译 提了个 PR，才发现是时候学一波前端了，此文便记录 Vue 框架学习过程中一些笔记。">
+<meta name="keywords" content="笔记,前端">
+<meta property="og:type" content="article">
+<meta property="og:title" content="渐进式 JavaScript 框架——Vue">
+<meta property="og:url" content="http://yoursite.com/2017/12/19/VueLearning/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="Vue 作为一款优秀的前端框架，火了有很久一阵了。前两天给一个开源的 Chrome 插件 划词翻译 提了个 PR，才发现是时候学一波前端了，此文便记录 Vue 框架学习过程中一些笔记。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cn.vuejs.org/images/props-events.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.768Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="渐进式 JavaScript 框架——Vue">
+<meta name="twitter:description" content="Vue 作为一款优秀的前端框架，火了有很久一阵了。前两天给一个开源的 Chrome 插件 划词翻译 提了个 PR，才发现是时候学一波前端了，此文便记录 Vue 框架学习过程中一些笔记。">
+<meta name="twitter:image" content="https://cn.vuejs.org/images/props-events.png">
+  <link rel="canonical" href="http://yoursite.com/2017/12/19/VueLearning/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>渐进式 JavaScript 框架——Vue | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/19/VueLearning/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">渐进式 JavaScript 框架——Vue
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-12-19 20:00:00" itemprop="dateCreated datePublished" datetime="2017-12-19T20:00:00+08:00">2017-12-19</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/前端/" itemprop="url" rel="index"><span itemprop="name">前端</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p><code>Vue</code> 作为一款优秀的前端框架，火了有很久一阵了。前两天给一个开源的 Chrome 插件 <a href="https://github.com/Selection-Translator/crx-selection-translate" target="_blank" rel="noopener">划词翻译</a> 提了个 PR，才发现是时候学一波前端了，此文便记录 <code>Vue</code> 框架学习过程中一些笔记。</p>
+<a id="more"></a>
+
+<h2 id="1-渲染"><a href="#1-渲染" class="headerlink" title="1. 渲染"></a>1. 渲染</h2><hr>
+<h2 id="v-if-和-v-show"><a href="#v-if-和-v-show" class="headerlink" title="v-if 和 v-show"></a>v-if 和 v-show</h2><p><code>v-if</code> 是“真正”的条件渲染，因为它会确保在切换过程中条件块内的事件监听器和子组件适当地被销毁和重建。</p>
+<p><code>v-if</code> 也是<strong>惰性的</strong>：如果在初始渲染时条件为假，则什么也不做——直到条件第一次变为真时，才会开始渲染条件块。</p>
+<p>相比之下，<code>v-show</code> 就简单得多——不管初始条件是什么，元素总是会被渲染，并且只是简单地基于 CSS 进行切换。</p>
+<p>一般来说，<code>v-if</code> 有更高的切换开销，而 <code>v-show</code> 有更高的初始渲染开销。因此，如果需要非常频繁地切换，则使用 <code>v-show</code> 较好；如果在运行时条件很少改变，则使用 <code>v-if</code> 较好。</p>
+<h2 id="v-for"><a href="#v-for" class="headerlink" title="v-for"></a>v-for</h2><p>在 <code>v-for</code> 块中，我们拥有对父作用域属性的完全访问权限。<code>v-for</code> 还支持一个可选的第二个参数为当前项的索引:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;li v-for=&quot;(item, index) in items&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>也可以用 <code>of</code> 替代 <code>in</code> 作为分隔符;</p>
+<p>也可以用 <code>v-for</code> 通过一个对象的属性来迭代, 也可以提供键名、索引：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;div v-for=&quot;(value, key, index) in object&quot;&gt;</span><br><span class="line">  &#123;&#123; index &#125;&#125;. &#123;&#123; key &#125;&#125;: &#123;&#123; value &#125;&#125;</span><br><span class="line">&lt;/div&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="数组更新检测"><a href="#数组更新检测" class="headerlink" title="数组更新检测"></a>数组更新检测</h2><p>由于 JavaScript 的限制，Vue 不能检测以下变动的数组：</p>
+<ol>
+<li>当你利用索引直接设置一个项时，例如：<code>vm.items[indexOfItem] = newValue</code></li>
+<li>当你修改数组的长度时，例如：<code>vm.items.length = newLength</code></li>
+</ol>
+<p>为了解决第一类问题，以下两种方式都可以实现和 <code>vm.items[indexOfItem] = newValue</code> 相同的效果，同时也将触发状态更新：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Vue.set</span></span><br><span class="line">Vue.set(example1.items, indexOfItem, newValue)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Array.prototype.splice</span></span><br><span class="line">example1.items.splice(indexOfItem, <span class="number">1</span>, newValue)</span><br></pre></td></tr></table></figure>
+
+<p>为了解决第二类问题，你可以使用 <code>splice</code>：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">example1.items.splice(newLength)</span><br></pre></td></tr></table></figure>
+
+<h2 id="对象更改检测注意事项"><a href="#对象更改检测注意事项" class="headerlink" title="对象更改检测注意事项"></a>对象更改检测注意事项</h2><p>还是由于 JavaScript 的限制，<strong>Vue 不能检测对象属性的添加或删除</strong></p>
+<h2 id="v-for-和-v-if-共存"><a href="#v-for-和-v-if-共存" class="headerlink" title="v-for 和 v-if 共存"></a>v-for 和 v-if 共存</h2><p>当它们处于同一节点，<code>v-for</code> 的优先级比 <code>v-if</code> 更高，这意味着 <code>v-if</code> 将分别重复运行于每个 <code>v-for</code> 循环中。当你想为仅有的<em>一些</em>项渲染节点时，这种优先级的机制会十分有用，如下：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;li v-for=&quot;todo in todos&quot; v-if=&quot;!todo.isComplete&quot;&gt;</span><br><span class="line">  &#123;&#123; todo &#125;&#125;</span><br><span class="line">&lt;/li&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-事件"><a href="#2-事件" class="headerlink" title="2. 事件"></a>2. 事件</h2><hr>
+<h2 id="监听事件"><a href="#监听事件" class="headerlink" title="监听事件"></a>监听事件</h2><p>可以用 <code>v-on</code> 指令监听 DOM 事件，并在触发时运行一些 JavaScript 代码。</p>
+<p>有时也需要在内联语句处理器中访问原始的 DOM 事件。可以用特殊变量 <code>$event</code> 把它传入方法：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;button v-on:click=&quot;warn(&apos;Form cannot be submitted yet.&apos;, $event)&quot;&gt;</span><br><span class="line">  Submit</span><br><span class="line">&lt;/button&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="按键修饰符"><a href="#按键修饰符" class="headerlink" title="按键修饰符"></a>按键修饰符</h2><p>在监听键盘事件时，我们经常需要检查常见的键值。Vue 允许为 <code>v-on</code> 在监听键盘事件时添加按键修饰符：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- 只有在 `keyCode` 是 13 时调用 `vm.submit()` --&gt;</span><br><span class="line">&lt;input v-on:keyup.13=&quot;submit&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>记住所有的 <code>keyCode</code> 比较困难，所以 Vue 为最常用的按键提供了别名：</p>
+<ul>
+<li><code>.enter</code></li>
+<li><code>.tab</code></li>
+<li><code>.delete</code> (捕获“删除”和“退格”键)</li>
+<li><code>.esc</code></li>
+<li><code>.space</code></li>
+<li><code>.up</code></li>
+<li><code>.down</code></li>
+<li><code>.left</code></li>
+<li><code>.right</code></li>
+</ul>
+<p>可以通过全局 <code>config.keyCodes</code> 对象<a href="https://cn.vuejs.org/v2/api/#keyCodes" target="_blank" rel="noopener">自定义按键修饰符别名</a>：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 可以使用 `v-on:keyup.f1`</span></span><br><span class="line">Vue.config.keyCodes.f1 = <span class="number">112</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="3-绑定"><a href="#3-绑定" class="headerlink" title="3.绑定"></a>3.绑定</h2><hr>
+<h2 id="语法糖"><a href="#语法糖" class="headerlink" title="语法糖"></a>语法糖</h2><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;input v-model=&quot;something&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这不过是以下示例的语法糖：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">&lt;input</span><br><span class="line">  v-bind:value=&quot;something&quot;</span><br><span class="line">  v-on:input=&quot;something = $event.target.value&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="值绑定"><a href="#值绑定" class="headerlink" title="值绑定"></a>值绑定</h2><p>对于单选按钮，勾选框及选择列表选项，<code>v-model</code> 绑定的 value 通常是静态字符串 (对于勾选框 radio 是逻辑值)</p>
+<h2 id="修饰符"><a href="#修饰符" class="headerlink" title="修饰符"></a>修饰符</h2><p>.lazy</p>
+<p>在默认情况下，<code>v-model</code> 在 <code>input</code> 事件中同步输入框的值与数据 (除了 <a href="https://cn.vuejs.org/v2/guide/forms.html#vmodel-ime-tip" target="_blank" rel="noopener">上述</a> IME 部分)，但你可以添加一个修饰符 <code>lazy</code> ，从而转变为在 <code>change</code> 事件中同步：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- 在 &quot;change&quot; 而不是 &quot;input&quot; 事件中更新 --&gt;</span><br><span class="line">&lt;input v-model.lazy=&quot;msg&quot; &gt;</span><br></pre></td></tr></table></figure>
+
+<p>.number</p>
+<p>如果想自动将用户的输入值转为 Number 类型 (如果原值的转换结果为 NaN 则返回原值)，可以添加一个修饰符 <code>number</code> 给 <code>v-model</code> 来处理输入值：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;input v-model.number=&quot;age&quot; type=&quot;number&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<p>这通常很有用，因为在 <code>type=&quot;number&quot;</code> 时 HTML 中输入的值也总是会返回字符串类型。</p>
+<p>.trim</p>
+<p>如果要自动过滤用户输入的首尾空格，可以添加 <code>trim</code> 修饰符到 <code>v-model</code> 上过滤输入：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;input v-model.trim=&quot;msg&quot;&gt;</span><br></pre></td></tr></table></figure>
+
+<h2 id="4-组件"><a href="#4-组件" class="headerlink" title="4. 组件"></a>4. 组件</h2><hr>
+<h2 id="组件组合"><a href="#组件组合" class="headerlink" title="组件组合"></a>组件组合</h2><p>在 Vue 中，父子组件的关系可以总结为 <strong>prop 向下传递，事件向上传递</strong>。父组件通过 <strong>prop</strong>给子组件下发数据，子组件通过<strong>事件</strong>给父组件发送消息。看看它们是怎么工作的。</p>
+<p><img src="https://cn.vuejs.org/images/props-events.png" alt="prop 向下传递，事件向上传递"></p>
+<p>每次父组件更新时，子组件的所有 prop 都会更新为最新值。这意味着你<strong>不应该</strong>在子组件内部改变 prop。如果你这么做了，Vue 会在控制台给出警告。</p>
+<blockquote>
+<p>注意在 JavaScript 中对象和数组是引用类型，指向同一个内存空间，如果 prop 是一个对象或数组，在子组件内部改变它<strong>会影响</strong>父组件的状态。</p>
+</blockquote>
+<h2 id="命名"><a href="#命名" class="headerlink" title="命名"></a>命名</h2><p>HTML 特性是不区分大小写的。所以，当使用的不是字符串模板时，camelCase (驼峰式命名) 的 prop 需要转换为相对应的 kebab-case (短横线分隔式命名)：</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">Vue.component(<span class="string">'child'</span>, &#123;</span><br><span class="line">  <span class="comment">// 在 JavaScript 中使用 camelCase</span></span><br><span class="line">  props: [<span class="string">'myMessage'</span>],</span><br><span class="line">  template: <span class="string">'&lt;span&gt;&#123;&#123; myMessage &#125;&#125;&lt;/span&gt;'</span></span><br><span class="line">&#125;)</span><br></pre></td></tr></table></figure>
+
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">&lt;!-- 在 HTML 中使用 kebab-case --&gt;</span><br><span class="line">&lt;child my-message=&quot;hello!&quot;&gt;&lt;/child&gt;</span><br></pre></td></tr></table></figure>
+
+<p>如果你使用字符串模板，则没有这些限制。</p>
+<h3 id="绑定自定义事件"><a href="#绑定自定义事件" class="headerlink" title="绑定自定义事件"></a>绑定自定义事件</h3><p>每个 Vue 实例都实现了事件接口，即：</p>
+<ul>
+<li>使用 <code>$on(eventName)</code> 监听事件</li>
+<li>使用 <code>$emit(eventName)</code> 触发事件</li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+              <a href="/tags/前端/" rel="tag"># 前端</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/07/15/HTTPQWZN/" rel="next" title="HTTP 协议揭秘">
+                  <i class="fa fa-chevron-left"></i> HTTP 协议揭秘
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/12/25/MyBlogUpgrade/" rel="prev" title="我的博客网站大升级">
+                  我的博客网站大升级 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-渲染"><span class="nav-number">1.</span> <span class="nav-text">1. 渲染</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#v-if-和-v-show"><span class="nav-number">2.</span> <span class="nav-text">v-if 和 v-show</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#v-for"><span class="nav-number">3.</span> <span class="nav-text">v-for</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#数组更新检测"><span class="nav-number">4.</span> <span class="nav-text">数组更新检测</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对象更改检测注意事项"><span class="nav-number">5.</span> <span class="nav-text">对象更改检测注意事项</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#v-for-和-v-if-共存"><span class="nav-number">6.</span> <span class="nav-text">v-for 和 v-if 共存</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-事件"><span class="nav-number">7.</span> <span class="nav-text">2. 事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#监听事件"><span class="nav-number">8.</span> <span class="nav-text">监听事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#按键修饰符"><span class="nav-number">9.</span> <span class="nav-text">按键修饰符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-绑定"><span class="nav-number">10.</span> <span class="nav-text">3.绑定</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#语法糖"><span class="nav-number">11.</span> <span class="nav-text">语法糖</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#值绑定"><span class="nav-number">12.</span> <span class="nav-text">值绑定</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#修饰符"><span class="nav-number">13.</span> <span class="nav-text">修饰符</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-组件"><span class="nav-number">14.</span> <span class="nav-text">4. 组件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#组件组合"><span class="nav-number">15.</span> <span class="nav-text">组件组合</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#命名"><span class="nav-number">16.</span> <span class="nav-text">命名</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#绑定自定义事件"><span class="nav-number">16.1.</span> <span class="nav-text">绑定自定义事件</span></a></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

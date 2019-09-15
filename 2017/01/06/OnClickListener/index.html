@@ -1,0 +1,623 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="问题对于 Android 初学者，可能对这个问题会比较疑惑: 对于一个 View，比如 Button，如果为其设置多次点击监听 OnClickListener 回调方法，同时还在布局中设置了 onClick 属性，并且也实现了点击回调方法，那么问题来了，哪些回调方法会执行呢？又是以怎样的顺序执行呢？请跟随脚步和我一探究竟…">
+<meta name="keywords" content="经验,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android 中多次设置 OnClickListener 只执行一次吗？">
+<meta property="og:url" content="http://yoursite.com/2017/01/06/OnClickListener/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="问题对于 Android 初学者，可能对这个问题会比较疑惑: 对于一个 View，比如 Button，如果为其设置多次点击监听 OnClickListener 回调方法，同时还在布局中设置了 onClick 属性，并且也实现了点击回调方法，那么问题来了，哪些回调方法会执行呢？又是以怎样的顺序执行呢？请跟随脚步和我一探究竟…">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.763Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android 中多次设置 OnClickListener 只执行一次吗？">
+<meta name="twitter:description" content="问题对于 Android 初学者，可能对这个问题会比较疑惑: 对于一个 View，比如 Button，如果为其设置多次点击监听 OnClickListener 回调方法，同时还在布局中设置了 onClick 属性，并且也实现了点击回调方法，那么问题来了，哪些回调方法会执行呢？又是以怎样的顺序执行呢？请跟随脚步和我一探究竟…">
+  <link rel="canonical" href="http://yoursite.com/2017/01/06/OnClickListener/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Android 中多次设置 OnClickListener 只执行一次吗？ | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/06/OnClickListener/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android 中多次设置 OnClickListener 只执行一次吗？
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-06 23:00:00" itemprop="dateCreated datePublished" datetime="2017-01-06T23:00:00+08:00">2017-01-06</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="问题"><a href="#问题" class="headerlink" title="问题"></a>问题</h1><p>对于 Android 初学者，可能对这个问题会比较疑惑: 对于一个 <code>View</code>，比如 <code>Button</code>，如果为其设置多次点击监听 <code>OnClickListener</code> 回调方法，同时还在布局中设置了 <code>onClick</code> 属性，并且也实现了点击回调方法，那么问题来了，哪些回调方法会执行呢？又是以怎样的顺序执行呢？请跟随脚步和我一探究竟…</p>
+<a id="more"></a>
+
+<h1 id="实验现象"><a href="#实验现象" class="headerlink" title="实验现象"></a>实验现象</h1><p>我们先来做个实验，观察一下实验现象。<br>首先在布局文件中声明一个 <code>Button</code>，并为其设置好点击属性:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">Button</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">"@+id/btn"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:onClick</span>=<span class="string">"click()"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:text</span>=<span class="string">"BUTTON"</span>/&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>嗯，对，然后再在 <code>Activity</code> 中实现方法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">click</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">    Log.i(TAG, <span class="string">"click: in layout file"</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样第一组测试样例放置好了，第二组和第三组很容易，先后在 <code>onCreate()</code> 中设置两次监听，都记得打上 <code>Log</code> 日志:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">mButton.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        Log.i(TAG, <span class="string">"click: in onCreate() first"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br><span class="line">mButton.setOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        Log.i(TAG, <span class="string">"click: in onCreate() second"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>然后，见证奇迹了，运行观察实验结果:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">I/MainActivity: click: in onCreate() second</span><br></pre></td></tr></table></figure>
+
+<p>你没有看错，只有一条结果，而且是第二次的结果，说明优先级 <code>java</code> 设置监听的优先级大于布局文件，而且最后一次设置的监听会覆盖前一次设置的监听。</p>
+<blockquote>
+<p><strong>结论</strong><br>点击监听优先级: 之后设置的优先级大于之前设置的优先级，代码中设置的优先级大于布局中设置的优先级</p>
+</blockquote>
+<h1 id="寻找答案"><a href="#寻找答案" class="headerlink" title="寻找答案"></a>寻找答案</h1><p>结果很出乎意料，也许猜的都会执行，也许你猜的布局先执行，却没想到只有最后一次设置的执行，这其中的神秘之处究竟何在呢？让我们 Read The Fuck Source Code.</p>
+<h2 id="setOnClickListener"><a href="#setOnClickListener" class="headerlink" title="setOnClickListener"></a>setOnClickListener</h2><p>先从 <code>setOnClickListener()</code> 入手:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">public void setOnClickListener(@Nullable OnClickListener l) &#123;</span><br><span class="line">    if (!isClickable()) &#123;</span><br><span class="line">        setClickable(true);</span><br><span class="line">    &#125;</span><br><span class="line">    getListenerInfo().mOnClickListener = l;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>先是将该 <code>View</code> 设置为可点击状态，所以即便一个 <code>View</code> 是不可点击的，你为其设置了监听，也会将其恢复成可点击状态。再是将 <code>getListenerInfo()</code> 返回的对象中的成员 <code>mOnClickListener</code> 直接复制为参数 <code>l</code>，还不明白？再看:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function">ListenerInfo <span class="title">getListenerInfo</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (mListenerInfo != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> mListenerInfo;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果为空，重新创建用于保存所有监听器的容器类</span></span><br><span class="line">    mListenerInfo = <span class="keyword">new</span> ListenerInfo();</span><br><span class="line">    <span class="keyword">return</span> mListenerInfo;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 容器类定义</span></span><br><span class="line"><span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ListenerInfo</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 是数组 事件发生回调所有监听器</span></span><br><span class="line">    <span class="keyword">private</span> CopyOnWriteArrayList&lt;OnAttachStateChangeListener&gt; mOnAttachStateChangeListeners;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 不是数组 直接对其进行赋值</span></span><br><span class="line">    <span class="keyword">public</span> OnClickListener mOnClickListener;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">protected</span> OnLongClickListener mOnLongClickListener;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>哈，是不是恍然大悟，所以每一次设置监听都是对这个 <code>mOnClickListener</code> 成员进行替换赋值，所以说最后一次设置监听才是有效的。</p>
+<h2 id="布局文件"><a href="#布局文件" class="headerlink" title="布局文件"></a>布局文件</h2><p> <code>Java</code> 中的监听确实明白了，那么布局文件中又是怎么回事呢？<br> 通过 <code>setOnClickListener()</code> 可以对 <code>mOnClickListener</code> 进行修改，那么我们找一下这个函数在哪里有调用，果然找到了，<br>在 <code>View</code> 的构造函数中，有这样两行代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取布局 android:onClick="" 属性值</span></span><br><span class="line"><span class="keyword">final</span> String handlerName = a.getString(attr);</span><br><span class="line"><span class="keyword">if</span> (handlerName != <span class="keyword">null</span>) &#123;</span><br><span class="line">    setOnClickListener(<span class="keyword">new</span> DeclaredOnClickListener(<span class="keyword">this</span>, handlerName));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也就是说，<code>View</code> 默认就设置了一个叫做 <code>DeclaredOnClickListener</code> 的监听器:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">DeclaredOnClickListener</span> <span class="keyword">implements</span> <span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(@NonNull View v)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span> (mMethod == <span class="keyword">null</span>) &#123;</span><br><span class="line">            mMethod = resolveMethod(mHostView.getContext(), mMethodName);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 调用方法，并携带参数 v</span></span><br><span class="line">        mMethod.invoke(mHostView.getContext(), v);</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+<p>默认的实现是通过 <code>resolveMethod()</code> 获取到方法，并调用之:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> Method <span class="title">resolveMethod</span><span class="params">(@Nullable Context context, @NonNull String name)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (!context.isRestricted()) &#123;</span><br><span class="line">        <span class="comment">// 使用参数 name 反射取得方法</span></span><br><span class="line">        <span class="keyword">return</span> context.getClass().getMethod(mMethodName, View.class);</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br></pre></td></tr></table></figure>
+
+<p>是不是很眼熟了，这不就是反射获取到方法吗？！一切都明白了吧，在 <code>View</code> 创建之初就设置了一个默认监听， 默认监听是调用的所在 <code>Context</code> 中的符合布局中定义的方法签名的方法。</p>
+<h1 id="结论"><a href="#结论" class="headerlink" title="结论"></a>结论</h1><p>所以，总的来说是这样的，<code>View</code> 在构造之初就默认设置好了一个监听器，<code>View</code> 的构造也是在 <code>onCreate()</code> 方法执行前完成的，对于每一次设置监听都会覆盖上一次的监听，所以最后一次设置的监听才会是有效的。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/12/26/Linux_process/" rel="next" title="初探 Linux 系统编程之进程">
+                  <i class="fa fa-chevron-left"></i> 初探 Linux 系统编程之进程
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/01/18/LruCache/" rel="prev" title="Android LruCache 源码分析">
+                  Android LruCache 源码分析 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#问题"><span class="nav-number">1.</span> <span class="nav-text">问题</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实验现象"><span class="nav-number">2.</span> <span class="nav-text">实验现象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#寻找答案"><span class="nav-number">3.</span> <span class="nav-text">寻找答案</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#setOnClickListener"><span class="nav-number">3.1.</span> <span class="nav-text">setOnClickListener</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#布局文件"><span class="nav-number">3.2.</span> <span class="nav-text">布局文件</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#结论"><span class="nav-number">4.</span> <span class="nav-text">结论</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

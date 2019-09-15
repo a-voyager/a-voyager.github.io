@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Hello!大家最近还好吗!现在是2015年11月14日凌晨4点，今天的博客写完了，主要讲的是学习慕课网的Activity专题后的总结，帮助复习一下安卓的Activity，“深入理解Activity”是一个系列，后面还会更新，由浅到深，希望能带给大家一点帮助，也同时记录自己的学习历程。不多说，开始！">
+<meta name="keywords" content="Android,深入理解Activity">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解Activity(一)">
+<meta property="og:url" content="http://yoursite.com/2015/11/14/Activity(1)/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="Hello!大家最近还好吗!现在是2015年11月14日凌晨4点，今天的博客写完了，主要讲的是学习慕课网的Activity专题后的总结，帮助复习一下安卓的Activity，“深入理解Activity”是一个系列，后面还会更新，由浅到深，希望能带给大家一点帮助，也同时记录自己的学习历程。不多说，开始！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.770Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解Activity(一)">
+<meta name="twitter:description" content="Hello!大家最近还好吗!现在是2015年11月14日凌晨4点，今天的博客写完了，主要讲的是学习慕课网的Activity专题后的总结，帮助复习一下安卓的Activity，“深入理解Activity”是一个系列，后面还会更新，由浅到深，希望能带给大家一点帮助，也同时记录自己的学习历程。不多说，开始！">
+  <link rel="canonical" href="http://yoursite.com/2015/11/14/Activity(1)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>深入理解Activity(一) | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/11/14/Activity(1)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">深入理解Activity(一)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2015-11-14 00:00:00" itemprop="dateCreated datePublished" datetime="2015-11-14T00:00:00+08:00">2015-11-14</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Hello!大家最近还好吗!现在是2015年11月14日凌晨4点，今天的博客写完了，主要讲的是学习慕课网的Activity专题后的总结，帮助复习一下安卓的Activity，“深入理解Activity”是一个系列，后面还会更新，由浅到深，希望能带给大家一点帮助，也同时记录自己的学习历程。不多说，开始！</p>
+<a id="more"></a>
+<h1 id="Activity的生命周期"><a href="#Activity的生命周期" class="headerlink" title="Activity的生命周期"></a>Activity的生命周期</h1><h2 id="对于单个Activity"><a href="#对于单个Activity" class="headerlink" title="对于单个Activity"></a>对于单个Activity</h2><ul>
+<li><p>可见状态</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">onCreate()-&gt;onStart()-&gt;onResume()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>不可见状态</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">onPause()-&gt;onStop()</span><br><span class="line">onDestroy()</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>销毁状态</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">onDestroy()</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<h2 id="对于多个Activity"><a href="#对于多个Activity" class="headerlink" title="对于多个Activity"></a>对于多个Activity</h2><p>不多讲，只注意一点:<br>每次打开新的Activity总会调用当前的onPause()方法</p>
+<h2 id="交互设计思想"><a href="#交互设计思想" class="headerlink" title="交互设计思想"></a>交互设计思想</h2><ol>
+<li>为什么需要onPause()？是否多此一举？<br> 用于暂停状态信息，比如暂停音乐视频播放</li>
+<li>要注意onStop()方法是在最后执行的，这又是为什么呢<br> 这是为了防止在创建第二个Activity时造成当前Activity消失黑屏，造成视觉体验不够良好(onStop执行后才处于不可见状态)<h2 id="横竖屏切换"><a href="#横竖屏切换" class="headerlink" title="横竖屏切换"></a>横竖屏切换</h2></li>
+</ol>
+<ul>
+<li><p>Bundle对象<br>  用于保存横竖切换前的状态信息，通过bundle.put()方法</p>
+<h1 id="Activity的两种启动方式"><a href="#Activity的两种启动方式" class="headerlink" title="Activity的两种启动方式"></a>Activity的两种启动方式</h1></li>
+<li><p>显式启动<br>  直接启动方式就不用说了，直接Intent启动即可，还是简单举个例子吧，举个不常用的Component方式</p>
+  <figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">ComponentName cn = <span class="keyword">new</span> ComponentName(<span class="keyword">this</span>, other.class);</span><br><span class="line">intent.setComponent(cn);</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>隐式启动<br>  什么是隐式启动，其实就是启动其他应用程序的Activity，具体怎么做呢，看代码</p>
+</li>
+</ul>
+<ol>
+<li><p>首先在被启动Activity中定义inten-filter</p>
+ <figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">"www.xxx.com"</span>/&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">"......DEFAULT"</span>/&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p>intent中setAction(“…”)即可</p>
+</li>
+</ol>
+<blockquote>
+<h3 id="拓展-启动系统的Activity"><a href="#拓展-启动系统的Activity" class="headerlink" title="拓展: 启动系统的Activity"></a>拓展: 启动系统的Activity</h3></blockquote>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//启动浏览器</span></span><br><span class="line">intent.setAction(Intent.ACTION_VIEW);</span><br><span class="line">Uri url = Uri.parse(<span class="string">"http://www.baidu.com"</span>);</span><br><span class="line">intent.setData(url);</span><br><span class="line"></span><br><span class="line"><span class="comment">//启动系统相册</span></span><br><span class="line">intent.setAction(Intent.ACTION_GET_CONTENT);</span><br><span class="line">intent.setType(<span class="string">"image/*"</span>);	<span class="comment">//重写onActivityForResult()</span></span><br><span class="line"></span><br><span class="line"><span class="comment">//发送短信</span></span><br><span class="line">intent.setAction(Intent.ACTION_SEND);</span><br><span class="line">intent.setType(<span class="string">"text/plain"</span>);</span><br><span class="line">intent.putExtra(Intent.EXTRA_TEXT, <span class="string">"your sms text"</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">//打开电话拨号</span></span><br><span class="line">intent.setAction(Intent.ACTION_VIEW);</span><br><span class="line">Uri url = Uri.parse(<span class="string">"12345678901"</span>);</span><br><span class="line">intent.setData(url);</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/深入理解Activity/" rel="tag"># 深入理解Activity</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2015/11/11/Hexo搭建个人网站/" rel="next" title="如何使用Hexo搭建个人网站">
+                  <i class="fa fa-chevron-left"></i> 如何使用Hexo搭建个人网站
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2015/11/16/AndroidProject151116(1)/" rel="prev" title="安卓项目实战----收集用户信息(一)">
+                  安卓项目实战----收集用户信息(一) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#Activity的生命周期"><span class="nav-number">1.</span> <span class="nav-text">Activity的生命周期</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#对于单个Activity"><span class="nav-number">1.1.</span> <span class="nav-text">对于单个Activity</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#对于多个Activity"><span class="nav-number">1.2.</span> <span class="nav-text">对于多个Activity</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#交互设计思想"><span class="nav-number">1.3.</span> <span class="nav-text">交互设计思想</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#横竖屏切换"><span class="nav-number">1.4.</span> <span class="nav-text">横竖屏切换</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Activity的两种启动方式"><span class="nav-number">2.</span> <span class="nav-text">Activity的两种启动方式</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#拓展-启动系统的Activity"><span class="nav-number">2.0.1.</span> <span class="nav-text">拓展: 启动系统的Activity</span></a></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

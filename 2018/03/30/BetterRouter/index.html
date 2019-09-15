@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在前一篇博文中，已经分析了阿里开源的 ARouter 框架，这篇文章将对另一款更加灵活、简单的路由框架 Router 进行分析，看看它和 ARouter 比起来有什么不同。">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="来看一个更有趣的 Router">
+<meta property="og:url" content="http://yoursite.com/2018/03/30/BetterRouter/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="在前一篇博文中，已经分析了阿里开源的 ARouter 框架，这篇文章将对另一款更加灵活、简单的路由框架 Router 进行分析，看看它和 ARouter 比起来有什么不同。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180330-111137@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180330-111702@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180330-111903@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180330-112144@2x.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.755Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="来看一个更有趣的 Router">
+<meta name="twitter:description" content="在前一篇博文中，已经分析了阿里开源的 ARouter 框架，这篇文章将对另一款更加灵活、简单的路由框架 Router 进行分析，看看它和 ARouter 比起来有什么不同。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/WX20180330-111137@2x.png">
+  <link rel="canonical" href="http://yoursite.com/2018/03/30/BetterRouter/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>来看一个更有趣的 Router | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/03/30/BetterRouter/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">来看一个更有趣的 Router
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-03-30 16:40:00" itemprop="dateCreated datePublished" datetime="2018-03-30T16:40:00+08:00">2018-03-30</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在前一篇博文中，已经分析了阿里开源的 <code>ARouter</code> 框架，这篇文章将对另一款更加灵活、简单的路由框架 <code>Router</code> 进行分析，看看它和 <code>ARouter</code> 比起来有什么不同。</p>
+<a id="more"></a>
+
+<h1 id="容易的用法"><a href="#容易的用法" class="headerlink" title="容易的用法"></a>容易的用法</h1><p>和往常一样，分析一款框架还是先从回顾用法开始，读者可以<a href="https://github.com/chenenyu/Router" target="_blank" rel="noopener">点这里去</a> Github 看看 <code>Router</code> 的介绍，不然可能一脸懵逼地不知道我在讲什么。</p>
+<p>初始化流程稍显复杂，需要指定我们的应用中有哪些模块：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line">Router.initialize(<span class="keyword">new</span> Configuration.Builder()</span><br><span class="line">        <span class="comment">// 调试模式</span></span><br><span class="line">        .setDebuggable(BuildConfig.DEBUG)</span><br><span class="line">        <span class="comment">// 指定所有module</span></span><br><span class="line">        .registerModules(<span class="string">"module1"</span>, <span class="string">"module2"</span>, <span class="string">"app"</span>)</span><br><span class="line">        .build());</span><br></pre></td></tr></table></figure>
+
+<p>然后看看多样的跳转方式，首先，一样用 <code>@Route</code> 注解标记需要路由的组件，值得注意的是：</p>
+<ol>
+<li>不需要指定组，但是要完整的 URI 格式</li>
+<li>可以为一个组件指定多个路径，可以是名字，也可以是 URI 格式</li>
+</ol>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Route</span>(&#123;<span class="string">"module1"</span>, <span class="string">"router://filter/module1"</span>&#125;)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">Module1Activity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 Activity 或 Fragment 或 Context 下，都可以携带路径参数调用方法实现跳转：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 可以指定命名式路径</span></span><br><span class="line">Router.build(<span class="string">"module1"</span>).go(<span class="keyword">this</span>);</span><br><span class="line"><span class="comment">// 也可以指定URI式路径</span></span><br><span class="line">Router.build(<span class="string">"router://filter/module1"</span>).go(<span class="keyword">this</span>);</span><br><span class="line"><span class="comment">// 甚至隐式Intent</span></span><br><span class="line">Router.build(<span class="string">"router://implicit"</span>).go(<span class="keyword">this</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这里提一下，隐式 Intent 方式，不需要在组件注解，直接在 Manifest 中指定如下即可：</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">intent-filter</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">action</span> <span class="attr">android:name</span>=<span class="string">"android.intent.action.VIEW"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">"android.xxxx.DEFAULT"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">category</span> <span class="attr">android:name</span>=<span class="string">"android.xxxx.BROWSABLE"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">data</span> <span class="attr">android:host</span>=<span class="string">"implicit"</span> <span class="attr">android:scheme</span>=<span class="string">"router"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">intent-filter</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>可见，跳转方式很灵活，接下来还有拦截器，较于 <code>ARouter</code> 而言，<code>Router</code> 既支持配置全局拦截器，也支持对特定组件单独配置拦截器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 全局拦截器</span></span><br><span class="line">Router.addGlobalInterceptor(<span class="keyword">new</span> MyInterceptor());</span><br><span class="line"></span><br><span class="line"><span class="comment">// 对特定组件配置拦截器</span></span><br><span class="line"><span class="meta">@Route</span>(value = <span class="string">"intercepted"</span>, interceptors = <span class="string">"SampleInterceptor"</span>)</span><br><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InterceptedActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不仅如此，<code>Router</code> 还将路由匹配相关逻辑进行了抽象，可以实现开发自定义规则的匹配器，甚至动态注册路由表：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 动态注册路由表</span></span><br><span class="line">Router.handleRouteTable(<span class="keyword">new</span> RouteTable() &#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">handle</span><span class="params">(Map&lt;String, Class&lt;?&gt;&gt; map)</span> </span>&#123;</span><br><span class="line">        map.put(<span class="string">"dynamic"</span>, DynamicActivity.class);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;);</span><br></pre></td></tr></table></figure>
+
+<p>以上便是 <code>Router</code> 的常见用法，更强的 API 赋予更佳的灵活性，接下来看看这些灵活性是如何实现的。</p>
+<h1 id="不见怪的路由表"><a href="#不见怪的路由表" class="headerlink" title="不见怪的路由表"></a>不见怪的路由表</h1><p>同样，路由表也是通过 APT 技术在编译前期生成的，不同于 <code>ARouter</code>，<code>Router</code> 中没有分组的概念，即不会生成组管理类，取而代之的是直接生成各个模块对应的模块内路径关联类，如「app」模块的路由表：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180330-111137@2x.png" alt="WX20180330-111137@2x.png"></p>
+<p>同时，<code>Router</code> 更专注于路由，没有「Provider」一类的提供者服务，也无需生成对应的类。但是，<code>Router</code> 的拦截器支持对单一组件配置拦截器，所以拦截器和组件的对应关系需要生成类：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180330-111702@2x.png" alt="WX20180330-111702@2x.png"></p>
+<p>为实现拦截器的动态组件化，拦截器的名字也得独立开来，少不了拦截器名和类的关联：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180330-111903@2x.png" alt="WX20180330-111903@2x.png"></p>
+<p>最后，参数注入功能和 <code>ARouter</code> 没区别，都是生成相应的注入类：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180330-112144@2x.png" alt="WX20180330-112144@2x.png"></p>
+<p><code>Router</code> 中生成类的类名都是按规则能够事先确定的，使得运行期加载时直接根据确定的类名进行类加载，而非像 <code>ARouter</code> 一样找出包下所有的类，然后筛选进行加载。生成类分析为止，接下来看运行期的分析。</p>
+<h1 id="一样的初始化"><a href="#一样的初始化" class="headerlink" title="一样的初始化"></a>一样的初始化</h1><p>初始化的思路大致一致，实例化生成类然后进行缓存，不同的是加载不支持 Gradle 插件方式加载，也无需找出包中的类进行筛选，而是根据开发者提供注册的模块，<code>Router</code> 直接确定类名反射实例化，来看看：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class Router</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">initialize</span><span class="params">(Configuration configuration)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 控制日志开关</span></span><br><span class="line">    RLog.showLog(configuration.debuggable);</span><br><span class="line">    <span class="comment">// 加载路由信息到AptHub</span></span><br><span class="line">    AptHub.registerModules(configuration.modules);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>根据提供的模块名，AptHub 中将路由信息进行加载：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class AptHub</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">synchronized</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">registerModules</span><span class="params">(String... modules)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (modules == <span class="keyword">null</span> || modules.length == <span class="number">0</span>) &#123;</span><br><span class="line">        RLog.w(<span class="string">"empty modules."</span>);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 分割符号替换为'_'</span></span><br><span class="line">        validateModuleName(modules);</span><br><span class="line">        <span class="comment">// 按模块，加载路由图信息到routeTable</span></span><br><span class="line">        String routeTableName;</span><br><span class="line">        <span class="keyword">for</span> (String <span class="keyword">module</span> : modules) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// com.chenenyu.router.Module1RouteTable</span></span><br><span class="line">                <span class="comment">// 反射实例化生成类</span></span><br><span class="line">                routeTableName = PACKAGE_NAME + DOT + capitalize(<span class="keyword">module</span>) + ROUTE_TABLE;</span><br><span class="line">                Class&lt;?&gt; routeTableClz = Class.forName(routeTableName);</span><br><span class="line">                Constructor constructor = routeTableClz.getConstructor();</span><br><span class="line">                RouteTable instance = (RouteTable) constructor.newInstance();</span><br><span class="line">                <span class="comment">// 加入路由信息到routeTable</span></span><br><span class="line">                instance.handle(routeTable);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 同理，加载组件和拦截器的关联信息</span></span><br><span class="line">        String targetInterceptorsName;</span><br><span class="line">        <span class="keyword">for</span> (String moduleName : modules) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// com.chenenyu.router.Module1TargetInterceptors</span></span><br><span class="line">                targetInterceptorsName = PACKAGE_NAME + DOT + capitalize(moduleName) + TARGET_INTERCEPTORS;</span><br><span class="line">                Class&lt;?&gt; clz = Class.forName(targetInterceptorsName);</span><br><span class="line">                Constructor constructor = clz.getConstructor();</span><br><span class="line">                TargetInterceptors instance = (TargetInterceptors) constructor.newInstance();</span><br><span class="line">                instance.handle(targetInterceptors);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 加载所有拦截器</span></span><br><span class="line">        String interceptorName;</span><br><span class="line">        <span class="keyword">for</span> (String moduleName : modules) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">                <span class="comment">// com.chenenyu.router.Module1InterceptorTable</span></span><br><span class="line">                interceptorName = PACKAGE_NAME + DOT + capitalize(moduleName) + INTERCEPTOR_TABLE;</span><br><span class="line">                Class&lt;?&gt; clz = Class.forName(interceptorName);</span><br><span class="line">                Constructor constructor = clz.getConstructor();</span><br><span class="line">                InterceptorTable instance = (InterceptorTable) constructor.newInstance();</span><br><span class="line">                instance.handle(interceptorTable);</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">                ...</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        ...</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>提供模块名后的加载过程变得很简单，可以用确定的类名直接反射加载并实例化，然后将信息存放在 AptHub 中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">AptHub</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">        </span><br><span class="line">    <span class="comment">// path 和 Activity/Fragment组件的关联</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String, Class&lt;?&gt;&gt; routeTable = ...;</span><br><span class="line">    <span class="comment">// Activity/Fragment组件 和 拦截器名字的关联</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;Class&lt;?&gt;, String[]&gt; targetInterceptors = ...;</span><br><span class="line">    <span class="comment">// 拦截器名字 和 拦截器的关联</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String, Class&lt;? extends RouteInterceptor&gt;&gt; interceptorTable = ...;</span><br><span class="line">    <span class="comment">// 参数注入名 和 参数注入器的关联</span></span><br><span class="line">    <span class="keyword">static</span> Map&lt;String, Class&lt;ParamInjector&gt;&gt; injectors = ....;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>初始化流程到此结束，得到的是路径、组件、拦截器之间的关联关系，接下来看跳转流程。</p>
+<h1 id="强大的跳转"><a href="#强大的跳转" class="headerlink" title="强大的跳转"></a>强大的跳转</h1><p>跳转也是类似的 API，先构造路由参数，然后执行跳转：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class Router</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> IRouter <span class="title">build</span><span class="params">(String path)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> build(path == <span class="keyword">null</span> ? <span class="keyword">null</span> : Uri.parse(path));</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> IRouter <span class="title">build</span><span class="params">(Uri uri)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> RealRouter.getInstance().build(uri);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p><code>ARouter</code> 构造出的是一个路由请求 Postcard，跳转的逻辑经过 Postcard 后分离在 _ARouter 中；而这里构造出的是一个 RealRouter，内部封装一个路由请求 RouteRequest，跳转的逻辑就在 RealRouter 中进行实现：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbsRouter</span> <span class="keyword">implements</span> <span class="title">IRouter</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 路由请求</span></span><br><span class="line">    RouteRequest mRouteRequest;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> IRouter <span class="title">build</span><span class="params">(Uri uri)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// new路由请求</span></span><br><span class="line">        mRouteRequest = <span class="keyword">new</span> RouteRequest(uri);</span><br><span class="line">        <span class="comment">// 填充原始Uri参数</span></span><br><span class="line">        Bundle bundle = <span class="keyword">new</span> Bundle();</span><br><span class="line">        bundle.putString(Router.RAW_URI, uri == <span class="keyword">null</span> ? <span class="keyword">null</span> : uri.toString());</span><br><span class="line">        mRouteRequest.setExtras(bundle);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">this</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中路由请求 RouteRequest 类中包含路由所需要的所有信息：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">RouteRequest</span> <span class="keyword">implements</span> <span class="title">Serializable</span> </span>&#123;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">private</span> Uri uri;        <span class="comment">// 目标uri</span></span><br><span class="line">    <span class="keyword">private</span> Bundle extras;  <span class="comment">// 携带参数</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> flags;      <span class="comment">// Intent标记</span></span><br><span class="line">    <span class="keyword">private</span> Uri data;       <span class="comment">// 隐式Intent的data</span></span><br><span class="line">    <span class="keyword">private</span> String type;    <span class="comment">// 隐式Intent的data type</span></span><br><span class="line">    <span class="keyword">private</span> String action;  <span class="comment">// 隐式Intent的action</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">boolean</span> skipInterceptors;         <span class="comment">// 跳过拦截器</span></span><br><span class="line">    <span class="keyword">private</span> Set&lt;String&gt; removedInterceptors;  <span class="comment">// 动态移除拦截器</span></span><br><span class="line">    <span class="keyword">private</span> Set&lt;String&gt; addedInterceptors;    <span class="comment">// 动态增加拦截器</span></span><br><span class="line">    <span class="keyword">private</span> RouteCallback callback;           <span class="comment">// 回调</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> requestCode = INVALID_CODE;   <span class="comment">// 请求码</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> enterAnim = INVALID_CODE;     <span class="comment">// 进入动画</span></span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> exitAnim = INVALID_CODE;      <span class="comment">// 退出动画</span></span><br><span class="line">    <span class="keyword">private</span> ActivityOptionsCompat options;    <span class="comment">// Activity配置</span></span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>RouteRequest 构造后，就可以调用 go() 方法进行跳转，接下来进入 go() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">go</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 构造Intent</span></span><br><span class="line">    Intent intent = getIntent(context);</span><br><span class="line">    <span class="keyword">if</span> (intent == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    Bundle options = mRouteRequest.getActivityOptionsCompat() == <span class="keyword">null</span> ? <span class="keyword">null</span> : mRouteRequest.getActivityOptionsCompat().toBundle();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 启动Activity</span></span><br><span class="line">    <span class="keyword">if</span> (context <span class="keyword">instanceof</span> Activity) &#123;</span><br><span class="line">        <span class="comment">// Activity内启动才可以request code</span></span><br><span class="line">        ActivityCompat.startActivityForResult((Activity) context, intent, mRouteRequest.getRequestCode(), options);</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getEnterAnim() &gt;= <span class="number">0</span> &amp;&amp; mRouteRequest.getExitAnim() &gt;= <span class="number">0</span>) &#123;</span><br><span class="line">            <span class="comment">// 添加进入和退出动画</span></span><br><span class="line">            ((Activity) context).overridePendingTransition(</span><br><span class="line">                    mRouteRequest.getEnterAnim(), mRouteRequest.getExitAnim());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 非Activity的Context启动</span></span><br><span class="line">        intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK);</span><br><span class="line">        <span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= Build.VERSION_CODES.JELLY_BEAN) &#123;</span><br><span class="line">            context.startActivity(intent, options);</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            context.startActivity(intent);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    callback(RouteResult.SUCCEED, <span class="keyword">null</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>思路简单，依据 RouteRequest 构造 Intent，然后携带合适的配置 startActivity 即可。重点在于 Intent 的构造，它是如何既支持显式 Intent 又支持隐式 Intent 的呢？继续进入 getIntent() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class RealRouter</span></span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> Intent <span class="title">getIntent</span><span class="params">(Context context)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (!mRouteRequest.isSkipInterceptors()) &#123;</span><br><span class="line">        <span class="comment">// 全局拦截器，按序执行，非递归</span></span><br><span class="line">        <span class="keyword">for</span> (RouteInterceptor interceptor : Router.getGlobalInterceptors()) &#123;</span><br><span class="line">            <span class="keyword">if</span> (interceptor.intercept(context, mRouteRequest)) &#123;</span><br><span class="line">               ...</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 取出所有注册的Matcher</span></span><br><span class="line">    List&lt;AbsMatcher&gt; matcherList = MatcherRegistry.getMatcher();</span><br><span class="line">    <span class="comment">// 没有Matcher</span></span><br><span class="line">    <span class="keyword">if</span> (matcherList.isEmpty()) &#123;</span><br><span class="line">        callback(RouteResult.FAILED, <span class="string">"The MatcherRegistry contains no matcher."</span>);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 路由表</span></span><br><span class="line">    Set&lt;Map.Entry&lt;String, Class&lt;?&gt;&gt;&gt; entries = AptHub.routeTable.entrySet();</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 遍历所有Matcher</span></span><br><span class="line">    <span class="keyword">for</span> (AbsMatcher matcher : matcherList) &#123;</span><br><span class="line">        <span class="keyword">if</span> (AptHub.routeTable.isEmpty()) &#123;</span><br><span class="line">            <span class="comment">// 没有路由表，都是隐式Intent</span></span><br><span class="line">            <span class="keyword">if</span> (matcher.match(context, mRouteRequest.getUri(), <span class="keyword">null</span>, mRouteRequest)) &#123;</span><br><span class="line">                <span class="comment">// 构造Intent</span></span><br><span class="line">                <span class="keyword">return</span> finalizeIntent(context, matcher, <span class="keyword">null</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            <span class="comment">// 是否为隐式匹配的Matcher</span></span><br><span class="line">            <span class="keyword">boolean</span> isImplicit = matcher <span class="keyword">instanceof</span> AbsImplicitMatcher;</span><br><span class="line">            <span class="comment">// 遍历路由表</span></span><br><span class="line">            <span class="keyword">for</span> (Map.Entry&lt;String, Class&lt;?&gt;&gt; entry : entries) &#123;</span><br><span class="line">                <span class="comment">// mRouteRequest.getUri(): router://filter/module1</span></span><br><span class="line">                <span class="comment">// 路由表entry: router://filter/module1 &lt;--&gt; Module1Activity.class</span></span><br><span class="line">                <span class="keyword">if</span> (matcher.match(context, mRouteRequest.getUri(), isImplicit ? <span class="keyword">null</span> : entry.getKey(), mRouteRequest)) &#123;</span><br><span class="line">                    <span class="comment">// 构造Intent</span></span><br><span class="line">                    <span class="keyword">return</span> finalizeIntent(context, matcher, isImplicit ? <span class="keyword">null</span> : entry.getValue());</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    callback(RouteResult.FAILED, String.format(</span><br><span class="line">            <span class="string">"Can not find an Activity that matches the given uri: %s"</span>, mRouteRequest.getUri()));</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再继续看 Intent 的构造：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class RealRouter</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> Intent <span class="title">finalizeIntent</span><span class="params">(Context context, AbsMatcher matcher, @Nullable Class&lt;?&gt; target)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 拦截目标组件class</span></span><br><span class="line">    <span class="keyword">if</span> (intercept(context, assembleClassInterceptors(target))) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 返回Intent or 实例</span></span><br><span class="line">    Object result = matcher.generate(context, mRouteRequest.getUri(), target);</span><br><span class="line">    <span class="keyword">if</span> (result <span class="keyword">instanceof</span> Intent) &#123;</span><br><span class="line">        Intent intent = (Intent) result;</span><br><span class="line">        <span class="comment">// 填充Intent，完善的参数配置</span></span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getExtras() != <span class="keyword">null</span> &amp;&amp; !mRouteRequest.getExtras().isEmpty()) &#123;</span><br><span class="line">            intent.putExtras(mRouteRequest.getExtras());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getFlags() != <span class="number">0</span>) &#123;</span><br><span class="line">            intent.addFlags(mRouteRequest.getFlags());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getData() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            intent.setData(mRouteRequest.getData());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getType() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            intent.setType(mRouteRequest.getType());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getAction() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            intent.setAction(mRouteRequest.getAction());</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> intent;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 非Intent，返回null</span></span><br><span class="line">        ...</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>可见，Intent 的构造是由不同的 Matcher 所决定的，隐式 Intent 和显式 Intent 的不同生成便是在 Matcher 中实现的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 显式Intent的Matcher</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbsExplicitMatcher</span> <span class="keyword">extends</span> <span class="title">AbsMatcher</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">generate</span><span class="params">(Context context, Uri uri, @Nullable Class&lt;?&gt; target)</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 没有type字段标注类型，所以直接用class判断继承关系</span></span><br><span class="line">        <span class="keyword">if</span> (Activity.class.isAssignableFrom(target)) &#123;</span><br><span class="line">            <span class="comment">// activity返回intent</span></span><br><span class="line">            result = <span class="keyword">new</span> Intent(context, target);</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (Fragment.class.isAssignableFrom(target)) &#123; </span><br><span class="line">            <span class="comment">// v4.fragment返回实例</span></span><br><span class="line">            result = target.newInstance();</span><br><span class="line">        &#125; <span class="keyword">else</span> <span class="keyword">if</span> (android.app.Fragment.class.isAssignableFrom(target)) &#123;</span><br><span class="line">            <span class="comment">// fragment返回实例</span></span><br><span class="line">            result = target.newInstance();</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> result;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>隐式 Intent 同理，但更简单，只需返回一个携带 ACTION_VIEW 的 Intent 即可：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 隐式Intent的Matcher</span></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">AbsImplicitMatcher</span> <span class="keyword">extends</span> <span class="title">AbsMatcher</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">        </span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Object <span class="title">generate</span><span class="params">(Context context, Uri uri, @Nullable Class&lt;?&gt; target)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> Intent(Intent.ACTION_VIEW, uri);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么，是如何匹配到合适的匹配器呢？答案就在 match() 方法：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 隐式Intent</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(Context context, Uri uri, @Nullable String route, RouteRequest routeRequest)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Manifest是否有关联该隐式URI</span></span><br><span class="line">    ResolveInfo resolveInfo = context.getPackageManager().resolveActivity(</span><br><span class="line">            <span class="keyword">new</span> Intent(Intent.ACTION_VIEW, uri), PackageManager.MATCH_DEFAULT_ONLY);</span><br><span class="line">    <span class="keyword">if</span> (resolveInfo != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">if</span> (uri.getQuery() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 将uri的query参数添加到routeRequest的bundle</span></span><br><span class="line">            parseParams(uri, routeRequest);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 显式Intent</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">match</span><span class="params">(Context context, Uri uri, @Nullable String route, RouteRequest routeRequest)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> !isEmpty(route) &amp;&amp; uri.toString().equals(route);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，跳转相关就分析完毕了，简单说就是根据请求，匹配到合适的 Matcher，Matcher 会生成合适的 Intent，然后将 RouteRequest 中的信息填充到 Intent 中，再 startActivity() 进行跳转即可。</p>
+<p>而其中的 Matcher 的抽象使得开发者可以自定义自己的 Matcher，构造自定义的 Intent，使得路由流程更加地灵活，这是 <code>ARouter</code> 中不具备的一个有意思的亮点，接下来看另一个亮点，拦截器是如何实现单一拦截的。</p>
+<h1 id="合理的组件拦截"><a href="#合理的组件拦截" class="headerlink" title="合理的组件拦截"></a>合理的组件拦截</h1><p>回到跳转方法，其中跳转前的操作就是拦截：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class RealRouter</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> Intent <span class="title">finalizeIntent</span><span class="params">(Context c, AbsMatcher matcher, @Nullable Class&lt;?&gt; target)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 拦截目标组件class</span></span><br><span class="line">    <span class="keyword">if</span> (intercept(c, assembleClassInterceptors(target))) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先需要获取组件关联的拦截器，关联信息在初始化阶段就已经被加载，这里只需取出即可，不过还需加上动态配置的拦截器：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class RealRouter</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> Set&lt;String&gt; <span class="title">assembleClassInterceptors</span><span class="params">(@Nullable Class&lt;?&gt; target)</span> </span>&#123;</span><br><span class="line">    Set&lt;String&gt; finalInterceptors = <span class="keyword">new</span> HashSet&lt;&gt;();</span><br><span class="line">    <span class="keyword">if</span> (target != <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="comment">// 1. 取出组件对应的拦截器</span></span><br><span class="line">        String[] baseInterceptors = AptHub.targetInterceptors.get(target);</span><br><span class="line">        <span class="keyword">if</span> (baseInterceptors != <span class="keyword">null</span> &amp;&amp; baseInterceptors.length &gt; <span class="number">0</span>) &#123;</span><br><span class="line">            Collections.addAll(finalInterceptors, baseInterceptors);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 2. 移除需要动态跳过的拦截器</span></span><br><span class="line">        <span class="keyword">if</span> (mRouteRequest.getRemovedInterceptors() != <span class="keyword">null</span>) &#123;</span><br><span class="line">            finalInterceptors.removeAll(mRouteRequest.getRemovedInterceptors());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 3. 添加动态增加的拦截器</span></span><br><span class="line">    <span class="keyword">if</span> (mRouteRequest.getAddedInterceptors() != <span class="keyword">null</span>) &#123;</span><br><span class="line">        finalInterceptors.addAll(mRouteRequest.getAddedInterceptors());</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> finalInterceptors;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对于每一个跳转请求，都会进入到 intercept() 方法中：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// class RealRouter</span></span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">intercept</span><span class="params">(Context context, Set&lt;String&gt; finalInterceptors)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 是否跳过拦截器</span></span><br><span class="line">    <span class="keyword">if</span> (mRouteRequest.isSkipInterceptors()) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (finalInterceptors != <span class="keyword">null</span> &amp;&amp; !finalInterceptors.isEmpty()) &#123;</span><br><span class="line">        <span class="keyword">for</span> (String name : finalInterceptors) &#123;</span><br><span class="line">            <span class="comment">// 从缓存取实例</span></span><br><span class="line">            RouteInterceptor interceptor = mInterceptorInstance.get(name);</span><br><span class="line">            <span class="keyword">if</span> (interceptor == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="comment">// 没有实例则创建，并缓存</span></span><br><span class="line">                <span class="comment">// 取出拦截器名字对应的class</span></span><br><span class="line">                Class&lt;? extends RouteInterceptor&gt; clz = AptHub.interceptorTable.get(name);</span><br><span class="line">                <span class="keyword">try</span> &#123;</span><br><span class="line">                    Constructor&lt;? extends RouteInterceptor&gt; constructor = clz.getConstructor();</span><br><span class="line">                    interceptor = constructor.newInstance();</span><br><span class="line">                    mInterceptorInstance.put(name, interceptor);</span><br><span class="line">                &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">                    ...</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="comment">// 执行拦截，任意一个返回true则拦截</span></span><br><span class="line">            <span class="keyword">if</span> (interceptor != <span class="keyword">null</span> &amp;&amp; interceptor.intercept(context, mRouteRequest)) &#123;</span><br><span class="line">                ...</span><br><span class="line">                <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>拦截流程设计得简单，很容易理解，取出一个组件的声明的拦截器，再处理动态增减拦截器，再将这些拦截器实例化并缓存，然后每实例化一个就执行该拦截，任意一个拦截函数返回 true 即中断，否则继续执行其它拦截器。</p>
+<h1 id="最后说点什么"><a href="#最后说点什么" class="headerlink" title="最后说点什么"></a>最后说点什么</h1><p>到这里，<code>Router</code> 的分析就结束了，那么 <code>Router</code> 相对于 <code>ARouter</code> 存在的意义是什么？在阅读源码后，我想，也许是『灵活』和『专注』吧，灵活在于赋予开发者更多的操作能力实现更酷的 idea，专注在于让 Provider 什么的一边去，只做好页面路由。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/03/26/AndroidARouter/" rel="next" title="ARouter 源码简析">
+                  <i class="fa fa-chevron-left"></i> ARouter 源码简析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/05/03/WeakReferenceProblem/" rel="prev" title="弱引用回调引发的坑">
+                  弱引用回调引发的坑 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#容易的用法"><span class="nav-number">1.</span> <span class="nav-text">容易的用法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#不见怪的路由表"><span class="nav-number">2.</span> <span class="nav-text">不见怪的路由表</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#一样的初始化"><span class="nav-number">3.</span> <span class="nav-text">一样的初始化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#强大的跳转"><span class="nav-number">4.</span> <span class="nav-text">强大的跳转</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#合理的组件拦截"><span class="nav-number">5.</span> <span class="nav-text">合理的组件拦截</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#最后说点什么"><span class="nav-number">6.</span> <span class="nav-text">最后说点什么</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

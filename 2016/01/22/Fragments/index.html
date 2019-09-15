@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="什么是Fragment Fragment代表的是在一个Activity里面用户界面的一个行为或者一个部分。可以在一个Activity中组合多个Fragment或者在多个Activity中使用同一个Fragment。Fragment拥有自己的生命周期和事件体系，但位Activity之下，所以我们可以把它看做是一个子Activity。">
+<meta name="keywords" content="经验,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓Fragments入门">
+<meta property="og:url" content="http://yoursite.com/2016/01/22/Fragments/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="什么是Fragment Fragment代表的是在一个Activity里面用户界面的一个行为或者一个部分。可以在一个Activity中组合多个Fragment或者在多个Activity中使用同一个Fragment。Fragment拥有自己的生命周期和事件体系，但位Activity之下，所以我们可以把它看做是一个子Activity。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/0122_fragment_lifecycle.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.766Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓Fragments入门">
+<meta name="twitter:description" content="什么是Fragment Fragment代表的是在一个Activity里面用户界面的一个行为或者一个部分。可以在一个Activity中组合多个Fragment或者在多个Activity中使用同一个Fragment。Fragment拥有自己的生命周期和事件体系，但位Activity之下，所以我们可以把它看做是一个子Activity。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/0122_fragment_lifecycle.jpg">
+  <link rel="canonical" href="http://yoursite.com/2016/01/22/Fragments/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>安卓Fragments入门 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/01/22/Fragments/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">安卓Fragments入门
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-01-22 00:00:00" itemprop="dateCreated datePublished" datetime="2016-01-22T00:00:00+08:00">2016-01-22</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="什么是Fragment"><a href="#什么是Fragment" class="headerlink" title="什么是Fragment"></a>什么是Fragment</h1><blockquote>
+<p>Fragment代表的是在一个Activity里面用户界面的一个行为或者一个部分。可以在一个Activity中组合多个Fragment或者在多个Activity中使用同一个Fragment。Fragment拥有自己的生命周期和事件体系，但位Activity之下，所以我们可以把它看做是一个子Activity。</p>
+</blockquote>
+<a id="more"></a>
+<h3 id="Fragment受限于Activity"><a href="#Fragment受限于Activity" class="headerlink" title="Fragment受限于Activity"></a>Fragment受限于Activity</h3><p>Fragment必须嵌入在Activity，并且Fragment的生命周期受其Host Activity直接影响，也就是Activity执行onPause()、onDestroy()等，Fragment随即也会执行。但在Activity正常运作中，Fragment则独立了。</p>
+<h3 id="添加方式"><a href="#添加方式" class="headerlink" title="添加方式"></a>添加方式</h3><p>Fragment可以添加到Activity或者Viewgroup中，也可以没有界面而为Activity服务。</p>
+<h1 id="创建Fragment"><a href="#创建Fragment" class="headerlink" title="创建Fragment"></a>创建Fragment</h1><p>要创建一个Fragment，必须先创建Fragment的子类（或它的一个现有的子类）。它含有类似Activity的回调方法，如oncreate()，onstart()，onpause()，和onstop()。<br><img src="http://cdn.wuhaojie.top/0122_fragment_lifecycle.jpg" alt="Fragment生命周期"><br>生命周期如图所示，通常至少需要实现以下几种方法: </p>
+<ul>
+<li>onCreate():最先调用，执行一些初始化操作; </li>
+<li>onCreateView():在需要绘制界面时调用此方法，该方法需要返回一个View到该Fragment的根布局，不需要用户界面时返回null；</li>
+<li>onPause():当用户离开该Fragment时调用，并非destroyed，通常执行提交保存等操作，因为用户可能不再回到这个界面。<br>
+>**注意:** 通常来说，实现以上三个方法就够了，如果要实现更多方法，参见Fragment生命周期图。还有一些可能用到的父类: </li>
+<li><strong>DialogFragment</strong><br>Displays a floating dialog. Using this class to create a dialog is a good alternative to using the dialog helper methods in the Activity class, because you can incorporate a fragment dialog into the back stack of fragments managed by the activity, allowing the user to return to a dismissed fragment.</li>
+<li><strong>ListFragment</strong><br>Displays a list of items that are managed by an adapter (such as a SimpleCursorAdapter), similar to ListActivity. It provides several methods for managing a list view, such as the onListItemClick() callback to handle click events.</li>
+<li><strong>PreferenceFragment</strong><br>Displays a hierarchy of Preference objects as a list, similar to PreferenceActivity. This is useful when creating a “settings” activity for your application.<h1 id="添加用户界面"><a href="#添加用户界面" class="headerlink" title="添加用户界面"></a>添加用户界面</h1>为了提供用户界面，需要实现onCreateView()方法，并且返回一个View给根布局。<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">ExampleFragment</span> <span class="keyword">extends</span> <span class="title">Fragment</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> View <span class="title">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container,</span></span></span><br><span class="line"><span class="function"><span class="params">                             Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">        <span class="comment">// Inflate the layout for this fragment</span></span><br><span class="line">        <span class="keyword">return</span> inflater.inflate(R.layout.example_fragment, container, <span class="keyword">false</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>参数</p>
+<ul>
+<li>R.layout.example_fragment: <strong>Fragment的布局文件</strong></li>
+<li>container: <strong>需要传递到的根布局</strong></li>
+<li>false: 是否将examlep_fragment附着到container上，此处已经附着于container故为false</li>
+</ul>
+<h1 id="将Fragment添加到Activity"><a href="#将Fragment添加到Activity" class="headerlink" title="将Fragment添加到Activity"></a>将Fragment添加到Activity</h1><p>有两种方式可以添加: </p>
+<h3 id="Layout布局文件方式"><a href="#Layout布局文件方式" class="headerlink" title="Layout布局文件方式"></a>Layout布局文件方式</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">LinearLayout</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:orientation</span>=<span class="string">"horizontal"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">fragment</span> <span class="attr">android:name</span>=<span class="string">"com.example.news.ArticleListFragment"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:id</span>=<span class="string">"@+id/list"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_weight</span>=<span class="string">"1"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">"0dp"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span> /&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">fragment</span> <span class="attr">android:name</span>=<span class="string">"com.example.news.ArticleReaderFragment"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:id</span>=<span class="string">"@+id/viewer"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_weight</span>=<span class="string">"2"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">"0dp"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p><strong>注意:</strong> fragment 标签中 <code>android:name</code>属性指定的是Fragment类，系统在解析主布局xml时，依据该属性找到onCreateView()方法，获取View。</p>
+</blockquote>
+<h3 id="Java代码添加到ViewGroup方式"><a href="#Java代码添加到ViewGroup方式" class="headerlink" title="Java代码添加到ViewGroup方式"></a>Java代码添加到ViewGroup方式</h3><p>此方法可以在Activity运作中任意添加，即动态添加。在进行添加、删除或替换操作中，为了安全需要使用事务来进行操作。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 开启事务</span></span><br><span class="line">FragmentManager fragmentManager = getFragmentManager();</span><br><span class="line">FragmentTransaction fragmentTransaction = fragmentManager.beginTransaction();</span><br><span class="line"><span class="comment">// 执行添加操作</span></span><br><span class="line">ExampleFragment fragment = <span class="keyword">new</span> ExampleFragment();</span><br><span class="line">fragmentTransaction.add(R.id.fragment_container, fragment); <span class="comment">// 父容器， Fragment</span></span><br><span class="line"><span class="comment">// 提交事务</span></span><br><span class="line">fragmentTransaction.commit();</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>添加没有UI界面的Fragment: 调用add(Fragment, String)来添加，String标识唯一的ID来代替资源ID，并且系统将不会调用onCreate()方法，所以无须实现该方法。对于找到该Fragment，可以使用findFragmentByTag()来实现。</p>
+</blockquote>
+<h1 id="管理Fragment"><a href="#管理Fragment" class="headerlink" title="管理Fragment"></a>管理Fragment</h1><p>在Activity中调用 <code>getFragmentManager()</code> 获得FragmentManager，其中包含方法 <code>findFragmetById()</code> 或者 <code>findFragmentByTag()</code> 用于获得Fragment，然后可以通过 <code>popBackStack()</code> 来弹出Fragment(模拟用户命令实现)，还包含 <code>addOnBackStackChangedListener()</code> 方法。</p>
+<blockquote>
+<p>addToBackStack()后允许用户点击返回键销毁该Fragment</p>
+</blockquote>
+<h1 id="执行其它事务操作"><a href="#执行其它事务操作" class="headerlink" title="执行其它事务操作"></a>执行其它事务操作</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 创建事务</span></span><br><span class="line">Fragment newFragment = <span class="keyword">new</span> ExampleFragment();</span><br><span class="line">FragmentTransaction transaction = getFragmentManager().beginTransaction();</span><br><span class="line"></span><br><span class="line"><span class="comment">// Replace whatever is in the fragment_container view with this fragment,</span></span><br><span class="line"><span class="comment">// and add the transaction to the back stack</span></span><br><span class="line">transaction.replace(R.id.fragment_container, newFragment);</span><br><span class="line">transaction.addToBackStack(<span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 提交事务</span></span><br><span class="line">transaction.commit();</span><br></pre></td></tr></table></figure>
+
+<h1 id="Fragment与Activity之间的通信"><a href="#Fragment与Activity之间的通信" class="headerlink" title="Fragment与Activity之间的通信"></a>Fragment与Activity之间的通信</h1><p><strong><em>两行代码看破一切：</em></strong><br>Fragment中访问Activity</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">View listView = getActivity().findViewById(R.id.list);</span><br></pre></td></tr></table></figure>
+
+<p>Activity中访问Fragment</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">ExampleFragment fragment = (ExampleFragment) getFragmentManager().findFragmentById(R.id.example_fragment);</span><br></pre></td></tr></table></figure>
+
+<h3 id="回调法通信"><a href="#回调法通信" class="headerlink" title="回调法通信"></a>回调法通信</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">FragmentA</span> <span class="keyword">extends</span> <span class="title">ListFragment</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// Container Activity must implement this interface</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">OnArticleSelectedListener</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onArticleSelected</span><span class="params">(Uri articleUri)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后让Activity实现该接口以达到通知回调目的，为了确保Activity实现该接口，需要重写onAttach(activity)方法，这个方法在添加Fragment到Activity时调用，在该方法中实例化接口，如果Activity没有实现接口则会报错。然后，Fragment可以通过mListener发送消息回调到Activity了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">FragmentA</span> <span class="keyword">extends</span> <span class="title">ListFragment</span> </span>&#123;</span><br><span class="line">    OnArticleSelectedListener mListener;</span><br><span class="line">    ...</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onAttach</span><span class="params">(Activity activity)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onAttach(activity);</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            mListener = (OnArticleSelectedListener) activity;</span><br><span class="line">        &#125; <span class="keyword">catch</span> (ClassCastException e) &#123;</span><br><span class="line">            <span class="keyword">throw</span> <span class="keyword">new</span> ClassCastException(activity.toString() + <span class="string">" must implement OnArticleSelectedListener"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/01/14/Stream/" rel="next" title="Java输入输出流">
+                  <i class="fa fa-chevron-left"></i> Java输入输出流
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/01/24/Javabyteint/" rel="prev" title="Java byte数组转有符号int">
+                  Java byte数组转有符号int <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#什么是Fragment"><span class="nav-number">1.</span> <span class="nav-text">什么是Fragment</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Fragment受限于Activity"><span class="nav-number">1.0.1.</span> <span class="nav-text">Fragment受限于Activity</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#添加方式"><span class="nav-number">1.0.2.</span> <span class="nav-text">添加方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#创建Fragment"><span class="nav-number">2.</span> <span class="nav-text">创建Fragment</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#添加用户界面"><span class="nav-number">3.</span> <span class="nav-text">添加用户界面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#将Fragment添加到Activity"><span class="nav-number">4.</span> <span class="nav-text">将Fragment添加到Activity</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Layout布局文件方式"><span class="nav-number">4.0.1.</span> <span class="nav-text">Layout布局文件方式</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Java代码添加到ViewGroup方式"><span class="nav-number">4.0.2.</span> <span class="nav-text">Java代码添加到ViewGroup方式</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#管理Fragment"><span class="nav-number">5.</span> <span class="nav-text">管理Fragment</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#执行其它事务操作"><span class="nav-number">6.</span> <span class="nav-text">执行其它事务操作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Fragment与Activity之间的通信"><span class="nav-number">7.</span> <span class="nav-text">Fragment与Activity之间的通信</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#回调法通信"><span class="nav-number">7.0.1.</span> <span class="nav-text">回调法通信</span></a></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

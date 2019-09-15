@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在 Android 开发 中，许多时候不可避免需要展示 富文本 内容，通常我们用到 WebView 加载网页的形式来实现，比如新闻类应用的新闻详情页、休闲软件的阅读界面等等，几乎你看到的图文混杂的富文本页面都是由网页实现的。 但不知道读者有没有发现，这些网页和 Native 交互起来很自然，完全不像网页。比如点击网页的图片跳转到图片浏览界面、标题预加载图片懒加载，包括我司阅读软件的阅读界面的点击查">
+<meta name="keywords" content="Android,前端">
+<meta property="og:type" content="article">
+<meta property="og:title" content="JavaScript 处理 HTML DOM">
+<meta property="og:url" content="http://yoursite.com/2018/01/04/JavaScriptHTMLDOM/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="在 Android 开发 中，许多时候不可避免需要展示 富文本 内容，通常我们用到 WebView 加载网页的形式来实现，比如新闻类应用的新闻详情页、休闲软件的阅读界面等等，几乎你看到的图文混杂的富文本页面都是由网页实现的。 但不知道读者有没有发现，这些网页和 Native 交互起来很自然，完全不像网页。比如点击网页的图片跳转到图片浏览界面、标题预加载图片懒加载，包括我司阅读软件的阅读界面的点击查">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://www.w3school.com.cn/i/ct_htmltree.gif">
+<meta property="og:image" content="http://cdn.wuhaojie.top/180104reading.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.762Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="JavaScript 处理 HTML DOM">
+<meta name="twitter:description" content="在 Android 开发 中，许多时候不可避免需要展示 富文本 内容，通常我们用到 WebView 加载网页的形式来实现，比如新闻类应用的新闻详情页、休闲软件的阅读界面等等，几乎你看到的图文混杂的富文本页面都是由网页实现的。 但不知道读者有没有发现，这些网页和 Native 交互起来很自然，完全不像网页。比如点击网页的图片跳转到图片浏览界面、标题预加载图片懒加载，包括我司阅读软件的阅读界面的点击查">
+<meta name="twitter:image" content="http://www.w3school.com.cn/i/ct_htmltree.gif">
+  <link rel="canonical" href="http://yoursite.com/2018/01/04/JavaScriptHTMLDOM/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>JavaScript 处理 HTML DOM | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/01/04/JavaScriptHTMLDOM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">JavaScript 处理 HTML DOM
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-01-04 12:00:00" itemprop="dateCreated datePublished" datetime="2018-01-04T12:00:00+08:00">2018-01-04</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/前端/" itemprop="url" rel="index"><span itemprop="name">前端</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/前端/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在 <code>Android 开发</code> 中，许多时候不可避免需要展示 <code>富文本</code> 内容，通常我们用到 WebView 加载网页的形式来实现，比如新闻类应用的<strong>新闻详情页</strong>、休闲软件的<strong>阅读界面</strong>等等，几乎你看到的图文混杂的富文本页面都是由网页实现的。</p>
+<p>但不知道读者有没有发现，这些网页和 Native 交互起来很自然，完全不像网页。比如点击网页的图片跳转到图片浏览界面、标题预加载图片懒加载，包括我司阅读软件的阅读界面的点击查词。本文将讲述如何通过 JavaScript 处理 HTML 的 DOM 结构来实现与 Native 更好地交互。</p>
+<a id="more"></a>
+
+<h1 id="1-概览"><a href="#1-概览" class="headerlink" title="1. 概览"></a>1. 概览</h1><h2 id="1-1-DOM-是什么"><a href="#1-1-DOM-是什么" class="headerlink" title="1.1 DOM 是什么"></a>1.1 DOM 是什么</h2><p>DOM（Document Object Model）是浏览器加载网页时构造的对象树结构，如图:</p>
+<p><img src="http://www.w3school.com.cn/i/ct_htmltree.gif" alt="DOM"></p>
+<p>HTML 本身也是 XML 格式，熟悉 XML 解析的读者对这个可能并不陌生，每一个标签都被抽象为一个 Element，它具备它包含的文本和它具有的属性。</p>
+<h2 id="1-2-JavaScript-能对其做什么"><a href="#1-2-JavaScript-能对其做什么" class="headerlink" title="1.2 JavaScript 能对其做什么"></a>1.2 JavaScript 能对其做什么</h2><p>JavaScript 获得了足够的能力来创建动态的 HTML: </p>
+<ul>
+<li>JavaScript 能够改变页面中的所有 HTML 元素</li>
+<li>JavaScript 能够改变页面中的所有 HTML 属性</li>
+<li>JavaScript 能够改变页面中的所有 CSS 样式</li>
+<li>JavaScript 能够对页面中的所有事件做出反应</li>
+</ul>
+<h2 id="1-3-三种取得-HTML-元素的方法"><a href="#1-3-三种取得-HTML-元素的方法" class="headerlink" title="1.3 三种取得 HTML 元素的方法"></a>1.3 三种取得 HTML 元素的方法</h2><p>（1）通过 id 查找</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x=<span class="built_in">document</span>.getElementById(<span class="string">"intro"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（2）通过标签名查找</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x=<span class="built_in">document</span>.getElementsByTagName(<span class="string">"p"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（3）通过 class 查找</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> x=<span class="built_in">document</span>.getElementsByClassName(<span class="string">'cc'</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-4-操作-HTML-元素"><a href="#1-4-操作-HTML-元素" class="headerlink" title="1.4 操作 HTML 元素"></a>1.4 操作 HTML 元素</h2><p>（1）改变 HTML 输出流</p>
+<p>在 JavaScript 中，document.write() 可用于直接向 HTML 输出流写内容，注意会覆盖网页现有内容</p>
+<p>（2）改变 HTML 内容</p>
+<p>修改 HTML 内容的最简单的方法时使用 innerHTML 属性，例如: </p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"p1"</span>&gt;</span>Hello World!<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="built_in">document</span>.getElementById(<span class="string">"p1"</span>).innerHTML=<span class="string">"New text!"</span>;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>（3）改变 HTML 属性</p>
+<p>Element#attributeName = value 语法用来改变 HTML 元素的属性，例如:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;!DOCTYPE html&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">html</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">body</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">img</span> <span class="attr">id</span>=<span class="string">"image"</span> <span class="attr">src</span>=<span class="string">"smiley.gif"</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="built_in">document</span>.getElementById(<span class="string">"image"</span>).src=<span class="string">"landscape.jpg"</span>;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">body</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">html</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-5-操作-CSS-元素"><a href="#1-5-操作-CSS-元素" class="headerlink" title="1.5 操作 CSS 元素"></a>1.5 操作 CSS 元素</h2><p>Element#style.propertyName = newStyle 语法用来改变样式，例如:</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span> <span class="attr">id</span>=<span class="string">"id1"</span>&gt;</span>My Heading 1<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">button</span> <span class="attr">type</span>=<span class="string">"button"</span> <span class="attr">onclick</span>=<span class="string">"document.getElementById('id1').style.color='red'"</span>&gt;</span></span><br><span class="line">点击这里</span><br><span class="line"><span class="tag">&lt;/<span class="name">button</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h2 id="1-6-DOM-事件"><a href="#1-6-DOM-事件" class="headerlink" title="1.6 DOM 事件"></a>1.6 DOM 事件</h2><p>HTML DOM 使 JavaScript 有能力对 HTML 事件做出反应，如:</p>
+<ul>
+<li>当用户点击鼠标时</li>
+<li>当网页已加载时</li>
+<li>当图像已加载时</li>
+<li>当鼠标移动到元素上时</li>
+<li>当输入字段被改变时</li>
+<li>当提交 HTML 表单时</li>
+<li>当用户触发按键时</li>
+</ul>
+<p>此处讲述点击事件，其他事件类似，可<a href="http://www.w3school.com.cn/jsref/dom_obj_event.asp" target="_blank" rel="noopener">前往 W3School </a>参考</p>
+<p>（1）HTML 声明事件</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">h1</span> <span class="attr">onclick</span>=<span class="string">"this.innerHTML='谢谢!'"</span>&gt;</span>请点击该文本<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br><span class="line">or</span><br><span class="line"><span class="tag">&lt;<span class="name">h1</span> <span class="attr">onclick</span>=<span class="string">"changetext(this)"</span>&gt;</span>请点击该文本<span class="tag">&lt;/<span class="name">h1</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>（2）JS 添加事件</p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">document</span>.getElementById(<span class="string">"myBtn"</span>).onclick=<span class="function"><span class="keyword">function</span>(<span class="params"></span>)</span>&#123;</span><br><span class="line">  displayDate(<span class="keyword">this</span>)	<span class="comment">// this 指的是 Element 元素</span></span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h2 id="1-7-添加和删除"><a href="#1-7-添加和删除" class="headerlink" title="1.7 添加和删除"></a>1.7 添加和删除</h2><p>（1）创建新的 HTML 元素</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"div1"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"p1"</span>&gt;</span>这是一个段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"p2"</span>&gt;</span>这是另一个段落<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> para=<span class="built_in">document</span>.createElement(<span class="string">"p"</span>);</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> node=<span class="built_in">document</span>.createTextNode(<span class="string">"这是新段落。"</span>);</span></span><br><span class="line">para.appendChild(node);</span><br><span class="line"></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> element=<span class="built_in">document</span>.getElementById(<span class="string">"div1"</span>);</span></span><br><span class="line">element.appendChild(para);</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>（2）删除已有的 HTML 元素</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">id</span>=<span class="string">"div1"</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"p1"</span>&gt;</span>这是一个段落。<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">p</span> <span class="attr">id</span>=<span class="string">"p2"</span>&gt;</span>这是另一个段落。<span class="tag">&lt;/<span class="name">p</span>&gt;</span></span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;<span class="name">script</span>&gt;</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> parent=<span class="built_in">document</span>.getElementById(<span class="string">"div1"</span>);</span></span><br><span class="line"><span class="javascript"><span class="keyword">var</span> child=<span class="built_in">document</span>.getElementById(<span class="string">"p1"</span>);</span></span><br><span class="line">parent.removeChild(child);</span><br><span class="line"><span class="tag">&lt;/<span class="name">script</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>父节点可通过 parentNode 属性寻找到，如上述代码可以简单实现: </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> child=<span class="built_in">document</span>.getElementById(<span class="string">"p1"</span>);</span><br><span class="line">child.parentNode.removeChild(child);</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-应用"><a href="#2-应用" class="headerlink" title="2. 应用"></a>2. 应用</h1><p>在 Android 中，应用思路主要是通过执行 JavaScript 代码为网页 DOM 添加事件，回调我们的 Native 接口，此处以为网页添加单词点击事件为例。</p>
+<p><img src="http://cdn.wuhaojie.top/180104reading.jpg" alt="百词斩爱阅读"></p>
+<h2 id="2-1-第一步，分析网页"><a href="#2-1-第一步，分析网页" class="headerlink" title="2.1 第一步，分析网页"></a>2.1 第一步，分析网页</h2><p>后端接口返回的 JSON 数据中，其中需要我们展示的便是这段 HTML 代码，我们的目的是为每个单词添加点击事件。</p>
+<figure class="highlight html"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">div</span> <span class="attr">class</span>=<span class="string">"paragraph"</span> <span class="attr">id</span>=<span class="string">"para_2"</span>&gt;</span></span><br><span class="line">	 <span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424590"</span> <span class="attr">class</span>=<span class="string">"span"</span> <span class="attr">rwt_id</span>=<span class="string">"62989"</span> <span class="attr">word</span>=<span class="string">"in"</span>  <span class="attr">trans</span>=<span class="string">"n.知情者；adj.在里面的，时髦的"</span> <span class="attr">pnc</span>=<span class="string">"/ɪn/"</span> <span class="attr">audio_src</span>=<span class="string">"https://ws.bczcdn.com/r/in.mp3"</span> <span class="attr">lv</span>=<span class="string">"3"</span> &gt;</span></span><br><span class="line">	 in<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	 <span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424592"</span> <span class="attr">class</span>=<span class="string">"span"</span> <span class="attr">rwt_id</span>=<span class="string">"82049"</span> <span class="attr">word</span>=<span class="string">"my"</span>  <span class="attr">trans</span>=<span class="string">"adj. 我的 (I的所有格形式)"</span> <span class="attr">pnc</span>=<span class="string">"/maɪ/"</span> <span class="attr">audio_src</span>=<span class="string">"http://7n.bczcdn.com/dict/audio/n_us/bXk=.mp3"</span> <span class="attr">lv</span>=<span class="string">"3"</span> &gt;</span></span><br><span class="line">	 my<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	 <span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424594"</span> <span class="attr">class</span>=<span class="string">"span"</span> <span class="attr">rwt_id</span>=<span class="string">"19648"</span> <span class="attr">word</span>=<span class="string">"case"</span>  <span class="attr">trans</span>=<span class="string">"n. 例子；情况；案例"</span> <span class="attr">pnc</span>=<span class="string">"/keɪs/"</span> <span class="attr">audio_src</span>=<span class="string">"http://7n.bczcdn.com/dict/audio/n_us/Y2FzZQ==.mp3"</span> <span class="attr">lv</span>=<span class="string">"3"</span> &gt;</span></span><br><span class="line">	 case<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	<span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424595"</span> <span class="attr">class</span>=<span class="string">"tm"</span> &gt;</span></span><br><span class="line">	,<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	 <span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424597"</span> <span class="attr">class</span>=<span class="string">"span"</span> <span class="attr">rwt_id</span>=<span class="string">"127815"</span> <span class="attr">word</span>=<span class="string">"too"</span>  <span class="attr">trans</span>=<span class="string">"adv.太，也，而且，很"</span> <span class="attr">pnc</span>=<span class="string">"/tuː/"</span> <span class="attr">audio_src</span>=<span class="string">"https://ws.bczcdn.com/r/too.mp3"</span> <span class="attr">lv</span>=<span class="string">"3"</span> &gt;</span></span><br><span class="line">	 too<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	 <span class="tag">&lt;<span class="name">span</span> <span class="attr">cid</span>=<span class="string">"424599"</span> <span class="attr">class</span>=<span class="string">"span"</span> <span class="attr">rwt_id</span>=<span class="string">"39267"</span> <span class="attr">word</span>=<span class="string">"early"</span>  <span class="attr">trans</span>=<span class="string">"adj.早的，早期的；adv.早，先"</span> <span class="attr">pnc</span>=<span class="string">"/ˈɜːrli/"</span> <span class="attr">audio_src</span>=<span class="string">"https://7n.bczcdn.com/r/early.mp3"</span> <span class="attr">lv</span>=<span class="string">"3"</span> &gt;</span></span><br><span class="line">	 early<span class="tag">&lt;/<span class="name">span</span>&gt;</span></span><br><span class="line">	 ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">div</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>简单分析很容易发现，每一个单词都是一个 span 标签，或者 class 都为 “span”，而且我们需要展示的内容全部都在标签属性中体现了，所以我们选择 span 标签下手。</p>
+<h2 id="2-2-第二步，准备添加点击的-JS-代码"><a href="#2-2-第二步，准备添加点击的-JS-代码" class="headerlink" title="2.2 第二步，准备添加点击的 JS 代码"></a>2.2 第二步，准备添加点击的 JS 代码</h2><p>JS 代码很简单，找出所有的 span 标签元素，为每个标签元素添加 onclick 事件属性即可: </p>
+<figure class="highlight javascript"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">var</span> tags = <span class="built_in">document</span>.getElementsByTagName(<span class="string">'span'</span>)</span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">var</span> i = <span class="number">0</span>; i &lt; tags.length; i++) &#123;</span><br><span class="line">	tags[i].onclick = <span class="function"><span class="keyword">function</span>(<span class="params"></span>) </span>&#123;</span><br><span class="line">		<span class="built_in">window</span>.read.onWordClick(<span class="keyword">this</span>.word)	<span class="comment">// 回调 Native</span></span><br><span class="line">	&#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，在 Native 端我们要在网页加载完毕后执行这段代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> <span class="class"><span class="keyword">class</span> <span class="title">DetailWebClient</span> <span class="keyword">extends</span> <span class="title">WebViewClient</span> </span>&#123;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onPageFinished</span><span class="params">(WebView view, String url)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onPageFinished(view, url);</span><br><span class="line">        view.loadUrl(<span class="string">"javascript:(function()&#123;"</span> + CODE + <span class="string">"&#125;)()"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-3-第三步，声明-Native-接口"><a href="#2-3-第三步，声明-Native-接口" class="headerlink" title="2.3 第三步，声明 Native 接口"></a>2.3 第三步，声明 Native 接口</h2><p>通过 WebView 的 addJavascriptInterface() 方法可指定接口，代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">webview.addJavascriptInterface(<span class="keyword">this</span>, <span class="string">"detail"</span>);</span><br><span class="line"></span><br><span class="line"><span class="meta">@JavascriptInterface</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onWordClick</span><span class="params">(String word)</span> </span>&#123;</span><br><span class="line">    Log.d(TAG, <span class="string">"onclick: "</span> + word);</span><br><span class="line">  	<span class="comment">// do some thing</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>本文主要讲解了 WebView 是如何与网页更好交互的，通常的手段是执行 JavaScript 代码操作 DOM，为 HTML 元素添加点击事件，而在事件中回调 Native 实现的。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/前端/" rel="tag"># 前端</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/12/25/MyBlogUpgrade/" rel="next" title="我的博客网站大升级">
+                  <i class="fa fa-chevron-left"></i> 我的博客网站大升级
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/01/22/MongoDBLearning/" rel="prev" title="MongoDB 初探">
+                  MongoDB 初探 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-概览"><span class="nav-number">1.</span> <span class="nav-text">1. 概览</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-DOM-是什么"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 DOM 是什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-JavaScript-能对其做什么"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 JavaScript 能对其做什么</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-三种取得-HTML-元素的方法"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 三种取得 HTML 元素的方法</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-操作-HTML-元素"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 操作 HTML 元素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-5-操作-CSS-元素"><span class="nav-number">1.5.</span> <span class="nav-text">1.5 操作 CSS 元素</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-6-DOM-事件"><span class="nav-number">1.6.</span> <span class="nav-text">1.6 DOM 事件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-7-添加和删除"><span class="nav-number">1.7.</span> <span class="nav-text">1.7 添加和删除</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-应用"><span class="nav-number">2.</span> <span class="nav-text">2. 应用</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-第一步，分析网页"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 第一步，分析网页</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-第二步，准备添加点击的-JS-代码"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 第二步，准备添加点击的 JS 代码</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-第三步，声明-Native-接口"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 第三步，声明 Native 接口</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">3.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

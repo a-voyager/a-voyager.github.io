@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="0. 前言本文将对github上 liuling开发的基于Material Design和MVP的《简易新闻》源码进行简要分析，通过本文你将学到:  阅读应用源码的步骤 RecyclerView NavigationView 下拉刷新和上拉加载 Material过渡动画 CollapsingToolbarLayout">
+<meta name="keywords" content="Android,源码分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="《简易新闻》源码分析">
+<meta property="og:url" content="http://yoursite.com/2016/04/25/SimpleNewsCode/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="0. 前言本文将对github上 liuling开发的基于Material Design和MVP的《简易新闻》源码进行简要分析，通过本文你将学到:  阅读应用源码的步骤 RecyclerView NavigationView 下拉刷新和上拉加载 Material过渡动画 CollapsingToolbarLayout">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160425Project.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160425swipe.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160516main.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160516menu.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160516mainblue.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160520layout.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160520detail.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160520weather.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.760Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="《简易新闻》源码分析">
+<meta name="twitter:description" content="0. 前言本文将对github上 liuling开发的基于Material Design和MVP的《简易新闻》源码进行简要分析，通过本文你将学到:  阅读应用源码的步骤 RecyclerView NavigationView 下拉刷新和上拉加载 Material过渡动画 CollapsingToolbarLayout">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160425Project.png">
+  <link rel="canonical" href="http://yoursite.com/2016/04/25/SimpleNewsCode/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>《简易新闻》源码分析 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/04/25/SimpleNewsCode/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">《简易新闻》源码分析
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-04-25 13:00:00" itemprop="dateCreated datePublished" datetime="2016-04-25T13:00:00+08:00">2016-04-25</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/源码分析/" itemprop="url" rel="index"><span itemprop="name">源码分析</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-前言"><a href="#0-前言" class="headerlink" title="0. 前言"></a>0. 前言</h1><p>本文将对github上 <code>liuling</code>开发的基于Material Design和MVP的《简易新闻》<a href="https://github.com/a-voyager/SimpleNews" target="_blank" rel="noopener">源码</a>进行简要分析，通过本文你将学到:</p>
+<ul>
+<li>阅读应用源码的步骤</li>
+<li>RecyclerView</li>
+<li>NavigationView</li>
+<li>下拉刷新和上拉加载</li>
+<li>Material过渡动画</li>
+<li>CollapsingToolbarLayout</li>
+</ul>
+<a id="more"></a>
+<h1 id="1-寻找入口"><a href="#1-寻找入口" class="headerlink" title="1. 寻找入口"></a>1. 寻找入口</h1><p>分析一个应用就是从MainActivity下手，那么如何找到MainActivity呢？当然还是通过Manifest文件，不过，在进入Manifest文件前，我们先来看看工程的一个结构。</p>
+<h2 id="1-1-工程总览"><a href="#1-1-工程总览" class="headerlink" title="1.1 工程总览"></a>1.1 工程总览</h2><p><img src="http://cdn.wuhaojie.top/160425Project.png" alt="工程结构"><br>工程的目录结构如上图所示，有两个Module，一个是应用本身，还有一个是导入的swipeback库，用于滑动返回，如图:<br><img src="http://cdn.wuhaojie.top/160425swipe.png" alt="滑动返回效果图"></p>
+<h2 id="1-2-Manifest文件"><a href="#1-2-Manifest文件" class="headerlink" title="1.2 Manifest文件"></a>1.2 Manifest文件</h2><h3 id="1-2-1-权限声明"><a href="#1-2-1-权限声明" class="headerlink" title="1.2.1 权限声明"></a>1.2.1 权限声明</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.INTERNET"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_COARSE_LOCATION"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_FINE_LOCATION"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_NETWORK_STATE"</span> /&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.ACCESS_WIFI_STATE"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>首先声明了权限，分别是网络相关和位置相关的权限。</p>
+<h3 id="1-2-2-应用层"><a href="#1-2-2-应用层" class="headerlink" title="1.2.2 应用层"></a>1.2.2 应用层</h3><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">application</span></span></span><br><span class="line"><span class="tag">    <span class="attr">...</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:supportsRtl</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:theme</span>=<span class="string">"@style/AppTheme"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">activity</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:name</span>=<span class="string">".main.widget.MainActivity"</span> <span class="attr">...</span> &gt;</span></span><br><span class="line">    ...</span><br><span class="line">    <span class="tag">&lt;/<span class="name">activity</span>&gt;</span></span><br><span class="line">    ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这里Application标签中有一个属性 <code>android:supportsRtl=&quot;true&quot;</code> 是什么意思呢？这是Android 4.2的一个新特性 layoutRtl，主要是方便开发者去支持阿拉伯语/波斯语等从右到左的阅读习惯。<br>接下来指明了两个主要的Activity:</p>
+<ul>
+<li>MainActivity</li>
+<li>NewsDetailActivity</li>
+</ul>
+<h1 id="2-MainActivity"><a href="#2-MainActivity" class="headerlink" title="2. MainActivity"></a>2. MainActivity</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MainActivity</span> <span class="keyword">extends</span> <span class="title">AppCompatActivity</span> <span class="keyword">implements</span> <span class="title">MainView</span></span></span><br></pre></td></tr></table></figure>
+
+<p>主Activity实现了MainView接口，所以我们来先看看该接口:<br>*</p>
+<h2 id="2-1-MainView接口"><a href="#2-1-MainView接口" class="headerlink" title="2.1 MainView接口"></a>2.1 MainView接口</h2><p>接口很简单，包含四个方法声明，分别是主界面的四个拨动页面。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">MainView</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">switch2News</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">switch2Images</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">switch2Weather</span><span class="params">()</span></span>;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">switch2About</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h2 id="2-2-onCreate-方法"><a href="#2-2-onCreate-方法" class="headerlink" title="2.2 onCreate()方法"></a>2.2 onCreate()方法</h2><h3 id="2-2-1-布局文件"><a href="#2-2-1-布局文件" class="headerlink" title="2.2.1 布局文件"></a>2.2.1 布局文件</h3><p>首先来看主布局文件，布局可以说是简单易懂，清晰明了。一个DrawerLayout中夹了协调布局包裹的FrameLayout作为主界面和一个NavigationView。<br><img src="http://cdn.wuhaojie.top/160516main.png" alt="主界面"></p>
+<p>其中值得注意的是就是这个NavigationView:<br><img src="http://cdn.wuhaojie.top/160516menu.png" alt="导航抽屉界面"></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">android.support.design.widget.NavigationView</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">"@+id/navigation_view"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_gravity</span>=<span class="string">"start"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">app:headerLayout</span>=<span class="string">"@layout/navigation_header"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">app:menu</span>=<span class="string">"@menu/navigation_menu"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+
+<ul>
+<li><p><code>app:headerLayout</code> 属性: 头布局文件，及抽屉上方的个人头像。说起头像，就要用到CircleImageView，相信也会有读者像我一样曾经好奇过CircleImageView用来干什么，怎么用吧，没错，就是这样用的:</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">de.hdodenhof.circleimageview.CircleImageView</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:id</span>=<span class="string">"@+id/profile_image"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"72dp"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"72dp"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_marginTop</span>=<span class="string">"20dp"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:src</span>=<span class="string">"@drawable/protrait"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">app:border_color</span>=<span class="string">"@color/primary_light"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">app:border_width</span>=<span class="string">"2dp"</span> /&gt;</span></span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>app:menu</code> 属性: 使用菜单来填充选项，大家就不要以为只可以使用ListView自定义来实现菜单选择咯，但是笔者认为这里有个缺陷就是，抽屉会默认遮住状态栏和Toolbar。</p>
+</li>
+</ul>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">group</span> <span class="attr">android:checkableBehavior</span>=<span class="string">"single"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">item</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:id</span>=<span class="string">"@+id/navigation_item_news"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:icon</span>=<span class="string">"@drawable/ic_assessment_white_24dp"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:checked</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:title</span>=<span class="string">"@string/navigation_news"</span> /&gt;</span></span><br><span class="line">    ...</span><br><span class="line"><span class="tag">&lt;/<span class="name">group</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-2-初始化视图"><a href="#2-2-2-初始化视图" class="headerlink" title="2.2.2 初始化视图"></a>2.2.2 初始化视图</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">mDrawerLayout = (DrawerLayout) findViewById(R.id.drawer_layout);</span><br><span class="line">mDrawerToggle = <span class="keyword">new</span> ActionBarDrawerToggle(<span class="keyword">this</span>, mDrawerLayout, mToolbar, R.string.drawer_open,</span><br><span class="line">        R.string.drawer_close);</span><br><span class="line">mDrawerToggle.syncState();</span><br><span class="line">mDrawerLayout.setDrawerListener(mDrawerToggle);</span><br><span class="line">mNavigationView = (NavigationView) findViewById(R.id.navigation_view);</span><br><span class="line">setupDrawerContent(mNavigationView);</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setupDrawerContent</span><span class="params">(NavigationView navigationView)</span> </span>&#123;</span><br><span class="line">    navigationView.setNavigationItemSelectedListener(</span><br><span class="line">            <span class="keyword">new</span> NavigationView.OnNavigationItemSelectedListener() &#123;</span><br><span class="line">                <span class="meta">@Override</span></span><br><span class="line">                <span class="function"><span class="keyword">public</span> <span class="keyword">boolean</span> <span class="title">onNavigationItemSelected</span><span class="params">(MenuItem menuItem)</span> </span>&#123;</span><br><span class="line">                    mMainPresenter.switchNavigation(menuItem.getItemId());</span><br><span class="line">                    menuItem.setChecked(<span class="keyword">true</span>);</span><br><span class="line">                    mDrawerLayout.closeDrawers();</span><br><span class="line">                    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">                &#125;</span><br><span class="line">            &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先实例化了ActionBar开关，同时调用syncState()同步状态，后面对mNavigationView设置了监听，实现了切换选项卡的效果。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// in class MainPresenterImpl</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">switchNavigation</span><span class="params">(<span class="keyword">int</span> id)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (id) &#123;</span><br><span class="line">        <span class="keyword">case</span> R.id.navigation_item_news:</span><br><span class="line">            mMainView.switch2News();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> R.id.navigation_item_images:</span><br><span class="line">            mMainView.switch2Images();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> R.id.navigation_item_weather:</span><br><span class="line">            mMainView.switch2Weather();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">case</span> R.id.navigation_item_about:</span><br><span class="line">            mMainView.switch2About();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        <span class="keyword">default</span>:</span><br><span class="line">            mMainView.switch2News();</span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="2-2-3-切换"><a href="#2-2-3-切换" class="headerlink" title="2.2.3 切换"></a>2.2.3 切换</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">switch2News</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    getSupportFragmentManager().beginTransaction().replace(R.id.frame_content, <span class="keyword">new</span> NewsFragment()).commit();</span><br><span class="line">    mToolbar.setTitle(R.string.navigation_news);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>四个选项卡切换Fragment即可，那我们依次来看看这几个Fragment。</p>
+<h1 id="3-新闻界面"><a href="#3-新闻界面" class="headerlink" title="3. 新闻界面"></a>3. 新闻界面</h1><h2 id="3-1-布局文件"><a href="#3-1-布局文件" class="headerlink" title="3.1 布局文件"></a>3.1 布局文件</h2><figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">android.support.design.widget.CoordinatorLayout</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:app</span>=<span class="string">"http://schemas.android.com/apk/res-auto"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span>&gt;</span></span><br><span class="line">    <span class="tag">&lt;<span class="name">android.support.design.widget.AppBarLayout</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:theme</span>=<span class="string">"@style/ThemeOverlay.AppCompat.Dark.ActionBar"</span>&gt;</span></span><br><span class="line">        <span class="tag">&lt;<span class="name">android.support.design.widget.TabLayout</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:id</span>=<span class="string">"@+id/tab_layout"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">"?attr/actionBarSize"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">app:tabIndicatorColor</span>=<span class="string">"@color/icons"</span>/&gt;</span></span><br><span class="line">    <span class="tag">&lt;/<span class="name">android.support.design.widget.AppBarLayout</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">android.support.v4.view.ViewPager</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:id</span>=<span class="string">"@+id/viewpager"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">app:layout_behavior</span>=<span class="string">"@string/appbar_scrolling_view_behavior"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">android.support.design.widget.CoordinatorLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意点</p>
+</blockquote>
+<ul>
+<li>tabIndicatorColor: TabLayout所选标签标志颜色，一张图看懂，此处改为蓝色<br><img src="http://cdn.wuhaojie.top/160516mainblue.png" alt="tabIndicatorColor"><blockquote>
+<p><br><br></p>
+</blockquote>
+</li>
+<li>layout_behavior: 滚动时自动消失Toolbar</li>
+</ul>
+<h2 id="3-2-视图初始化"><a href="#3-2-视图初始化" class="headerlink" title="3.2 视图初始化"></a>3.2 视图初始化</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">setupViewPager</span><span class="params">(ViewPager mViewPager)</span> </span>&#123;</span><br><span class="line">    <span class="comment">//Fragment中嵌套使用Fragment一定要使用getChildFragmentManager(),否则会有问题</span></span><br><span class="line">    MyPagerAdapter adapter = <span class="keyword">new</span> MyPagerAdapter(getChildFragmentManager());</span><br><span class="line">    adapter.addFragment(NewsListFragment.newInstance(NEWS_TYPE_TOP), getString(R.string.top));</span><br><span class="line">    adapter.addFragment(NewsListFragment.newInstance(NEWS_TYPE_NBA), getString(R.string.nba));</span><br><span class="line">    adapter.addFragment(NewsListFragment.newInstance(NEWS_TYPE_CARS), getString(R.string.cars));</span><br><span class="line">    adapter.addFragment(NewsListFragment.newInstance(NEWS_TYPE_JOKES), getString(R.string.jokes));</span><br><span class="line">    mViewPager.setAdapter(adapter);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="class"><span class="keyword">class</span> <span class="title">MyPagerAdapter</span> <span class="keyword">extends</span> <span class="title">FragmentPagerAdapter</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;Fragment&gt; mFragments = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">final</span> List&lt;String&gt; mFragmentTitles = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">MyPagerAdapter</span><span class="params">(FragmentManager fm)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(fm);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">addFragment</span><span class="params">(Fragment fragment, String title)</span> </span>&#123;</span><br><span class="line">        mFragments.add(fragment);</span><br><span class="line">        mFragmentTitles.add(title);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> Fragment <span class="title">getItem</span><span class="params">(<span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mFragments.get(position);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getCount</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mFragments.size();</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> CharSequence <span class="title">getPageTitle</span><span class="params">(<span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">return</span> mFragmentTitles.get(position);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>值得学习的是Adapter的写法，它将mFragments和mFragmentTitles两个List整合到了Adapter内部。还有要注意Fragment中嵌套使用Fragment一定要使用getChildFragmentManager()，接下来看其子项Fragment。</p>
+<h2 id="3-3-NewsListFragment"><a href="#3-3-NewsListFragment" class="headerlink" title="3.3 NewsListFragment"></a>3.3 NewsListFragment</h2><h3 id="3-3-1-布局"><a href="#3-3-1-布局" class="headerlink" title="3.3.1 布局"></a>3.3.1 布局</h3><p>布局很简单，一个SwipeRefreshLayout包裹RecyclerView。</p>
+<h3 id="3-3-2-初始化视图"><a href="#3-3-2-初始化视图" class="headerlink" title="3.3.2 初始化视图"></a>3.3.2 初始化视图</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Nullable</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> View <span class="title">onCreateView</span><span class="params">(LayoutInflater inflater, ViewGroup container, Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">    View view = inflater.inflate(R.layout.fragment_newslist, <span class="keyword">null</span>);</span><br><span class="line"></span><br><span class="line">    mSwipeRefreshWidget = (SwipeRefreshLayout) view.findViewById(R.id.swipe_refresh_widget);</span><br><span class="line">    mSwipeRefreshWidget.setColorSchemeResources(R.color.primary,</span><br><span class="line">            R.color.primary_dark, R.color.primary_light,</span><br><span class="line">            R.color.accent);</span><br><span class="line">    mSwipeRefreshWidget.setOnRefreshListener(<span class="keyword">this</span>);</span><br><span class="line"></span><br><span class="line">    mRecyclerView = (RecyclerView)view.findViewById(R.id.recycle_view);</span><br><span class="line">    mRecyclerView.setHasFixedSize(<span class="keyword">true</span>);</span><br><span class="line"></span><br><span class="line">    mLayoutManager = <span class="keyword">new</span> LinearLayoutManager(getActivity());</span><br><span class="line">    mRecyclerView.setLayoutManager(mLayoutManager);</span><br><span class="line"></span><br><span class="line">    mRecyclerView.setItemAnimator(<span class="keyword">new</span> DefaultItemAnimator());</span><br><span class="line">    mAdapter = <span class="keyword">new</span> NewsAdapter(getActivity().getApplicationContext());</span><br><span class="line">    mAdapter.setOnItemClickListener(mOnItemClickListener);</span><br><span class="line">    mRecyclerView.setAdapter(mAdapter);</span><br><span class="line">    mRecyclerView.addOnScrollListener(mOnScrollListener);</span><br><span class="line">    onRefresh();</span><br><span class="line">    <span class="keyword">return</span> view;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>值得提的是mSwipeRefreshWidget.setColorSchemeResources()方法可以设置刷新等待条的颜色；mRecyclerView.setItemAnimator()可以设置增加卡片动画。</p>
+<h3 id="3-3-3-点击事件"><a href="#3-3-3-点击事件" class="headerlink" title="3.3.3 点击事件"></a>3.3.3 点击事件</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onItemClick</span><span class="params">(View view, <span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">    NewsBean news = mAdapter.getItem(position);</span><br><span class="line">    Intent intent = <span class="keyword">new</span> Intent(getActivity(), NewsDetailActivity.class);</span><br><span class="line">    intent.putExtra(<span class="string">"news"</span>, news);</span><br><span class="line"></span><br><span class="line">    View transitionView = view.findViewById(R.id.ivNews);</span><br><span class="line">    ActivityOptionsCompat options =</span><br><span class="line">            ActivityOptionsCompat.makeSceneTransitionAnimation(getActivity(),</span><br><span class="line">                    transitionView, getString(R.string.transition_news_img));</span><br><span class="line"></span><br><span class="line">    ActivityCompat.startActivity(getActivity(), intent, options.toBundle());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>点击时，通过带有NewsBean参数的Intent启动新闻详情Activity，此外，在跳转页面的同时会有一个动画，通过以上代码可以实现动画。具体流程是先取得CardView中的ImageView，然后通过ActivityOptionsCompat makeSceneTransitionAnimation()方法取得过渡动画参数，并加在startActivity中。</p>
+<h3 id="3-3-4-上拉加载实现"><a href="#3-3-4-上拉加载实现" class="headerlink" title="3.3.4 上拉加载实现"></a>3.3.4 上拉加载实现</h3><p>上拉加载更多的实现主要有两个关键部分，一个是滚动事件的监听，另一个是Adapter内的视图创建。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">private</span> RecyclerView.OnScrollListener mOnScrollListener = <span class="keyword">new</span> RecyclerView.OnScrollListener() &#123;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> lastVisibleItem;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrolled</span><span class="params">(RecyclerView recyclerView, <span class="keyword">int</span> dx, <span class="keyword">int</span> dy)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onScrolled(recyclerView, dx, dy);</span><br><span class="line">        lastVisibleItem = mLayoutManager.findLastVisibleItemPosition();</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onScrollStateChanged</span><span class="params">(RecyclerView recyclerView, <span class="keyword">int</span> newState)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>.onScrollStateChanged(recyclerView, newState);</span><br><span class="line">        <span class="keyword">if</span> (newState == RecyclerView.SCROLL_STATE_IDLE</span><br><span class="line">                &amp;&amp; lastVisibleItem + <span class="number">1</span> == mAdapter.getItemCount()</span><br><span class="line">                &amp;&amp; mAdapter.isShowFooter()) &#123;</span><br><span class="line">            <span class="comment">//加载更多</span></span><br><span class="line">            LogUtils.d(TAG, <span class="string">"loading more data"</span>);</span><br><span class="line">            mNewsPresenter.loadNews(mType, pageIndex + Urls.PAZE_SIZE);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<p>滚动监听中判断三个条件：是否处于滚动暂停状态、当前页面的最后一个条目是否为所有信息中的最后一个条目、是否不处于正在加载新的条目状态。三个条件同时满足的情况下加载新条目。加载完新条目后又会调用mAdapter.isShowFooter(true)。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">int</span> <span class="title">getItemViewType</span><span class="params">(<span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 最后一个item设置为footerView</span></span><br><span class="line">    <span class="keyword">if</span>(!mShowFooter) &#123;</span><br><span class="line">        <span class="keyword">return</span> TYPE_ITEM;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (position + <span class="number">1</span> == getItemCount()) &#123;</span><br><span class="line">        <span class="keyword">return</span> TYPE_FOOTER;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="keyword">return</span> TYPE_ITEM;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="keyword">public</span> RecyclerView.<span class="function">ViewHolder <span class="title">onCreateViewHolder</span><span class="params">(ViewGroup parent,</span></span></span><br><span class="line"><span class="function"><span class="params">                                                  <span class="keyword">int</span> viewType)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(viewType == TYPE_ITEM) &#123;</span><br><span class="line">        View v = LayoutInflater.from(parent.getContext())</span><br><span class="line">                .inflate(R.layout.item_news, parent, <span class="keyword">false</span>);</span><br><span class="line">        ItemViewHolder vh = <span class="keyword">new</span> ItemViewHolder(v);</span><br><span class="line">        <span class="keyword">return</span> vh;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        View view = LayoutInflater.from(parent.getContext()).inflate(</span><br><span class="line">                R.layout.footer, <span class="keyword">null</span>);</span><br><span class="line">        view.setLayoutParams(<span class="keyword">new</span> ViewGroup.LayoutParams(ViewGroup.LayoutParams.MATCH_PARENT,</span><br><span class="line">                ViewGroup.LayoutParams.WRAP_CONTENT));</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">new</span> FooterViewHolder(view);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>onCreateViewHolder()方法是在每个条目创建时都会调用的方法，它用来填充视图，所以需要在这里进行选择需要创建的视图类型，这样便实现了上拉加载。</p>
+<h3 id="3-3-5-NewsAdapter"><a href="#3-3-5-NewsAdapter" class="headerlink" title="3.3.5 NewsAdapter"></a>3.3.5 NewsAdapter</h3><p>NewsAdapter其实在上文中有所提及，这里再进行一些补充。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ItemViewHolder</span> <span class="keyword">extends</span> <span class="title">RecyclerView</span>.<span class="title">ViewHolder</span> <span class="keyword">implements</span> <span class="title">View</span>.<span class="title">OnClickListener</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> TextView mTitle;</span><br><span class="line">    <span class="keyword">public</span> TextView mDesc;</span><br><span class="line">    <span class="keyword">public</span> ImageView mNewsImg;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ItemViewHolder</span><span class="params">(View v)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">super</span>(v);</span><br><span class="line">        mTitle = (TextView) v.findViewById(R.id.tvTitle);</span><br><span class="line">        mDesc = (TextView) v.findViewById(R.id.tvDesc);</span><br><span class="line">        mNewsImg = (ImageView) v.findViewById(R.id.ivNews);</span><br><span class="line">        v.setOnClickListener(<span class="keyword">this</span>);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="meta">@Override</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">        <span class="keyword">if</span>(mOnItemClickListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">            mOnItemClickListener.onItemClick(view, <span class="keyword">this</span>.getPosition());</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先是内部类ItemViewHolder，在这里有两个细节值得注意：一个是它的成员变量到初始化通过传入构造函数的View就实现了，不需要将每个参数都传入，二是为每个条目的点击事件设立了依赖注入，使其解耦。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onBindViewHolder</span><span class="params">(RecyclerView.ViewHolder holder, <span class="keyword">int</span> position)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(holder <span class="keyword">instanceof</span> ItemViewHolder) &#123;</span><br><span class="line">        NewsBean news = mData.get(position);</span><br><span class="line">        <span class="keyword">if</span>(news == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        ((ItemViewHolder) holder).mTitle.setText(news.getTitle());</span><br><span class="line">        ((ItemViewHolder) holder).mDesc.setText(news.getDigest());</span><br><span class="line">        ImageLoaderUtils.display(mContext, ((ItemViewHolder) holder).mNewsImg, news.getImgsrc());</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">display</span><span class="params">(Context context, ImageView imageView, String url)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(imageView == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"argument error"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    Glide.with(context).load(url).placeholder(R.drawable.ic_image_loading)</span><br><span class="line">            .error(R.drawable.ic_image_loadfail).crossFade().into(imageView);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在每个子条目的内容设置中，调用了Glide图片加载库进行图片的加载。关于Glide的使用读者可以参考这篇博客: <a href="http://blog.csdn.net/theone10211024/article/details/45557859" target="_blank" rel="noopener">Google推荐的图片加载库Glide介绍</a></p>
+<h3 id="3-3-6-显示失败消息"><a href="#3-3-6-显示失败消息" class="headerlink" title="3.3.6 显示失败消息"></a>3.3.6 显示失败消息</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">showLoadFailMsg</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span>(pageIndex == <span class="number">0</span>) &#123;</span><br><span class="line">        mAdapter.isShowFooter(<span class="keyword">false</span>);</span><br><span class="line">        mAdapter.notifyDataSetChanged();</span><br><span class="line">    &#125;</span><br><span class="line">    View view = getActivity() == <span class="keyword">null</span> ? mRecyclerView.getRootView() : getActivity().findViewById(R.id.drawer_layout);</span><br><span class="line">    Snackbar.make(view, getString(R.string.load_fail), Snackbar.LENGTH_SHORT).show();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>调用Snackbar显示消息即可。</p>
+<h1 id="4-新闻详情Activity"><a href="#4-新闻详情Activity" class="headerlink" title="4. 新闻详情Activity"></a>4. 新闻详情Activity</h1><h2 id="4-1-界面布局"><a href="#4-1-界面布局" class="headerlink" title="4.1 界面布局"></a>4.1 界面布局</h2><p><img src="http://cdn.wuhaojie.top/160520layout.png" alt="布局页面"></p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br><span class="line">54</span><br><span class="line">55</span><br><span class="line">56</span><br><span class="line">57</span><br><span class="line">58</span><br><span class="line">59</span><br><span class="line">60</span><br><span class="line">61</span><br><span class="line">62</span><br><span class="line">63</span><br><span class="line">64</span><br><span class="line">65</span><br><span class="line">66</span><br><span class="line">67</span><br><span class="line">68</span><br><span class="line">69</span><br><span class="line">70</span><br><span class="line">71</span><br><span class="line">72</span><br><span class="line">73</span><br><span class="line">74</span><br><span class="line">75</span><br><span class="line">76</span><br><span class="line">77</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">&lt;?xml version="1.0" encoding="utf-8"?&gt;</span></span><br><span class="line"><span class="tag">&lt;<span class="name">android.support.design.widget.CoordinatorLayout</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">xmlns:app</span>=<span class="string">"http://schemas.android.com/apk/res-auto"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">    <span class="attr">android:fitsSystemWindows</span>=<span class="string">"true"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">android.support.design.widget.AppBarLayout</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"256dp"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:fitsSystemWindows</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:theme</span>=<span class="string">"@style/ThemeOverlay.AppCompat.Dark.ActionBar"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">android.support.design.widget.CollapsingToolbarLayout</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:id</span>=<span class="string">"@+id/collapsing_toolbar"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:fitsSystemWindows</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">app:contentScrim</span>=<span class="string">"?attr/colorPrimary"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">app:expandedTitleMarginEnd</span>=<span class="string">"64dp"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">app:expandedTitleMarginStart</span>=<span class="string">"48dp"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">app:layout_scrollFlags</span>=<span class="string">"scroll|exitUntilCollapsed"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">            <span class="tag">&lt;<span class="name">ImageView</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:id</span>=<span class="string">"@+id/ivImage"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:fitsSystemWindows</span>=<span class="string">"true"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:scaleType</span>=<span class="string">"centerCrop"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:transitionName</span>=<span class="string">"@string/transition_news_img"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">app:layout_collapseMode</span>=<span class="string">"parallax"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">app:layout_collapseParallaxMultiplier</span>=<span class="string">"0.7"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">            <span class="tag">&lt;<span class="name">android.support.v7.widget.Toolbar</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:id</span>=<span class="string">"@+id/toolbar"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_height</span>=<span class="string">"?attr/actionBarSize"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">app:layout_collapseMode</span>=<span class="string">"pin"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">app:popupTheme</span>=<span class="string">"@style/ThemeOverlay.AppCompat.Light"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;/<span class="name">android.support.design.widget.CollapsingToolbarLayout</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">android.support.design.widget.AppBarLayout</span>&gt;</span></span><br><span class="line"></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">android.support.v4.widget.NestedScrollView</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">app:layout_behavior</span>=<span class="string">"@string/appbar_scrolling_view_behavior"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;<span class="name">LinearLayout</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">            <span class="attr">android:orientation</span>=<span class="string">"vertical"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">            <span class="tag">&lt;<span class="name">ProgressBar</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:id</span>=<span class="string">"@+id/progress"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">style</span>=<span class="string">"?android:attr/progressBarStyle"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_width</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_height</span>=<span class="string">"wrap_content"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_gravity</span>=<span class="string">"center"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">            <span class="tag">&lt;<span class="name">org.sufficientlysecure.htmltextview.HtmlTextView</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:id</span>=<span class="string">"@+id/htNewsContent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_width</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:layout_height</span>=<span class="string">"match_parent"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:padding</span>=<span class="string">"12dp"</span></span></span><br><span class="line"><span class="tag">                <span class="attr">android:textAppearance</span>=<span class="string">"@android:style/TextAppearance.Medium"</span>/&gt;</span></span><br><span class="line"></span><br><span class="line">        <span class="tag">&lt;/<span class="name">LinearLayout</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;/<span class="name">android.support.v4.widget.NestedScrollView</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">android.support.design.widget.CoordinatorLayout</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<p>这个页面布局代码全部都粘贴过来了，大家可想而知这个布局的重要性，让我们来细嚼一下这段布局代码。</p>
+<h3 id="4-1-1-CollapsingToolbarLayout"><a href="#4-1-1-CollapsingToolbarLayout" class="headerlink" title="4.1.1 CollapsingToolbarLayout"></a>4.1.1 CollapsingToolbarLayout</h3><p>CollapsingToolbarLayout作用是提供了一个可以折叠的Toolbar，它继承至FrameLayout，给它设置<code>layout_scrollFlags</code>，它可以控制包含在CollapsingToolbarLayout中的控件(如：ImageView、Toolbar)在响应<code>layout_behavior</code>事件时作出相应的scrollFlags滚动事件(移除屏幕或固定在屏幕顶端)。<br>app相关属性介绍:</p>
+<ol>
+<li><p>在CollapasingToolbarLayout 的属性：</p>
+<ul>
+<li>app:contentScrim=”?attr/colorPrimary” — 设置此属性生，CollapsingToolbarLayout完成折叠动画后，Title部分会显示一个普通的颜色，代码中的颜色来自于style文件中的colorPrimary属性</li>
+<li>app:expandedTitleMarginStart=”48dp”  — 控制文本的边距</li>
+<li>app:expandedTitleMarginEnd=”64dp”    — 控制文本的边距</li>
+<li>app:layout_scrollFlags —设置CollapsingToolbarLayout滚动折叠,关于这个属性需要详细解说,请看以下内容:<blockquote>
+<ul>
+<li>scroll  -想要滚动就必须设置这个标记</li>
+<li>exitUntilCollapsed  -向上滚动收缩View,可以一直固定在ToolBar上面</li>
+<li>enterAlwaysCollapsed  -当你的View已经设置minHeight属性又使用此标志时，你的View只能以最小高度进入，只有当滚动视图到达顶部时才扩大到完整高度。</li>
+</ul>
+</blockquote>
+</li>
+</ul>
+</li>
+<li><p>在ImageView控件中属性:</p>
+<ul>
+<li><p>app:layout_collapseMode   — 折叠模式 有俩个值</p>
+<blockquote>
+<ul>
+<li>pin   —设置这个模式时，当CollapsingToolbarLayout完全收缩后,ImageView显示的内容系统自己决定</li>
+<li>parallax  –设置这个模式时,当CollapsingToolbalLayout完全收缩后,ImageView显示的内容可以通过设置layout_collapseParallaxMultiplier来决定显示图片的哪部分内容</li>
+</ul>
+</blockquote>
+</li>
+<li><p>app:layout_collapseParallaxMultiplier=”0.7”  设置滚动视差，值为0~1。注意这个属性需要layout_collapseMode开启parallax模式后才会有作用,它决定CollapsingToolbarLayout完全折叠显示的内容</p>
+</li>
+</ul>
+</li>
+<li><p>CollapsingToolbarLayout配置完成之后,它下面的Layout必须设置layout_behavior属性来响应CollapsingToolbarLayout,如果没有配置layout_behavio，CollapsingToolbarLayout将没有折叠效果。</p>
+<blockquote>
+<p>注意：app:layout_behavior=”@string/appbar_scrolling_view_behavior”如果没有此属性那么CollapsingToolbarLayout将不会有折叠效果。</p>
+</blockquote>
+</li>
+</ol>
+<h3 id="4-1-2-NestedScrollView"><a href="#4-1-2-NestedScrollView" class="headerlink" title="4.1.2 NestedScrollView"></a>4.1.2 NestedScrollView</h3><p>Android 在发布 Lollipop版本之后，为了更好的用户体验，Google为Android的滑动机制提供了NestedScrolling特性，这便是NestedScrollView，没什么多讲的，感兴趣的读者可以自行研究。</p>
+<h3 id="4-1-3-HtmlTextView"><a href="#4-1-3-HtmlTextView" class="headerlink" title="4.1.3 HtmlTextView"></a>4.1.3 HtmlTextView</h3><p>HtmlTextView是<a href="https://github.com/SufficientlySecure/html-textview" target="_blank" rel="noopener">github</a>上的一个开源框架，它是Android TextView控件的一个扩展，可以加载的HTML并将其转换成Spannable用于显示它。这是WebView组件的一个替代。</p>
+<h2 id="4-2-视图相关"><a href="#4-2-视图相关" class="headerlink" title="4.2 视图相关"></a>4.2 视图相关</h2><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onCreate</span><span class="params">(Bundle savedInstanceState)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onCreate(savedInstanceState);</span><br><span class="line">    setContentView(R.layout.activity_news_detail);</span><br><span class="line">    Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);</span><br><span class="line">    mProgressBar = (ProgressBar) findViewById(R.id.progress);</span><br><span class="line">    mTVNewsContent = (HtmlTextView) findViewById(R.id.htNewsContent);</span><br><span class="line">    setSupportActionBar(toolbar);</span><br><span class="line">    getSupportActionBar().setDisplayHomeAsUpEnabled(<span class="keyword">true</span>);</span><br><span class="line">    toolbar.setNavigationOnClickListener(<span class="keyword">new</span> View.OnClickListener() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onClick</span><span class="params">(View view)</span> </span>&#123;</span><br><span class="line">            onBackPressed();</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">    mSwipeBackLayout = getSwipeBackLayout();</span><br><span class="line">    mSwipeBackLayout.setEdgeSize(ToolsUtil.getWidthInPx(<span class="keyword">this</span>));</span><br><span class="line">    mSwipeBackLayout.setEdgeTrackingEnabled(SwipeBackLayout.EDGE_LEFT);</span><br><span class="line">    mNews = (NewsBean) getIntent().getSerializableExtra(<span class="string">"news"</span>);</span><br><span class="line">    CollapsingToolbarLayout collapsingToolbar = (CollapsingToolbarLayout) findViewById(R.id.collapsing_toolbar);</span><br><span class="line">    collapsingToolbar.setTitle(mNews.getTitle());</span><br><span class="line">    ImageLoaderUtils.display(getApplicationContext(), (ImageView) findViewById(R.id.ivImage), mNews.getImgsrc());</span><br><span class="line">    mNewsDetailPresenter = <span class="keyword">new</span> NewsDetailPresenterImpl(getApplication(), <span class="keyword">this</span>);</span><br><span class="line">    mNewsDetailPresenter.loadNewsDetail(mNews.getDocid());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">showNewsDetialContent</span><span class="params">(String newsDetailContent)</span> </span>&#123;</span><br><span class="line">    mTVNewsContent.setHtmlFromString(newsDetailContent, <span class="keyword">new</span> HtmlTextView.LocalImageGetter());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>首先值得一提的是SwipeBackLayout，这是一个滑动返回库，使用方法非常简单:</p>
+<ol>
+<li>继承SwipeBackActivity </li>
+<li>mKeyTrackingMode = getString(R.string.key_tracking_mode);</li>
+<li>mSwipeBackLayout = getSwipeBackLayout();</li>
+<li>mSwipeBackLayout.setEdgeTrackingEnabled(edgeFlag);</li>
+<li>saveTrackingMode(edgeFlag);</li>
+</ol>
+<p><img src="http://cdn.wuhaojie.top/160520detail.png" alt="新闻详情界面"></p>
+<p>还有注意的是，在使用CollapsingToolbarLayout时，设置Toolbar标题要调用collapsingToolbar.setTitle()，而不是Toolbar的set方法，另外，笔者暂时还未发现如何为展开的Toolbar和折叠的Toolbar设置两个不同的标题，不过可以通过collapsingToolbar.setCollapsedTitleTextColor和collapsingToolbar.setExpandedTitleColor设置为不同颜色，并且底层自动处理颜色的过渡与渐变。</p>
+<h1 id="5-新闻业务处理"><a href="#5-新闻业务处理" class="headerlink" title="5. 新闻业务处理"></a>5. 新闻业务处理</h1><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 加载新闻详情</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> docid</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> listener</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadNewsDetail</span><span class="params">(<span class="keyword">final</span> String docid, <span class="keyword">final</span> OnLoadNewsDetailListener listener)</span> </span>&#123;</span><br><span class="line">    String url = getDetailUrl(docid);</span><br><span class="line">    OkHttpUtils.ResultCallback&lt;String&gt; loadNewsCallback = <span class="keyword">new</span> OkHttpUtils.ResultCallback&lt;String&gt;() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSuccess</span><span class="params">(String response)</span> </span>&#123;</span><br><span class="line">            NewsDetailBean newsDetailBean = NewsJsonUtils.readJsonNewsDetailBeans(response, docid);</span><br><span class="line">            listener.onSuccess(newsDetailBean);</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Exception e)</span> </span>&#123;</span><br><span class="line">            listener.onFailure(<span class="string">"load news detail info failure."</span>, e);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;;</span><br><span class="line">    OkHttpUtils.get(url, loadNewsCallback);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>业务层主要包括网络请求和Json数据处理，这些主要通过框架来实现，由于此应用使用的框架在当今不太火热，所以就不作具体分析了。</p>
+<h1 id="6-天气界面"><a href="#6-天气界面" class="headerlink" title="6. 天气界面"></a>6. 天气界面</h1><p><img src="http://cdn.wuhaojie.top/160520weather.png" alt="天气界面"><br>天气界面主要看的就是布局和Json解析，思路容易理解，就不作分析了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">loadWeatherData</span><span class="params">(String cityName, <span class="keyword">final</span> LoadWeatherListener listener)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        String url = Urls.WEATHER + URLEncoder.encode(cityName, <span class="string">"utf-8"</span>);</span><br><span class="line">        OkHttpUtils.ResultCallback&lt;String&gt; callback = <span class="keyword">new</span> OkHttpUtils.ResultCallback&lt;String&gt;() &#123;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSuccess</span><span class="params">(String response)</span> </span>&#123;</span><br><span class="line">                List&lt;WeatherBean&gt; lists = WeatherJsonUtils.getWeatherInfo(response);</span><br><span class="line">                listener.onSuccess(lists);</span><br><span class="line">            &#125;</span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onFailure</span><span class="params">(Exception e)</span> </span>&#123;</span><br><span class="line">                listener.onFailure(<span class="string">"load weather data failure."</span>, e);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line">        OkHttpUtils.get(url, callback);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (UnsupportedEncodingException e) &#123;</span><br><span class="line">        LogUtils.e(TAG, <span class="string">"url encode error."</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p>至此，《简易新闻》的代码分析就基本结束了，回顾全文，其实学到的不仅是Material的UI，还包括整个App的架构——MVP模式，该架构体现在每个模块，在代码方面，每个包以功能区分，在抽象方面每个模块又以MVP区分。最后，感谢读者的耐心阅读和App作者的无私奉献，然后祝大家学习进步！</p>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li><a href="http://my.oschina.net/benzhang99/blog/157060" target="_blank" rel="noopener">android 4.2的新特性layoutRtl，让布局自动从右往左显示</a></li>
+<li><a href="http://blog.csdn.net/theone10211024/article/details/45557859" target="_blank" rel="noopener">Google推荐的图片加载库Glide介绍</a></li>
+<li><a href="http://bbs.itcast.cn/forum.php?mod=viewthread&tid=86869" target="_blank" rel="noopener">[Android] 可以折叠的CollapsingToolbarLayout</a></li>
+<li><a href="http://www.open-open.com/lib/view/open1438265746378.html" target="_blank" rel="noopener">Android5.0+(CollapsingToolbarLayout)</a></li>
+<li><a href="http://www.open-open.com/lib/view/open1409303309150.html" target="_blank" rel="noopener">支持加载Html内容的TextView：HtmlTextView for Android</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/源码分析/" rel="tag"># 源码分析</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/04/22/160422fileuploadbug/" rel="next" title="JSP+Servlet使用commons-fileupload上传文件连接被重置解决方案">
+                  <i class="fa fa-chevron-left"></i> JSP+Servlet使用commons-fileupload上传文件连接被重置解决方案
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/05/26/customView/" rel="prev" title="浅谈自定义View">
+                  浅谈自定义View <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-前言"><span class="nav-number">1.</span> <span class="nav-text">0. 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-寻找入口"><span class="nav-number">2.</span> <span class="nav-text">1. 寻找入口</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-工程总览"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 工程总览</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-Manifest文件"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 Manifest文件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-权限声明"><span class="nav-number">2.2.1.</span> <span class="nav-text">1.2.1 权限声明</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-应用层"><span class="nav-number">2.2.2.</span> <span class="nav-text">1.2.2 应用层</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-MainActivity"><span class="nav-number">3.</span> <span class="nav-text">2. MainActivity</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-MainView接口"><span class="nav-number">3.1.</span> <span class="nav-text">2.1 MainView接口</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-onCreate-方法"><span class="nav-number">3.2.</span> <span class="nav-text">2.2 onCreate()方法</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-1-布局文件"><span class="nav-number">3.2.1.</span> <span class="nav-text">2.2.1 布局文件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-2-初始化视图"><span class="nav-number">3.2.2.</span> <span class="nav-text">2.2.2 初始化视图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-3-切换"><span class="nav-number">3.2.3.</span> <span class="nav-text">2.2.3 切换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-新闻界面"><span class="nav-number">4.</span> <span class="nav-text">3. 新闻界面</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-布局文件"><span class="nav-number">4.1.</span> <span class="nav-text">3.1 布局文件</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-视图初始化"><span class="nav-number">4.2.</span> <span class="nav-text">3.2 视图初始化</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-NewsListFragment"><span class="nav-number">4.3.</span> <span class="nav-text">3.3 NewsListFragment</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-1-布局"><span class="nav-number">4.3.1.</span> <span class="nav-text">3.3.1 布局</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-2-初始化视图"><span class="nav-number">4.3.2.</span> <span class="nav-text">3.3.2 初始化视图</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-3-点击事件"><span class="nav-number">4.3.3.</span> <span class="nav-text">3.3.3 点击事件</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-4-上拉加载实现"><span class="nav-number">4.3.4.</span> <span class="nav-text">3.3.4 上拉加载实现</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-5-NewsAdapter"><span class="nav-number">4.3.5.</span> <span class="nav-text">3.3.5 NewsAdapter</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-6-显示失败消息"><span class="nav-number">4.3.6.</span> <span class="nav-text">3.3.6 显示失败消息</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-新闻详情Activity"><span class="nav-number">5.</span> <span class="nav-text">4. 新闻详情Activity</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#4-1-界面布局"><span class="nav-number">5.1.</span> <span class="nav-text">4.1 界面布局</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-1-CollapsingToolbarLayout"><span class="nav-number">5.1.1.</span> <span class="nav-text">4.1.1 CollapsingToolbarLayout</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-2-NestedScrollView"><span class="nav-number">5.1.2.</span> <span class="nav-text">4.1.2 NestedScrollView</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#4-1-3-HtmlTextView"><span class="nav-number">5.1.3.</span> <span class="nav-text">4.1.3 HtmlTextView</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#4-2-视图相关"><span class="nav-number">5.2.</span> <span class="nav-text">4.2 视图相关</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-新闻业务处理"><span class="nav-number">6.</span> <span class="nav-text">5. 新闻业务处理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-天气界面"><span class="nav-number">7.</span> <span class="nav-text">6. 天气界面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">8.</span> <span class="nav-text">总结</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">9.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

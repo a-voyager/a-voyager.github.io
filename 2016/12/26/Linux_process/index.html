@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="0 前言本文对 Linux 系统编程的进程相关知识进行总结，包含了进程的创建方法、IPC 实现等。">
+<meta name="keywords" content="笔记,Linux">
+<meta property="og:type" content="article">
+<meta property="og:title" content="初探 Linux 系统编程之进程">
+<meta property="og:url" content="http://yoursite.com/2016/12/26/Linux_process/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="0 前言本文对 Linux 系统编程的进程相关知识进行总结，包含了进程的创建方法、IPC 实现等。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.756Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="初探 Linux 系统编程之进程">
+<meta name="twitter:description" content="0 前言本文对 Linux 系统编程的进程相关知识进行总结，包含了进程的创建方法、IPC 实现等。">
+  <link rel="canonical" href="http://yoursite.com/2016/12/26/Linux_process/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>初探 Linux 系统编程之进程 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/12/26/Linux_process/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">初探 Linux 系统编程之进程
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-12-26 22:10:00" itemprop="dateCreated datePublished" datetime="2016-12-26T22:10:00+08:00">2016-12-26</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Linux/" itemprop="url" rel="index"><span itemprop="name">Linux</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-前言"><a href="#0-前言" class="headerlink" title="0 前言"></a>0 前言</h1><p>本文对 Linux 系统编程的进程相关知识进行总结，包含了进程的创建方法、IPC 实现等。</p>
+<a id="more"></a>
+
+<h1 id="1-进程相关概念"><a href="#1-进程相关概念" class="headerlink" title="1 进程相关概念"></a>1 进程相关概念</h1><ul>
+<li><p>单道程序设计模式: <code>DOS</code> 操作系统</p>
+</li>
+<li><p>多道程序设计模式: 通过时钟中断在硬件级别控制 <code>CPU</code> 轮转</p>
+</li>
+<li><p>MMU: 内存管理单元，位于 <code>CPU</code> 内部，完成虚拟内存与物理内存的映射和设置修改内存访问级别</p>
+</li>
+<li><p>PCB: 进程控制块，定义在 <code>/usr/src/linux-haeders-3.16.0-30/include/linux/sched.h</code> 中</p>
+<blockquote>
+<p>查看资源上限的命令: ulimit -a</p>
+</blockquote>
+</li>
+<li><p>PCB的组成:</p>
+<ol>
+<li>进程号</li>
+<li>进程的状态，有就绪、运行、挂起、停止等状态</li>
+<li>进程切换时需要保存和回复的一些 CPU 寄存器</li>
+<li>描述虚拟地址空间的信息</li>
+<li>描述控制终端的信息</li>
+<li>当前工作目录</li>
+<li>UMASK 掩码</li>
+<li>文件描述表，包含很多指向 File 结构体的指针</li>
+<li>和信号相关的信息</li>
+<li>用户 ID 和组 ID</li>
+<li>会话和进程组</li>
+<li>进程可以使用的资源上限</li>
+</ol>
+</li>
+</ul>
+<h1 id="2-环境变量"><a href="#2-环境变量" class="headerlink" title="2 环境变量"></a>2 环境变量</h1><p>环境变量，是指在操作系统中用来指定操作系统运行环境的一些参数。通常具备以下特征: </p>
+<ul>
+<li>字符串</li>
+<li>有统一的格式: 名称=值，多个值用冒号分隔</li>
+<li>值用来描述进程环境信息</li>
+</ul>
+<blockquote>
+</blockquote>
+<ol>
+<li>存储形式: 与命令行参数类似，<code>char *[]</code> 数组，数组名 <code>environ</code>，内部存储字符串，<code>NULL</code> 作为哨兵结尾</li>
+<li>使用形式: 与命令行参数类似</li>
+<li>加载位置: 与命令行参数类似，位于用户区，高于 <code>stack</code> 的起始位置</li>
+<li>引入环境变量表，必须声明环境变量，extern char ** environ</li>
+</ol>
+<h3 id="2-1-常见的环境变量"><a href="#2-1-常见的环境变量" class="headerlink" title="2.1 常见的环境变量"></a>2.1 常见的环境变量</h3><ul>
+<li>PATH: 可执行文件的搜索路径，从前往后搜索，所以新版本的环境变量因放置在前面</li>
+<li>SHELL: 记录当前使用的命令解释器，如 <code>/bin/bash</code> </li>
+<li>HOME: 当前主目录</li>
+<li>LANG: 当前语言</li>
+<li>TERM: 当前的终端信息</li>
+</ul>
+<blockquote>
+<p><code>echo $PATH</code> 打印当前的 <code>PATH</code> 变量</p>
+</blockquote>
+<h3 id="2-2-相关函数"><a href="#2-2-相关函数" class="headerlink" title="2.2 相关函数"></a>2.2 相关函数</h3><ul>
+<li>char* getenv(const char *name); 成功：返回环境变量到值，失败：NULL</li>
+<li>int setenv(const char *name, const char *value, int overwrite); 成功：0，失败：-1，override 取1表示覆盖原环境变量值</li>
+<li>int unsetenv(const char *name); 成功：0，失败：-1，当name不存在是仍然返回0，当name命名为”ABC=”时则会出错</li>
+</ul>
+<blockquote>
+<p>通过 man [函数名] 可以查看函数相关 API</p>
+</blockquote>
+<h1 id="3-进程控制"><a href="#3-进程控制" class="headerlink" title="3 进程控制"></a>3 进程控制</h1><h3 id="3-1-fork-函数"><a href="#3-1-fork-函数" class="headerlink" title="3.1 fork 函数"></a>3.1 fork 函数</h3><p>pid_t fork(void)，创建一个子进程，返回值有两个（一个进程变为两个进程，各自的 <code>fork()</code> 都返回）：返回子进程的 <code>PID</code>（非负整数）和返回 0。可以判断返回值确定子进程执行的代码或是父进程执行的代码</p>
+<h3 id="3-2-创建多个子进程"><a href="#3-2-创建多个子进程" class="headerlink" title="3.2 创建多个子进程"></a>3.2 创建多个子进程</h3><p>使用以下语句</p>
+<figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (i=<span class="number">0</span>; i&lt;n; i++) &#123;</span><br><span class="line">    fork();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并不是创建 N 个子进程，而是 （2^N-1）个子进程，正确的做法是在循环体中判断，如果是子进程(返回值=0)，那么就 break</p>
+<blockquote>
+<p>ps aux 显示所有进程<br>unistd.h 是 UNIX 系统标准库头文件<br>vim下使用:vs可以分屏</p>
+</blockquote>
+<h3 id="3-3-补充函数"><a href="#3-3-补充函数" class="headerlink" title="3.3 补充函数"></a>3.3 补充函数</h3><ul>
+<li>uid_t getuid(void)，获取当前进程的实际用户 ID</li>
+<li>uid_t geteuid(void)，获取当前进程的有效用户 ID</li>
+<li>gid_t getgid(void)，获取当前进程使用组 ID</li>
+<li>gid_t getegid(void)，获取当前进程有效用户组 ID</li>
+</ul>
+<h3 id="3-4-进程共享"><a href="#3-4-进程共享" class="headerlink" title="3.4 进程共享"></a>3.4 进程共享</h3><p>父子进程共享之后的异同:<br>相同点: </p>
+<ul>
+<li>全局变量</li>
+<li><code>.data</code> <code>.text</code></li>
+<li>栈、堆</li>
+<li>环境变量、信号处理方式</li>
+<li>用户ID、宿主目录、进程工作目录</li>
+</ul>
+<p>不同点:</p>
+<ul>
+<li>进程 ID、父进程 ID</li>
+<li>fork 返回值</li>
+<li>进程运行时间</li>
+<li>定时器</li>
+<li>未决信号集</li>
+</ul>
+<blockquote>
+<p>注意:</p>
+<ol>
+<li>子进程并非将空间完全拷贝一份，而是遵循读时共享写时复制的原则</li>
+<li>父子进程共享文件描述符（所以进程通信可以通过文件共享方式实现）和 MMAP 建立的映射区</li>
+</ol>
+</blockquote>
+<h3 id="3-5-GDB-调试"><a href="#3-5-GDB-调试" class="headerlink" title="3.5 GDB 调试"></a>3.5 GDB 调试</h3><p>第一步，在 gcc 编译选项中增加 -g 选项；第二步，gdb 运行程序<br>通过 <code>set follow-fork-mode child</code> 跟踪子进程，通过 <code>set follow-fork-mode parent</code> 跟踪父进程，默认跟踪父进程</p>
+<h1 id="4-Exec-函数族"><a href="#4-Exec-函数族" class="headerlink" title="4 Exec 函数族"></a>4 Exec 函数族</h1><p>fork 创建子进程后执行的是和父进程相同的程序（但有可能执行不同的代码分支），子进程往往要调用一种 exec 函数以执行另一个程序。当进程调用一种 exec 函数时，该进程的用户空间代码和数据完全被新程序替换，从新程序的启动例程开始执行。调用 exec <strong>并不创建新进程</strong>，所以调用 exec 前后该进程的 id 并未改变。<br>将当前进程的.text、.data 替换为所要加载的.text、.data，然后让进程从新的.text 第一条指令开始执行，但进程 ID 不变，换核不换壳。<br>其中有六种以 exec 开头的函数，统称 exec 函数:</p>
+<ul>
+<li><p>int execl(const char *path, const char *arg, …);   // list<br>加载一个进程，通过路径+程序名来加载，成功无返回，失败返回-1,；对比execlp，如加载”ls”命令带有-l，-F参数</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">execlp(&quot;ls&quot;, &quot;ls&quot;, &quot;-l&quot;, &quot;-F&quot;, NULL); // 使用程序名在PATH中搜索</span><br><span class="line">execl(&quot;/bin/ls&quot;, &quot;ls&quot;, &quot;-l&quot;, &quot;-F&quot;, NULL); //使用参数1给出的绝对路径搜索</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>int execlp(const char *file, const char *arg, …);  // list path<br>加载一个进程，借助 PATH 环境变量，成功无返回，失败返回-1；参数1：要加载到程序的名字，该函数通常用来调用系统程序，如：ls、date、cp、cat 等命令</p>
+</li>
+<li><p>int execle(const char *path, const char *arg, …, char *const envp[]); // list environment<br>借助环境变量表</p>
+</li>
+<li><p>int execv(const char *path, char *const argv[]);<br>携带参数表</p>
+</li>
+<li><p>int execvp(const char *file, char *const argv[], char *const envp[]);<br>携带环境变量表和参数表</p>
+</li>
+</ul>
+<blockquote>
+<ol>
+<li>argv[0] 是程序名，arg[1~n-1] 是携带参数，arg[n] 是 NULL 结束符</li>
+<li>exec 族函数只在失败时才有返回值，<strong>成功无返回值，也不会继续再执行下面的程序</strong></li>
+</ol>
+</blockquote>
+<h3 id="DUP2"><a href="#DUP2" class="headerlink" title="DUP2"></a>DUP2</h3><blockquote>
+<p>引入: 将当前的进程信息输出到文件</p>
+</blockquote>
+<ul>
+<li>方法一: 通过 <code>ps aux &gt; out.txt</code> 命令可以实现，但是 <code>&gt;</code> 符并不属于参数，需要转义才可以</li>
+<li>方法二: 使用 <code>DUP2</code> 函数实现文件输出拷贝<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int dup2(int oldfd, int newfd);</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<p>将输出指针 oldfd 复制到 newfd，即 newfd 所指向的文件和 oldfd 所指向的文件是一样的，也就实现了 newfd 重定向到 oldfd。</p>
+<blockquote>
+<p>需要添加头文件 fcntl.h</p>
+</blockquote>
+<h1 id="5-回收子进程"><a href="#5-回收子进程" class="headerlink" title="5 回收子进程"></a>5 回收子进程</h1><ul>
+<li>孤儿进程<br>父进程先于子进程结束，则子进程成为孤儿进程，子进程的父进程成为 init 进程，称为 init 进程领养孤儿进程</li>
+<li>僵尸进程<br>进程终止，父进程尚未回收，子进程残余资源（PCB）存放于内核中，变成僵尸（Zombie）进程</li>
+</ul>
+<blockquote>
+<p>特别注意，僵尸进程是不能使用 kill 命令清除掉的，因为 kill 命令只是用来终止进程的，而僵尸进程已经终止。<br>ps aux 命令显示的进程列表中，STATE 栏表示当前状态，R 表示运行，S 表示后台运行，Z 表示僵尸进程</p>
+</blockquote>
+<h3 id="5-1-Wait-函数"><a href="#5-1-Wait-函数" class="headerlink" title="5.1 Wait 函数"></a>5.1 Wait 函数</h3><p>一个进程在终止时会关闭所有的文件描述符，释放在用户空间分配的内存，但它的 PCB 还保留着，内核在其中保存了一些信息：如果是正常终止则保存着退出状态，如果是异常终止则保存着导致该进程终止的信号信息。这个进程的父进程可以调用 wait 或 waitpid 获取这些信息，然后彻底清除这个进程。我们知道一个进程的退出状态可以在 Shell 中用特殊变量$?查看，因为 Shell 是它的父进程，当它终止时 Shell 调用 wait 或 waitpid 得到它的退出状态，同时彻底清除掉这个进程。</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pid_t wait(int *status);</span><br></pre></td></tr></table></figure>
+
+<p>成功返回清理掉的子进程 ID，失败返回-1（没有子进程）<br>父进程调用 wait 函数可以回收子进程终止信息。该函数有三个功能:</p>
+<ul>
+<li><strong>阻塞等待</strong>子进程退出</li>
+<li>回收子进程残余资源</li>
+<li>获取子进程结束状态（退出原因）</li>
+</ul>
+<p>当进程终止时，操作系统的隐式回收机制会完成:</p>
+<ul>
+<li>关闭所有文件描述符</li>
+<li>释放用户空间分配的内存<br>内核的 PCB 仍存在，其中保存该进程的退出状态（正常终止-&gt;退出值，异常终止-&gt;终止信号）。</li>
+</ul>
+<p>可使用 wait 函数传出参数 status 来保存进程的退出状态，借助宏函数来进一步判断进程终止的具体原因。宏函数可分为如下三组:</p>
+<ul>
+<li>WIFEXITED(status) [wait if exited] 非零 进程正常退出，使用 WEXITSTATUS(status) 可获取进程退出状态(exit的参数)</li>
+<li>WIFSIGNALED(status) 非零 进程异常终止，使用 WTERMSIG(status) 取得使进程终止的那个信号的编号</li>
+<li>WIFSTOPPED(status) 非零 进程处于暂停状态，使用 WSTOPSIG(status) 取得使进程暂停的那个信号的编号，WIFCONTINUED(status) 如果为真说明进程暂停后已经继续运行</li>
+</ul>
+<h3 id="5-2-waitpid-函数"><a href="#5-2-waitpid-函数" class="headerlink" title="5.2 waitpid 函数"></a>5.2 waitpid 函数</h3><p>作用同 wait，但可以指定 pid 进程清理，可以不阻塞</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">pid_t waitpid(pid_t pid, int *status, in)</span><br></pre></td></tr></table></figure>
+
+<p>成功返回清理掉的子进程 ID，失败返回-1（无子进程）<br>参数 pid:</p>
+<ul>
+<li><blockquote>
+<p>0  回收指定 ID 的子进程</p>
+</blockquote>
+</li>
+<li><p>-1  回收任意进程（相当于 wait）</p>
+</li>
+<li><p>0  回收和当前调用 waitpid 一个组的所有子进程</p>
+</li>
+<li><p>&lt;-1 回收指定进程组内的任意子进程<br>参数3:</p>
+</li>
+<li><p>0，阻塞回收</p>
+</li>
+<li><p>WNOHANG，非阻塞回收（一般使用轮询）</p>
+</li>
+</ul>
+<p>返回值:</p>
+<ul>
+<li>pid 成功</li>
+<li>-1 失败</li>
+<li>0  参数3为WNOHANG 并且子进程尚未结束</li>
+</ul>
+<blockquote>
+<p>一次 wait 或 waitpid 调用只能清理一个子进程，清理多个子进程应使用循环</p>
+</blockquote>
+<h1 id="6-进程间通信"><a href="#6-进程间通信" class="headerlink" title="6 进程间通信"></a>6 进程间通信</h1><p>Linux 环境下，进程地址空间相互独立，每个进程各自有不同的用户地址空间。任何一个进程的全局变量在另一个进程中都看不到，所以进程和进程之间不能相互访问，要交换数据必须通过内核，在内核中开辟一块缓冲区，进程1把数据从用户空间拷贝到内核缓冲区，进程2再从内核缓冲区把数据读走，内核提供的这种机制称为进程间通信（IPC）<br>在进程间完成数据传递需要借助操作系统提供特殊的方法，如文件、管道、信号、共享内存、消息队列、套接字、命名管道等。随着计算机的蓬勃发展，一些方法由于自身设计缺陷被淘汰或者弃用，现今常用的进程间通信方式有:</p>
+<ul>
+<li>管道（使用最简单）</li>
+<li>信号（开销最小）</li>
+<li>共享映射区（无血缘关系）</li>
+<li>本地套接字（最稳定）</li>
+</ul>
+<h3 id="6-1-管道-PIPE"><a href="#6-1-管道-PIPE" class="headerlink" title="6.1 管道 PIPE"></a>6.1 管道 PIPE</h3><h4 id="6-1-1-概念"><a href="#6-1-1-概念" class="headerlink" title="6.1.1 概念"></a>6.1.1 概念</h4><p>管道是一种最基本的 IPC 机制，作用于有血缘关系的进程之间，完成数据传递。调用 pipe 系统函数即可创建一个管道，有如下特质: </p>
+<ul>
+<li>其实质是一个伪文件（实为内核缓冲区）</li>
+<li>由两个文件描述符引用，一个表示读端，一个表示写端</li>
+<li>规定数据从管道的写端流入管道，从读端流出</li>
+</ul>
+<p>管道的原理: 管道实为内核使用<strong>环形队列</strong>机制，借助<strong>内核缓冲区</strong>（4K）实现<br>管道的局限性: </p>
+<ul>
+<li>数据自己读不能自己写</li>
+<li>数据一旦被读走，便不在管道中存在，因此，数据只能在一个方向上流动</li>
+<li>只能在有公共祖先的进程间使用管道</li>
+</ul>
+<blockquote>
+<p>常见的通信方式有，单工通信、半双工通信、半双工通信</p>
+</blockquote>
+<blockquote>
+<p>Linux 中的7中文件类型</p>
+<ul>
+<li>文件 d 目录 l 符号链接 s 套接字 b 块设备 p 管道<br>前三种才占用存储空间，后四种称之为伪文件</li>
+</ul>
+</blockquote>
+<h4 id="6-1-2-pipe-函数"><a href="#6-1-2-pipe-函数" class="headerlink" title="6.1.2 pipe 函数"></a>6.1.2 pipe 函数</h4><figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int pipe(int pipefd[2]);</span><br></pre></td></tr></table></figure>
+
+<p>成功: 0；失败: -1<br>函数调用成功会在传入参数返回 r/w 两个文件描述符，无需 open，但需 close</p>
+<h3 id="6-2-有名管道-FIFO"><a href="#6-2-有名管道-FIFO" class="headerlink" title="6.2 有名管道 FIFO"></a>6.2 有名管道 FIFO</h3><h3 id="6-3-共享内存-MMAP"><a href="#6-3-共享内存-MMAP" class="headerlink" title="6.3 共享内存 MMAP"></a>6.3 共享内存 MMAP</h3><p>使用文件进行进程间通信</p>
+<h4 id="6-3-1-mmap-函数"><a href="#6-3-1-mmap-函数" class="headerlink" title="6.3.1 mmap 函数"></a>6.3.1 mmap 函数</h4><figure class="highlight c"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> *<span class="title">mmap</span><span class="params">(<span class="keyword">void</span> *addr, <span class="keyword">size_t</span> length, <span class="keyword">int</span> prot, <span class="keyword">int</span> flags, <span class="keyword">int</span> fd, <span class="keyword">off_t</span> offset)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>成功，返回创建的映射区首地址；失败，返回 MAP_FAILED 宏<br>参数:</p>
+<ul>
+<li>addr 建立映射区的首地址，由 Linux 内核指定，使用时，直接传递 NULL</li>
+<li>length 域创建映射区的大小</li>
+<li>prot 映射区权限 PROT_READ、PROT_WRITE、PROT_READ|PROT_WRITE</li>
+<li>flags 标志位参数（常用于设定更新物理区域、设置共享、创建匿名映射区）<br>MAP_SHARED 会将映射区所做的操作反映到物理设备（磁盘）上<br>MAP_PRIVATE 映射区所做的修改不会反映到物理设备</li>
+<li>fd 用来建立映射区的文件描述符</li>
+<li>offset 映射文件的偏移（4K的整数倍）</li>
+</ul>
+<h4 id="6-3-2-注意事项"><a href="#6-3-2-注意事项" class="headerlink" title="6.3.2 注意事项"></a>6.3.2 注意事项</h4><ol>
+<li>malloc 分配内存可以分配 0 字节，也可以将其释放，但映射区并不可以分配 0 字节</li>
+<li>不能对 mmap 的返回值进行修改，否则 munmap 无法成功</li>
+<li>打开文件只读，则不论是否开启映射物理设备，均不能在映射区进行写操作</li>
+<li>创建映射区的权限要小于等于打开映射区文件的权限，映射区的创建中隐含着一次对映射区文件的读操作</li>
+<li>最后一个参数的 offset 必须要是 4k 的整数倍，即 4096 的整数倍，页大小</li>
+<li>映射区大小不能大于文件大小</li>
+<li>文件描述符先关闭对读写映射区操作无影响，因为现在是通过映射区读写，不再使用文件句柄</li>
+</ol>
+<blockquote>
+<p>unlink(filename) 函数，删除零食临时文件目录项，使之具备被释放条件<br>truncate() 和 ftruncate() 两个函数可用于改变文件长度</p>
+</blockquote>
+<h4 id="6-3-3-父子进程共享"><a href="#6-3-3-父子进程共享" class="headerlink" title="6.3.3 父子进程共享"></a>6.3.3 父子进程共享</h4><p>父子进程共享的内容有:</p>
+<ul>
+<li>共享打开的文件</li>
+<li>mmap 建立的映射区（但必须要使用 MAP_SHARED）</li>
+</ul>
+<h4 id="6-3-3-匿名映射区"><a href="#6-3-3-匿名映射区" class="headerlink" title="6.3.3 匿名映射区"></a>6.3.3 匿名映射区</h4><p>mmap 足够方便，但问题在于每次建立映射一定要依赖一个文件才能实现，通常为了建立映射区要 open 一个 temp 文件，从创建好了再 unlink、close，比较麻烦。于是可以直接使用匿名映射来代替，借助标志位 <code>MAP_ANONYMOUS</code> 或 <code>MAP_ANON</code>，注意该宏仅在 Linux 操作系统中可用</p>
+<blockquote>
+<p><code>MAP_ANON</code> 宏仅在 Linux 操作系统中可用，在类 Unix 系统中如果没有该宏，可以使用 fd = open(“/dev/zero”, O_RDWR) 代替</p>
+</blockquote>
+<p>用法</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">int *p = mmap(NULL, 4, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<ol>
+<li>注意的是 fd 需要配置为-1</li>
+<li>mmap 可用于非血缘关系进程通信</li>
+<li>使用 memcpy() 函数可以拷贝结构体</li>
+</ol>
+</blockquote>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">memcp(map, $student, sizeof(student));</span><br></pre></td></tr></table></figure>
+
+
+
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+              <a href="/tags/Linux/" rel="tag"># Linux</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/12/15/AndroidKnowledge/" rel="next" title="Android 相关重难点知识整理">
+                  <i class="fa fa-chevron-left"></i> Android 相关重难点知识整理
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/01/06/OnClickListener/" rel="prev" title="Android 中多次设置 OnClickListener 只执行一次吗？">
+                  Android 中多次设置 OnClickListener 只执行一次吗？ <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-前言"><span class="nav-number">1.</span> <span class="nav-text">0 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-进程相关概念"><span class="nav-number">2.</span> <span class="nav-text">1 进程相关概念</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-环境变量"><span class="nav-number">3.</span> <span class="nav-text">2 环境变量</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-常见的环境变量"><span class="nav-number">3.0.1.</span> <span class="nav-text">2.1 常见的环境变量</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-2-相关函数"><span class="nav-number">3.0.2.</span> <span class="nav-text">2.2 相关函数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-进程控制"><span class="nav-number">4.</span> <span class="nav-text">3 进程控制</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#3-1-fork-函数"><span class="nav-number">4.0.1.</span> <span class="nav-text">3.1 fork 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-2-创建多个子进程"><span class="nav-number">4.0.2.</span> <span class="nav-text">3.2 创建多个子进程</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-3-补充函数"><span class="nav-number">4.0.3.</span> <span class="nav-text">3.3 补充函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-4-进程共享"><span class="nav-number">4.0.4.</span> <span class="nav-text">3.4 进程共享</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#3-5-GDB-调试"><span class="nav-number">4.0.5.</span> <span class="nav-text">3.5 GDB 调试</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-Exec-函数族"><span class="nav-number">5.</span> <span class="nav-text">4 Exec 函数族</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#DUP2"><span class="nav-number">5.0.1.</span> <span class="nav-text">DUP2</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-回收子进程"><span class="nav-number">6.</span> <span class="nav-text">5 回收子进程</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#5-1-Wait-函数"><span class="nav-number">6.0.1.</span> <span class="nav-text">5.1 Wait 函数</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#5-2-waitpid-函数"><span class="nav-number">6.0.2.</span> <span class="nav-text">5.2 waitpid 函数</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#6-进程间通信"><span class="nav-number">7.</span> <span class="nav-text">6 进程间通信</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#6-1-管道-PIPE"><span class="nav-number">7.0.1.</span> <span class="nav-text">6.1 管道 PIPE</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-1-1-概念"><span class="nav-number">7.0.1.1.</span> <span class="nav-text">6.1.1 概念</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-1-2-pipe-函数"><span class="nav-number">7.0.1.2.</span> <span class="nav-text">6.1.2 pipe 函数</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-2-有名管道-FIFO"><span class="nav-number">7.0.2.</span> <span class="nav-text">6.2 有名管道 FIFO</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#6-3-共享内存-MMAP"><span class="nav-number">7.0.3.</span> <span class="nav-text">6.3 共享内存 MMAP</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-1-mmap-函数"><span class="nav-number">7.0.3.1.</span> <span class="nav-text">6.3.1 mmap 函数</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-2-注意事项"><span class="nav-number">7.0.3.2.</span> <span class="nav-text">6.3.2 注意事项</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-3-父子进程共享"><span class="nav-number">7.0.3.3.</span> <span class="nav-text">6.3.3 父子进程共享</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#6-3-3-匿名映射区"><span class="nav-number">7.0.3.4.</span> <span class="nav-text">6.3.3 匿名映射区</span></a></li></ol></li></ol></li></ol></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

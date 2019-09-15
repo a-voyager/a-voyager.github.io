@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文介绍了线程安全和共享对象。">
+<meta name="keywords" content="Java,笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java并发编程(一)">
+<meta property="og:url" content="http://yoursite.com/2016/09/03/JavaConcurrency1/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="本文介绍了线程安全和共享对象。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.762Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java并发编程(一)">
+<meta name="twitter:description" content="本文介绍了线程安全和共享对象。">
+  <link rel="canonical" href="http://yoursite.com/2016/09/03/JavaConcurrency1/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Java并发编程(一) | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/09/03/JavaConcurrency1/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Java并发编程(一)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-09-03 20:00:00" itemprop="dateCreated datePublished" datetime="2016-09-03T20:00:00+08:00">2016-09-03</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文介绍了线程安全和共享对象。</p>
+<a id="more"></a>
+
+<h1 id="线程安全"><a href="#线程安全" class="headerlink" title="线程安全"></a>线程安全</h1><ol>
+<li><p><strong>无状态对象</strong>永远是线程安全的</p>
+<blockquote>
+<p>无状态对象指的是没有成员域变量的对象</p>
+</blockquote>
+</li>
+<li><p>原子操作<br>自增操作是三个离散操作的简写形式: 获取当前值，加1，写回新值。这是一个 <code>读-改-写</code> 操作的实例，其中，结果的状态衍生自它先前的状态。</p>
+</li>
+<li><p>竞争条件<br>当计算的正确性依赖于运行时中的相关的时序或者多线程的交替时，会产生竞争条件；换句话说，想要得到正确的答案，要依赖于“幸运”的时序。最常见的一种竞争条件是 <code>检查再运行</code> ，使用一个潜在的过期值作为决定下一步操作的依据。例如: 你观察到一些事情为真（文件X不存在），然后（then）基于你的观察去执行一些操作（创建文件X）；但事实上，从观察到执行操作的这段时间内，观察结果可能已经失效了（有人在此期间创建了文件X），从而引发错误（非预期的异常，重写数据或者破坏文件）。</p>
+</li>
+<li><p>复合操作和原子操作</p>
+<blockquote>
+<p>假设有操作A和B，如果从执行A的线程的角度看，当其他线程执行B时，要么B全部执行完成，要么一点都没有执行，这样A和B互为原子操作。一个<strong>原子操作</strong>是指: 该操作对于所有的操作，包括它自己，都满足前面描述的状态。</p>
+</blockquote>
+<p><em>java.util.concurrent.atomic</em> 包中包括了<strong>原子变量</strong>类这些类用来实现数字和对象引用的原子状态转换。例如 <code>long</code> 类型替换为 <code>AtomicLong</code> 类型。</p>
+</li>
+<li><p>内部锁<br>Java提供了强制原子性的内置锁机制:  <code>synchronized</code> 块。一个 <code>synchronized</code> 块共有两部分: 锁对象的引用，以及这个锁保护的代码块。 <code>synchronized</code> 方法是对跨越了整个方法体的 <code>synchronized</code> 块的简短描述，至于 <code>synchronized</code> 方法的锁，就是该方法所在的对象本身。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">synchronized</span> (lock)&#123;</span><br><span class="line">    <span class="comment">// 访问或修改被锁保护的共享状态</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>执行 <code>synchronized</code> 块的线程，不可能看到会有其他线程能同时执行由同一个锁保护的 <code>synchronized</code> 块。</p>
+<ol start="6">
+<li><p>可重进入性<br>一个具有锁的方法内可以调用另一个具有锁的方法，称为<strong>可重进入</strong>。它是通过对锁进行计数实现的。</p>
+</li>
+<li><p>活跃度与性能<br><code>若并发</code> : 请求排队等候并依次被处理。</p>
+<blockquote>
+<p>通常简单性与性能是相互牵制的。实现一个同步策略是，不要过早地为了性能而牺牲简单性（这是对安全性潜在的妥协）。<br>有些耗时的计算或操作，比如网络或控制台I/O，难以快速完成，执行这些操作期间不要占有锁。</p>
+</blockquote>
+</li>
+</ol>
+<h1 id="共享对象"><a href="#共享对象" class="headerlink" title="共享对象"></a>共享对象</h1><ol>
+<li><p>可见性<br><code>重排序现象</code> : 在单个线程中，只要重排序不会对结果产生影响，那么就不能保证其中的操作一定按照程序写定的顺序执行——即使重排序对于其他线程来说会产生明显的影响。</p>
+<blockquote>
+<p>在没有同步的情况下，编译器，处理器，运行时安排操作的执行顺序可能完全出人意料。在没有进行适当同步的多线程程序中，尝试推断那些“必然”发生在内存中的动作时，你总是会判断错误。</p>
+</blockquote>
+</li>
+<li><p>非原子的64位操作<br>当一个线程在没有同步的情况下读取变量，它可能会得到一个过期值。但是至少它可以看到某个线程在那里设定的一个真实数值，而不是一个凭空而来的值。这样的安全保证被称为是<strong>最低限的安全性</strong>。<br>最低限的安全性应用于所有的变量，除了一个例外: 没有申明为 <code>volatile</code> 的64位数值变量(double和long)。Java存储模型要求获取和存储操作都为原子的，但是对于非volatile的long和double变量，JVM允许将64位的读或写<strong>划分为两个32位的操作</strong>。如果读和写发生在不同的线程，这种情况读取一个非volatile类型long就可能会出现得到一个值的高32位和另一个值的低32位。因此，即使你并不关心过期数据，但仅仅在多线程程序中使用共享的、可变的long和double变量也可能是不安全的，<strong>除非将它们声明为volatile类型，或者用锁保护起来</strong>。</p>
+</li>
+<li><p>锁不仅仅是关于同步与互斥的，也是关于内存可见的。为了保证所有线程都能够看到共享的、可变变量的最新值，读取和写入线程必须使用公共的锁进行同步。</p>
+</li>
+<li><p>Volatile变量<br>Java语言也提供了其他的选择，即一种同步的弱形式: volatile变量。它确保对一个变量到更新以可预见的方式告知其他的线程。当一个一域声明为volatile类型后，编译器与运行时会监视这个变量: 它是共享的，而且对它的操作不会与其他的内存操作一起被重排序。<strong>volatile变量不会缓存在寄存器或者缓存在对其他处理器隐藏的地方。</strong>所以，读一个volatile类型的变量时，总会返回由某一线程所写入到最新值。<br>但是我们并不推荐过度依赖volatile变量所提供的可见性。依赖volatile变量来控制状态可见性的代码，比使用锁的代码更脆弱，更难以理解。</p>
+<blockquote>
+<p>只有当volatile变量能够简化实现和同步策略的验证时，才使用它们。当验证正确性必须推断可见性问题时，应该避免使用volatile变量。正确使用volatile变量到方式包括:  </p>
+<ul>
+<li>用于确保它们所引用的对象状态的可见性</li>
+<li>或者用于标识重要的生命周期事件（比如初始化或关闭）的发生。</li>
+</ul>
+</blockquote>
+</li>
+<li><p><strong>加锁可以保证可见性与原子性；volatile变量只能保证可见性。</strong><br>只有满足了下面所有的标准后，才能使用volatile变量:</p>
+<ul>
+<li>写入变量时并不依赖变量的当前值(自增操作)；或者能够确保只有单一的线程修改变量的值；</li>
+<li>变量不需要与其他的状态变量共同参与不变约束</li>
+<li>而且，访问变量时，没有其他的原因需要加锁</li>
+</ul>
+</li>
+<li><p>发布与逸出<br><code>发布</code> : 使一个对象能够被当前范围之外的代码所使用<br><code>逸出</code> : 一个对象在尚未准备好时就将它发布</p>
+<p>不要允许可变的数据逸出，比如:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">class</span> <span class="title">UnsafeStates</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> Stringp[ states = <span class="keyword">new</span> String[]&#123;<span class="string">"AK"</span>, <span class="string">"AL"</span> ... &#125;;</span><br><span class="line">    <span class="comment">// 任何一个调用者都可以修改内容</span></span><br><span class="line">    <span class="comment">// 逸出所属的范围</span></span><br><span class="line">    <span class="keyword">public</span> String[] getSates() &#123; <span class="keyword">return</span> states; &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>也不要隐式地允许this引用逸出:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">ThisEscape</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="title">ThisEscape</span><span class="params">(EventSource source)</span></span>&#123;</span><br><span class="line">        source.registerListener (</span><br><span class="line">            <span class="keyword">new</span> EventListener()&#123;</span><br><span class="line">               <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onEvent</span><span class="params">(Event e)</span></span>&#123;</span><br><span class="line">                    <span class="comment">// 能够操作ThisEscape私有成员</span></span><br><span class="line">                    <span class="comment">// 而且this还没有构造完成</span></span><br><span class="line">                    doSomething(e);</span><br><span class="line">               &#125; </span><br><span class="line">            &#125;);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>不要让this引用在构造期间逸出，甚至即使是在构造函数的最后一行。</p>
+</blockquote>
+</li>
+<li><p>线程封闭<br>当对象封闭在一个线程时，这种做法会自动成为线程安全的，即使被封闭的对象本身并不是。例如:</p>
+<ul>
+<li>Swing: UI组件只有主线程才能够访问</li>
+<li>JDBC: Connection是从池中取得的，池负责管理不将其分配给其他线程</li>
+</ul>
+<p>线程限制是你在程序设计中需要考虑的一个元素，它是在程序的实现中完成的。语言自身以及核心库提供了某些机制（本地变量和ThreadLocal类）有助于维护线程限制，尽管如此，程序员仍然要自己负责确保线程限制对象不会从它所在的线程中逸出。</p>
+<p>7.1 Ad-hoc 线程限制<br><code>Ad-hoc 线程限制</code> 是指维护线程限制性的任务 全部落在实现上的这种情况。</p>
+<p>7.2 栈限制<br><code>栈限制</code> 是线程限制的一种特例，在栈限制中，只能通过本地变量才能触及对象。</p>
+<p>7.3 ThreadLocal<br>一种维护线程限制的更加规范的方式是使用 <code>ThreadLocal</code> ，它允许你将每个线程与持有数值的对象关联在一起。 <code>ThreadLocal</code> 提供了<em>get</em>和<em>set</em>访问器，为每个使用它的线程维护一份单独的拷贝。所以<em>get</em>总是返回由<strong>当前执行线程</strong>通过<em>set</em>设置的最新值。 <code>ThreadLocal&lt;T&gt;</code> 可以看做是 <code>map&lt;Thread, T&gt;</code> ，不过它内部不是这样实现的。</p>
+</li>
+<li><p>不可变对象<br>不可变对象永远是线程安全的。<br>只有满足如下状态，一个对象才是不可变的: </p>
+<ul>
+<li>它的状态不能在创建后再被修改</li>
+<li>所有域都是final类型</li>
+<li>它被正确创建（创建期间没有发生this引用的逸出）</li>
+</ul>
+<blockquote>
+<p>正如“将所有域声明为私有的，除非它们需要更高的可见性”一样，“将所有的域声明为final型，除非它们是可变的”，也是一条良好的实践。</p>
+</blockquote>
+</li>
+<li><p>安全发布<br>不可变对象可以在没有额外同步的情况下，安全地用于任意线程；甚至发布它们时亦不需要同步。</p>
+<blockquote>
+<p>为了安全地发布对象，对象的引用以及对象的状态必须同时对其他线程可见。一个正确的对象可以通过下列条件安全地发布:</p>
+<ul>
+<li>通过静态初始化器初始化的引用</li>
+<li>将它的引用存储到volatile域或AtomicReference</li>
+<li>将它的引用存储到正确创建的对象的final域中</li>
+<li>或者将它的引用存储到由锁正确保护的域中（置入线程安全容器，如Hashtable、ConcurrentMap、Vector、CopyOnWriteArrayList、BlockingQueue等）</li>
+</ul>
+</blockquote>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/08/24/Handler/" rel="next" title="Android Handler机制 源码解析">
+                  <i class="fa fa-chevron-left"></i> Android Handler机制 源码解析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/12/15/AndroidKnowledge/" rel="prev" title="Android 相关重难点知识整理">
+                  Android 相关重难点知识整理 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#线程安全"><span class="nav-number">1.</span> <span class="nav-text">线程安全</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#共享对象"><span class="nav-number">2.</span> <span class="nav-text">共享对象</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

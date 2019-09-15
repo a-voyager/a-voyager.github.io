@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言最近在写Java蓝牙串口通信读取数据中，需要将读取到的十六进制数转换为16位的有符号整数，网上Google一大堆，均无果，最后在StackOverFlow上找到了答案。">
+<meta name="keywords" content="Java,经验">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Java byte数组转有符号int">
+<meta property="og:url" content="http://yoursite.com/2016/01/24/Javabyteint/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="前言最近在写Java蓝牙串口通信读取数据中，需要将读取到的十六进制数转换为16位的有符号整数，网上Google一大堆，均无果，最后在StackOverFlow上找到了答案。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160124text1.jpg">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160124text2.jpg">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160124text3.jpg">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160124text4.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.767Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Java byte数组转有符号int">
+<meta name="twitter:description" content="前言最近在写Java蓝牙串口通信读取数据中，需要将读取到的十六进制数转换为16位的有符号整数，网上Google一大堆，均无果，最后在StackOverFlow上找到了答案。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160124text1.jpg">
+  <link rel="canonical" href="http://yoursite.com/2016/01/24/Javabyteint/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Java byte数组转有符号int | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/01/24/Javabyteint/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Java byte数组转有符号int
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-01-24 18:00:00" itemprop="dateCreated datePublished" datetime="2016-01-24T18:00:00+08:00">2016-01-24</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在写Java蓝牙串口通信读取数据中，需要将读取到的十六进制数转换为16位的有符号整数，网上Google一大堆，均无果，最后在StackOverFlow上找到了答案。</p>
+<a id="more"></a>
+<h1 id="问题描述"><a href="#问题描述" class="headerlink" title="问题描述"></a>问题描述</h1><p>通信协议上指出需要需要解析出三个16位的int型数据，每个数据2个字节，即2个byte。<br><img src="http://cdn.wuhaojie.top/160124text1.jpg" alt="通信协议"></p>
+<blockquote>
+<p>温习一下java数据类型基础知识: byte型占1个字节，int型占4个字节，在java中没有无符号的数据类型。</p>
+</blockquote>
+<p>下面是官方给的C#示例程序代码:<br><img src="http://cdn.wuhaojie.top/160124text2.jpg" alt="C#示例程序"><br>虽然没学过C#，但还是可以看出处理过程:<br>首先从原始数据byteTemp取出有用的部分<strong>复制到raw字节</strong>数组中，也就是raw中存放需要处理的两个字节，再调用自带的数组转置函数<strong>倒转一下顺序</strong>（应该是通信协议的要求），最后关键的一步<strong>调用BitConverter.ToInt16</strong>将2个字节转成一个16位的有符号整型数据。可见C#的各种小工具类还是挺全的，唉，此处不忍心要吐槽java了…<br>那么问题来了，如何将2个字节的字节数组转换成有符号的整型数据呢？也就是C#自带的API: BitConverter.ToInt16(byte[] src, int startIndex)在java中应该如何手动实现呢？</p>
+<h1 id="查看MSDN"><a href="#查看MSDN" class="headerlink" title="查看MSDN"></a>查看MSDN</h1><p>打开微软的官方API文档想一探究竟，结果被吓得怀疑人生了，怀疑自己到底有没有学过计算机…这究竟怎么转的啊…怎么0F00就是15，F1FF就变成-15呢，郁闷…<br><img src="http://cdn.wuhaojie.top/160124text3.jpg" alt="C#API"></p>
+<h1 id="Google搜索"><a href="#Google搜索" class="headerlink" title="Google搜索"></a>Google搜索</h1><blockquote>
+<ul>
+<li>Java 中int与byte数组转换详解 <a href="http://my.oschina.net/u/169390/blog/97495" target="_blank" rel="noopener">http://my.oschina.net/u/169390/blog/97495</a></li>
+<li>Java 中 byte、byte 数组和 int、long 之间的转换<br><a href="http://blog.csdn.net/defonds/article/details/8782785" target="_blank" rel="noopener">http://blog.csdn.net/defonds/article/details/8782785</a></li>
+<li>java中byte, int的转换<br><a href="http://freewind886.blog.163.com/blog/static/661924642011810236100/" target="_blank" rel="noopener">http://freewind886.blog.163.com/blog/static/661924642011810236100/</a></li>
+</ul>
+</blockquote>
+<p>无奈，先查阅各种资料，补充了点基础知识，学到了一些基本转换。</p>
+<h3 id="byte转换为int"><a href="#byte转换为int" class="headerlink" title="byte转换为int"></a>byte转换为int</h3><p>两种情况: </p>
+<ol>
+<li>保持值不变，如进行数值运算，采用强制转换: <code>int aInt = (int) aByte;</code></li>
+<li>保持低位不变，高位用0填充，如编码解码操作，采用位操作: <code>int aInt = aByte &amp; 0xFF;</code></li>
+</ol>
+<h3 id="int转换为byte"><a href="#int转换为byte" class="headerlink" title="int转换为byte"></a>int转换为byte</h3><p>直接使用强制类型转换: <code>byte aByte = (byte) aInt;</code> 但注意前提是int值小于255</p>
+<h3 id="有符号byte数组与int相互转换"><a href="#有符号byte数组与int相互转换" class="headerlink" title="有符号byte数组与int相互转换"></a>有符号byte数组与int相互转换</h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">byteArrayToInt</span><span class="params">(<span class="keyword">byte</span>[] b)</span> </span>&#123;  </span><br><span class="line">    <span class="keyword">return</span>   b[<span class="number">3</span>] &amp; <span class="number">0xFF</span> |  </span><br><span class="line">            (b[<span class="number">2</span>] &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">8</span> |  </span><br><span class="line">            (b[<span class="number">1</span>] &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">16</span> |  </span><br><span class="line">            (b[<span class="number">0</span>] &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">24</span>;  </span><br><span class="line">&#125;  </span><br><span class="line">  </span><br><span class="line"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">byte</span>[] intToByteArray(<span class="keyword">int</span> a) &#123;  </span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">new</span> <span class="keyword">byte</span>[] &#123;  </span><br><span class="line">        (<span class="keyword">byte</span>) ((a &gt;&gt; <span class="number">24</span>) &amp; <span class="number">0xFF</span>),  </span><br><span class="line">        (<span class="keyword">byte</span>) ((a &gt;&gt; <span class="number">16</span>) &amp; <span class="number">0xFF</span>),     </span><br><span class="line">        (<span class="keyword">byte</span>) ((a &gt;&gt; <span class="number">8</span>) &amp; <span class="number">0xFF</span>),     </span><br><span class="line">        (<span class="keyword">byte</span>) (a &amp; <span class="number">0xFF</span>)  </span><br><span class="line">    &#125;;  </span><br><span class="line">&#125;  </span><br><span class="line"><span class="comment">// 任意长度</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">toInt</span><span class="params">(<span class="keyword">byte</span>[] bRefArr)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">int</span> iOutcome = <span class="number">0</span>;</span><br><span class="line">	<span class="keyword">byte</span> bLoop;</span><br><span class="line">	<span class="keyword">for</span> (<span class="keyword">int</span> i = <span class="number">0</span>; i &lt; bRefArr.length; i++) &#123;</span><br><span class="line">		bLoop = bRefArr[i];</span><br><span class="line">		iOutcome += (bLoop &amp; <span class="number">0xFF</span>) &lt;&lt; (<span class="number">8</span> * i);</span><br><span class="line">	&#125;</span><br><span class="line">	<span class="keyword">return</span> iOutcome;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="StackOverFlow找到答案"><a href="#StackOverFlow找到答案" class="headerlink" title="StackOverFlow找到答案"></a>StackOverFlow找到答案</h1><p>说实话，StackOverFlow才是真正的神器啊！</p>
+<blockquote>
+<p>Convert from 2 or 4 bytes to signed/unsigned short/int<br><a href="http://stackoverflow.com/questions/10803557/convert-from-2-or-4-bytes-to-signed-unsigned-short-int" target="_blank" rel="noopener">http://stackoverflow.com/questions/10803557/convert-from-2-or-4-bytes-to-signed-unsigned-short-int</a></p>
+</blockquote>
+<p><img src="http://cdn.wuhaojie.top/160124text4.jpg" alt="StackOverFlow"><br>其中第一个是有符号类型的，第二个是无符号类型。<br>此处贴上该问题正确的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">IntegerConversion</span></span></span><br><span class="line"><span class="class"></span>&#123;</span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">convertTwoBytesToInt1</span> <span class="params">(<span class="keyword">byte</span> b1, <span class="keyword">byte</span> b2)</span>      <span class="comment">// signed</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (b2 &lt;&lt; <span class="number">8</span>) | (b1 &amp; <span class="number">0xFF</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">convertFourBytesToInt1</span> <span class="params">(<span class="keyword">byte</span> b1, <span class="keyword">byte</span> b2, <span class="keyword">byte</span> b3, <span class="keyword">byte</span> b4)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (b4 &lt;&lt; <span class="number">24</span>) | (b3 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">16</span> | (b2 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">8</span> | (b1 &amp; <span class="number">0xFF</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">int</span> <span class="title">convertTwoBytesToInt2</span> <span class="params">(<span class="keyword">byte</span> b1, <span class="keyword">byte</span> b2)</span>      <span class="comment">// unsigned</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (b2 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">8</span> | (b1 &amp; <span class="number">0xFF</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">long</span> <span class="title">convertFourBytesToInt2</span> <span class="params">(<span class="keyword">byte</span> b1, <span class="keyword">byte</span> b2, <span class="keyword">byte</span> b3, <span class="keyword">byte</span> b4)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> (<span class="keyword">long</span>) (b4 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">24</span> | (b3 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">16</span> | (b2 &amp; <span class="number">0xFF</span>) &lt;&lt; <span class="number">8</span> | (b1 &amp; <span class="number">0xFF</span>);</span><br><span class="line">  &#125;</span><br><span class="line"></span><br><span class="line">  <span class="function"><span class="keyword">public</span> <span class="keyword">static</span> <span class="keyword">void</span> <span class="title">main</span> <span class="params">(String[] args)</span></span></span><br><span class="line"><span class="function">  </span>&#123;</span><br><span class="line">    <span class="keyword">byte</span> b1 = (<span class="keyword">byte</span>) <span class="number">0xFF</span>;</span><br><span class="line">    <span class="keyword">byte</span> b2 = (<span class="keyword">byte</span>) <span class="number">0xFF</span>;</span><br><span class="line">    <span class="keyword">byte</span> b3 = (<span class="keyword">byte</span>) <span class="number">0xFF</span>;</span><br><span class="line">    <span class="keyword">byte</span> b4 = (<span class="keyword">byte</span>) <span class="number">0xFF</span>;</span><br><span class="line"></span><br><span class="line">    System.out.printf (<span class="string">"%,14d%n"</span>, convertTwoBytesToInt1 (b1, b2));</span><br><span class="line">    System.out.printf (<span class="string">"%,14d%n"</span>, convertTwoBytesToInt2 (b1, b2));</span><br><span class="line"></span><br><span class="line">    System.out.printf (<span class="string">"%,14d%n"</span>, convertFourBytesToInt1 (b1, b2, b3, b4));</span><br><span class="line">    System.out.printf (<span class="string">"%,14d%n"</span>, convertFourBytesToInt2 (b1, b2, b3, b4));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><ol>
+<li>不要小看基本数据类型以及各种位运算，这些往往才真的是难点，特别是对于java这种稀缺基本数据类型小工具包的语言</li>
+<li>不要逃避问题，善用搜索引擎，还有给StackOverFlow点个赞</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/01/22/Fragments/" rel="next" title="安卓Fragments入门">
+                  <i class="fa fa-chevron-left"></i> 安卓Fragments入门
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/01/25/NavigationDrawer/" rel="prev" title="安卓NavigationDrawer的使用">
+                  安卓NavigationDrawer的使用 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#问题描述"><span class="nav-number">2.</span> <span class="nav-text">问题描述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#查看MSDN"><span class="nav-number">3.</span> <span class="nav-text">查看MSDN</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Google搜索"><span class="nav-number">4.</span> <span class="nav-text">Google搜索</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#byte转换为int"><span class="nav-number">4.0.1.</span> <span class="nav-text">byte转换为int</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#int转换为byte"><span class="nav-number">4.0.2.</span> <span class="nav-text">int转换为byte</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#有符号byte数组与int相互转换"><span class="nav-number">4.0.3.</span> <span class="nav-text">有符号byte数组与int相互转换</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#StackOverFlow找到答案"><span class="nav-number">5.</span> <span class="nav-text">StackOverFlow找到答案</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">6.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

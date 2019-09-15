@@ -1,0 +1,741 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文章为《深入理解Java虚拟机: JVM高级特性与最佳实践》阅读笔记。主要包括 虚拟机字节码执行引擎、垃圾收集器与内存分配策略 两大内容。">
+<meta name="keywords" content="Java,笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入理解 Java 虚拟机">
+<meta property="og:url" content="http://yoursite.com/2017/04/01/JavaJVM/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="本文章为《深入理解Java虚拟机: JVM高级特性与最佳实践》阅读笔记。主要包括 虚拟机字节码执行引擎、垃圾收集器与内存分配策略 两大内容。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160922version.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160928classloader.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.780Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入理解 Java 虚拟机">
+<meta name="twitter:description" content="本文章为《深入理解Java虚拟机: JVM高级特性与最佳实践》阅读笔记。主要包括 虚拟机字节码执行引擎、垃圾收集器与内存分配策略 两大内容。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160922version.png">
+  <link rel="canonical" href="http://yoursite.com/2017/04/01/JavaJVM/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>深入理解 Java 虚拟机 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/04/01/JavaJVM/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">深入理解 Java 虚拟机
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-04-01 20:00:00" itemprop="dateCreated datePublished" datetime="2017-04-01T20:00:00+08:00">2017-04-01</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文章为《深入理解Java虚拟机: JVM高级特性与最佳实践》阅读笔记。主要包括 <code>虚拟机字节码执行引擎</code>、<code>垃圾收集器与内存分配策略</code> 两大内容。</p>
+<a id="more"></a>
+
+<h1 id="1-虚拟机字节码执行引擎"><a href="#1-虚拟机字节码执行引擎" class="headerlink" title="1. 虚拟机字节码执行引擎"></a>1. 虚拟机字节码执行引擎</h1><h2 id="1-1-概述"><a href="#1-1-概述" class="headerlink" title="1.1 概述"></a>1.1 概述</h2><p><code>虚拟机</code> 是一个相对于 <code>物理机</code> 的概念，这两种机器都有代码执行能力，其区别是物理机的执行引擎是直接建立在处理器、硬件、指令集和操作系统层面上的，而虚拟机的执行引擎则是自己实现的，因此可以自行制定指令集与执行引擎的结构体系，并且能够执行那些不被引擎直接支持的指令集格式。</p>
+<h2 id="1-2-运行时栈帧结构"><a href="#1-2-运行时栈帧结构" class="headerlink" title="1.2 运行时栈帧结构"></a>1.2 运行时栈帧结构</h2><p>栈帧是用于支持虚拟机进行方法调用和方法执行的数据结构，它是虚拟机运行时数据区中的虚拟机栈的栈元素。栈帧存储了方法的<code>局部变量表</code>、<code>操作数栈</code>、<code>动态连接</code> 和 <code>方法返回地址</code>等信息。每一个方法从调用开始至执行完成的过程，都对应着一个栈帧在虚拟机栈里面从入栈到出栈的过程。<br>每一个栈帧都包括了 <code>局部变量表</code>、<code>操作数栈</code>、<code>动态连接</code>、<code>方法返回地址</code>和一些<code>额外的附加信息</code>。在编译程序代码的时候，栈帧中需要多大的局部变量表，多深的操作数栈都已经完全确定了，并且写入到方法表的 <code>Code</code> 属性之中，因此一个栈帧需要分配多少内存，不会受到程序运行期变量数据的影响，而仅仅取决于具体的虚拟机实现。</p>
+<blockquote>
+<p>每一个线程都有一个存放栈帧的虚拟机栈</p>
+</blockquote>
+<h3 id="1-2-1-局部变量表"><a href="#1-2-1-局部变量表" class="headerlink" title="1.2.1 局部变量表"></a>1.2.1 局部变量表</h3><p>局部变量表是一组变量值存储空间，用于存放 <code>方法参数</code> 和 <code>方法内部定义的局部变量</code>。局部变量表的容量以变量槽(Variable Slot)为最小单位，它的大小可以随着处理器、操作系统或虚拟机的不同而发生变化。<br>局部变量表中，局部变量并不像类变量那样存在 <code>准备阶段</code>，类变量有两次赋初始值的过程，一次在准备阶段，赋予系统初始值；另一次在初始化阶段，赋予程序员定义的初始值，因此，即使在初始化阶段程序员没有为类变量赋值也没有关系，类变量仍然具有一个确定的初始值，但局部变量就不一样，如果一个<strong>局部变量定义了但没有赋初始值是不能使用的</strong>。</p>
+<h3 id="1-2-2-操作数栈"><a href="#1-2-2-操作数栈" class="headerlink" title="1.2.2 操作数栈"></a>1.2.2 操作数栈</h3><p>在方法的执行过程中，会有各种<code>字节码指令</code> 往操作数栈中写入和提取内容，也就是出栈/入栈操作。例如，在做算术运算的时候是通过操作数栈来进行的，又或者在调用其它方法的时候是通过操作数栈来进行参数传递的。</p>
+<blockquote>
+<p>Java 虚拟机的解释执行引擎称为 “基于栈的执行引擎”，其中所指的 “栈” 就是操作数栈。</p>
+</blockquote>
+<h3 id="1-2-3-动态连接"><a href="#1-2-3-动态连接" class="headerlink" title="1.2.3 动态连接"></a>1.2.3 动态连接</h3><p>每个栈帧都包含一个指向运行时常量池中该栈帧所属方法的引用，持有这个引用是为了支持方法调用过程中的动态连接。</p>
+<h3 id="1-2-4-方法返回地址"><a href="#1-2-4-方法返回地址" class="headerlink" title="1.2.4 方法返回地址"></a>1.2.4 方法返回地址</h3><p>当一个方法开始执行后，只有两种方式可以退出这个方法:</p>
+<ul>
+<li>第一种方式是执行引擎到任意一个方法返回的字节码指令，这时候可能会有返回值传递给上层的方法调用者（调用当前方法的方法称为调用者），是否有返回值和返回值的类型将根据遇到何种方法返回指令来决定，这种退出方法的方式称为正常完成出口</li>
+<li>另一种退出方式是，在方法执行过程中遇到了异常，并且这个异常没有在方法体内得到处理，无论是 <code>Java 虚拟机</code> 内部产生的异常，还是代码中使用 <code>athrow</code> 字节码指令产生的异常，只要在本方法的异常表中没有搜索到匹配的异常处理器，就会导致方法退出，这种退出方法的方式称为 <code>异常完成出口</code>。一个方法使用异常完成的方式退出，是不会给它的上层调用者产生任何返回值的。</li>
+</ul>
+<p>无论采用何种退出方式，在方法退出之后，<strong>都需要返回到方法被调用的位置</strong>，程序才能继续执行，方法返回时可能需要在栈帧中保存一些信息，用来帮助恢复它的上层方法的执行状态。一般来说，方法正常退出时，调用者的 <code>PC 计数器</code> 的值可以作为返回地址，栈帧中很可能会保存这个计数器值。而方法异常退出时，返回地址是要通过异常处理器表来确定的，栈帧中一般不会保存这部分信息。<br>方法退出的过程实际上就等同于把当前的栈帧出栈，因此退出时可能执行的操作有: 恢复上层方法上的局部变量表和操作数栈，把返回值（如果有的话）压入调用者栈帧的操作数栈中，调整 <code>PC 计数器</code> 的值以指向方法调用指令后面的一条指令等。</p>
+<h3 id="1-2-5-附加信息"><a href="#1-2-5-附加信息" class="headerlink" title="1.2.5 附加信息"></a>1.2.5 附加信息</h3><p>虚拟机规范允许具体的虚拟机实现增加一些规范里没有描述的信息到堆栈之中，例如与调试相关的信息，这部分信息完全取决于具体的虚拟机实现。在实际开发中，一般会把动态连接、方法返回地址与其他附加信息全部归为一类，称为栈帧信息。</p>
+<h2 id="1-3-方法调用"><a href="#1-3-方法调用" class="headerlink" title="1.3 方法调用"></a>1.3 方法调用</h2><p>方法调用并不等同与方法执行，方法调用阶段唯一的任务就是<strong>确定被调用方法的版本</strong>（即调用哪一个方法），暂时还不涉及方法内部的具体运行过程。在程序运行时，进行方法调用是最普通、最频繁的操作，但 <code>Class 文件</code> 的编译过程中不包含传统编译中的连接步骤，一切方法调用在 <code>Class 文件</code> 里面存储的都只是符号引用，而不是方法在实际运行时内存布局中的入口地址（相当于之前说的直接引用）。这个特性给 <code>Java</code> 带来了更强大的动态扩展能力，但也是的 <code>Java</code> 方法调用过程变得相对复杂起来，需要在类加载期间，甚至到运行期间才能确定目标方法的直接引用。</p>
+<h3 id="1-3-1-解析"><a href="#1-3-1-解析" class="headerlink" title="1.3.1 解析"></a>1.3.1 解析</h3><p>调用目标在程序代码写好、编译器进行编译时就必须确定下来，这类方法的调用称为 <code>解析</code>。<br>在 Java 语言中符合 “编译期可知，运行期不可变” 这个要求的方法，主要包括 <code>静态方法</code> 和 <code>私有方法</code> 两大类，前者与类型直接关联，后者在外部不可被访问，这两种方法各自的特点决定了它们<strong>都不可能通过继承或别的方式重写其他版本</strong>，因此它们都适合在 <code>类加载阶段</code> 进行解析。<br>解析调用一定是个静态的过程，在编译期间就完全确定，在类装载的解析阶段就会把涉及的符号引用全部转变为可确定的直接引用，不会延迟到运行期再去完成。</p>
+<h3 id="1-3-2-分派"><a href="#1-3-2-分派" class="headerlink" title="1.3.2 分派"></a>1.3.2 分派</h3><h4 id="1-静态分派"><a href="#1-静态分派" class="headerlink" title="1. 静态分派"></a>1. 静态分派</h4><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Human man = <span class="keyword">new</span> Man();</span><br></pre></td></tr></table></figure>
+
+<p>我们把上面代码中的 “Human” 称为变量的静态类型，或者叫做外观类型，后面的 “Man” 则称为变量的实际类型，静态类型和实际类型在程序中都可以发生一些变化，区别是静态类型的变化仅仅在使用时发生，变量本身的静态类型不会被改变，并且最终的静态类型是在编译期可知的；而实际类型变化的结果在运行期才可确定，编译器在编译程序的时候并不知道一个对象的实际类型是什么。例如下面的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实际类型变化</span></span><br><span class="line">Human man = <span class="keyword">new</span> Man();</span><br><span class="line">man = <span class="keyword">new</span> Woman();</span><br><span class="line"><span class="comment">// 静态类型变化</span></span><br><span class="line">sr.sayHello((Man) man);</span><br><span class="line">sr.sayHello((Woman) man);</span><br></pre></td></tr></table></figure>
+
+<p>虚拟机（准确地说是编译器）在重载时是通过参数的 <code>静态类型</code> 而不是实际类型作为判定依据的。并且静态类型是编译期可知的，因此，在编译阶段，Javac <strong>编译器会根据参数的静态类型决定使用哪个重载版本</strong>。<br>所有依赖静态类型来定位方法执行版本的分派动作称为静态分派，<code>静态分派</code> 的典型应用是 <code>方法重载</code>。静态分派发生在编译阶段，因此确定静态分派的动作实际上不是由虚拟机来执行的。<br>另外，编译器虽然能确定出方法的重载版本，但在很多情况下这个重载版本并不是 “唯一的”，往往只能确定一个 “更加合适的” 版本。</p>
+<blockquote>
+<p>更合适的版本:<br>char -&gt; int -&gt; long -&gt; float -&gt; double -&gt; Character -&gt; Serializable -&gt; Object -&gt; char…arr</p>
+</blockquote>
+<h4 id="2-动态分派"><a href="#2-动态分派" class="headerlink" title="2. 动态分派"></a>2. 动态分派</h4><p>动态分派和多态性中的重写有着很密切的关系。重载会选择合适的子类方法，原因就需要从 <code>invokevirtual</code> 指令的多态查找过程开始说起，<code>invokevirtual</code> 指令的运行时解析过程大致分为以下几个步骤:</p>
+<ul>
+<li>找到操作数栈顶的第一个元素所指向的对象的实际类型，记为 C</li>
+<li>如果在类型 C 中找到与常量中的 <code>描述符</code> 和 <code>简单名称</code> 都相符的方法，则进行访问权限校验，如果通过则返回这个方法的直接引用，查找过程结束; 如果不通过，则返回 java.lang.IllegalAccessException 异常</li>
+<li>否则，按照集成关系从下往上一次对 C 的各个父类进行第二步的搜索和验证过程</li>
+<li>如果始终没有找到合适的方法，则抛出 java.lang.AbstractMethodError 异常</li>
+</ul>
+<blockquote>
+<p>由于 invokevitual 指令执行的第一步就是在运行期确定接收者的实际类型，所以能够把常量池中的类方法符号引用解析到不同的直接引用上，这个过程就是 Java 语言中方法重写的本质。</p>
+</blockquote>
+<h4 id="3-单分派与多分派"><a href="#3-单分派与多分派" class="headerlink" title="3. 单分派与多分派"></a>3. 单分派与多分派</h4><p>方法的接收者与方法的参数统称为方法的宗量，根据分派基于多少种宗量，可以将分派划分为 <code>单分派</code> 和 <code>多分派</code> 两种。单分派是根据一个宗量对目标方法进行选择，多分派则是根据多于一个宗量对目标方法进行选择。<br>Java 语言是一门 <code>静态多分派</code>、<code>动态单分派</code> 的语言。</p>
+<h4 id="4-虚拟机动态分派的实现"><a href="#4-虚拟机动态分派的实现" class="headerlink" title="4. 虚拟机动态分派的实现"></a>4. 虚拟机动态分派的实现</h4><p>最常用的 “稳定优化” 手段就是在类方法区中建立一个虚方法表，使用虚方法表索引来代替元数据查找以提高性能。</p>
+<h3 id="1-3-3-动态类型语言支持"><a href="#1-3-3-动态类型语言支持" class="headerlink" title="1.3.3 动态类型语言支持"></a>1.3.3 动态类型语言支持</h3><p>随着 <code>JDK 1.7</code> 的发布，字节码指令集终于迎来了以为新成员————<code>invokedynamic</code> 指令，这条新增加的指令是 <code>JDK 1.7</code> 实现 “动态类型语言” 支持而进行的改进之一，也是为顺利实现 <code>Lambda</code> 表达式做技术准备。</p>
+<h4 id="1-动态类型语言"><a href="#1-动态类型语言" class="headerlink" title="1. 动态类型语言"></a>1. 动态类型语言</h4><p>动态类型语言的关键特征是它的类型检查的主体过程是在运行期而不是编译期，如 JavaScript、Python、PHP、Ruby 等，而在编译期就进行类型检查过程的语言（如 C++ 和 Java）等就是最常用的静态类型语言。</p>
+<h4 id="2-JDK-1-7-与动态类型"><a href="#2-JDK-1-7-与动态类型" class="headerlink" title="2. JDK 1.7 与动态类型"></a>2. JDK 1.7 与动态类型</h4><p>支持动态类型这种底层问题终归是应当在虚拟机层次上去解决才是最合适的，因此在 Java 虚拟机层面上提供动态类型的直接支持就成为了 Java 平台的发展趋势之一，这就是 JDK 1.7 中的 invokedynamic 指令以及 java.lang.invoke 包出现的技术背景。</p>
+<h4 id="3-java-lang-invoke-包"><a href="#3-java-lang-invoke-包" class="headerlink" title="3. java.lang.invoke 包"></a>3. java.lang.invoke 包</h4><p>JDK 1.7 新加入了 java.lang.invoke 包，主要目的是在之前单纯依靠符号引用来确定调用的目标方法以外，提供一种新的动态确定目标方法的机制，称为 MethodHandle，可以理解为 C/C++ 中的函数指针，或者 C# 中的代理。<br>也就是可以实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sort</span><span class="params">(List list, Comparator c)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>转变为:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">sort</span><span class="params">(List list, MethodHandle c)</span></span></span><br></pre></td></tr></table></figure>
+
+<p>获取 MethodHandle 实例可以通过下面的代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">MethodHandle c =  MethodHandles.lookup().findVirtual(obj.getClass, <span class="string">"println"</span>, mt);  <span class="comment">// mt 为方法类型</span></span><br></pre></td></tr></table></figure>
+
+<p>与反射的区别:</p>
+<ul>
+<li>Reflection 和 MethodHandle 机制都是在模拟方法调用，但 Reflection 是在模拟 <strong>Java 代码层次</strong>的方法调用，而 MethodHandle 是在模拟<strong>字节码层次</strong>的方法调用。在 MethodHandles.loopup 中的方法是分别对应字节码指令的行为的</li>
+<li>Reflection 中包含的描述信息更多，也就是说 <strong>Reflection 是重量级</strong>，而 <strong>MethodHandle 是轻量级</strong></li>
+<li>MethodHandle 是对字节码的方法指令调用的模拟，所以理论上虚拟机在这方面<strong>做的各种优化</strong>（如方法内联）也可以去支持 MethodHandle，而 Reflection 则得不到这种优化。</li>
+</ul>
+<h2 id="1-4-基于栈的字节码解释执行引擎"><a href="#1-4-基于栈的字节码解释执行引擎" class="headerlink" title="1.4 基于栈的字节码解释执行引擎"></a>1.4 基于栈的字节码解释执行引擎</h2><h3 id="1-4-1-基于栈的指令集和基于寄存器的指令集"><a href="#1-4-1-基于栈的指令集和基于寄存器的指令集" class="headerlink" title="1.4.1 基于栈的指令集和基于寄存器的指令集"></a>1.4.1 基于栈的指令集和基于寄存器的指令集</h3><p>基于栈的指令集主要的优点就是可移植，寄存器由硬件直接提供，程序直接依赖这些寄存器则不可避免地要受到硬件的约束。栈架构的指令集的主要缺点是执行速度相对来说会稍慢一些。</p>
+<h1 id="2-内存分配策略"><a href="#2-内存分配策略" class="headerlink" title="2. 内存分配策略"></a>2. 内存分配策略</h1><h2 id="2-1-内存分配与回收策略"><a href="#2-1-内存分配与回收策略" class="headerlink" title="2.1 内存分配与回收策略"></a>2.1 内存分配与回收策略</h2><p>对象的内存分配，往大方向讲，就是在堆上分配（但也可能经过 JIT 编译后被拆散为标量类型并间接地栈上分配），<strong>对象主要分配在新生代的 Eden 区上</strong>，如果启动了本地线程分配缓冲，将按线程有限在 TLAB 上分配。少数情况下也可能会直接分配在老年代中，分配的规则并不是百分之百固定的，其细节<strong>取决于</strong>当前使用的是哪一种<strong>垃圾收集器组合</strong>，还有虚拟机中与内存相关的参数的设置。</p>
+<h3 id="2-1-1-对象优先在-Eden-分配"><a href="#2-1-1-对象优先在-Eden-分配" class="headerlink" title="2.1.1 对象优先在 Eden 分配"></a>2.1.1 对象优先在 Eden 分配</h3><p>大多数情况下，对象在新生代 Eden 区中分配。当 Eden 区中没有足够空间进行分配时，虚拟机将发起一次 Minor GC。</p>
+<blockquote>
+<p>Eden 区 : Survivor 区 = 1 : 8<br>年轻代 : 老年代 = 1 : 2</p>
+</blockquote>
+<h3 id="2-1-2-大对象直接进入老年代"><a href="#2-1-2-大对象直接进入老年代" class="headerlink" title="2.1.2 大对象直接进入老年代"></a>2.1.2 大对象直接进入老年代</h3><p>所谓大对象是指，需要大量连续内存空间的 Java 对象，最典型的大对象就是那种很长的字符串以及数组。大对象对虚拟机的内存分配来说就是一个坏消息，经常出现大对象容易导致内存还有不少空间时就提前触发垃圾收集以获取足够的连续空间来 “安置” 它们。</p>
+<h3 id="2-1-3-长期存活的对象将进入老年代"><a href="#2-1-3-长期存活的对象将进入老年代" class="headerlink" title="2.1.3 长期存活的对象将进入老年代"></a>2.1.3 长期存活的对象将进入老年代</h3><p>既然虚拟机采用了分代收集的思想来管理内存，那么内存回收就必须能识别哪些对象应放在新生代，哪些对象应放在老年代中。为了做到这点，虚拟机给每个对象定义了一个对象年龄计数器。如果对象在 Eden 出生并经过第一次 Minor GC 后仍然存活，并且能被 Survivor 区中每 “熬过” 一次 Minor GC，年龄就增加 1 岁，当它的年龄增加到一定程度（默认为 15 岁），就将会被晋升到老年代中。</p>
+<h3 id="2-1-4-动态对象年龄判定"><a href="#2-1-4-动态对象年龄判定" class="headerlink" title="2.1.4 动态对象年龄判定"></a>2.1.4 动态对象年龄判定</h3><p>为了能更好地适应不同程序的内存状况，虚拟机并不是永远地要求对象的年龄必须达到了 MaxTenuringThreshold 才能晋升老年代，如果在 Survivor 空间中相同年龄所有对象大下的总和大于 Survivor 空间的一般，年龄大于等于该年龄的对象就可以直接进入老年代，无需等到要求的年龄。</p>
+<h3 id="2-1-5-空间分配担保"><a href="#2-1-5-空间分配担保" class="headerlink" title="2.1.5 空间分配担保"></a>2.1.5 空间分配担保</h3><p>在发生 Minor GC 之前，虚拟机会先检查老年代最大可用的连续空间是否大于新生代所有对象总空间，如果这个条件成立，那么 Minor GC 可以确保是安全的。如果不成立，则虚拟机会查看 HandlePromotionFailure 设置值是否允许担保失败。如果允许，那么会继续检查老年代最大可用的连续空间是否大于历次晋升到老年代对象的平均大小，如果大于，将尝试着进行一次 Minor GC，尽管这次 Minor GC 是有风险的；如果小于，或者 HandlePromotionFailure 设置不允许冒险，那这是也要改为进行一次 Full GC。</p>
+<h1 id="3-垃圾收集器与内存分配策略"><a href="#3-垃圾收集器与内存分配策略" class="headerlink" title="3. 垃圾收集器与内存分配策略"></a>3. 垃圾收集器与内存分配策略</h1><ol>
+<li><p><code>引用计数法</code> : 给对象中添加一个引用计数器，每当有一个地方引用它时，计数器值就加1；当引用失效时，计数器值就减1；任何时刻计数器都为0的对象就是不可能再被使用的。但是，其不能解决对象之间的相互循环引用的问题。</p>
+</li>
+<li><p>Java和C#，甚至包括古老的Lisp，都是使用 <code>根搜索算法</code> 判定对象是否存活的。该算法通过一系列「GC Roots」对象作为起始点，从这些节点开始向下搜索，搜索所走过的路径称为引用链，当一个对象到「GC Roots」没有任何引用链相连（用图论的话来说就是从「GC Roots」到这个对象不可达）时，则证明此对象是不可用的。<br>在Java中，「GC Roots」包括:</p>
+<ul>
+<li>栈中引用的对象</li>
+<li>静态引用对象</li>
+<li>常量引用对象</li>
+<li>JNI所引用的对象</li>
+</ul>
+</li>
+<li><p>Java中引用分为:  <code>强引用</code> (不被回收)、 <code>软引用</code> (内存不足进行第二次回收)、 <code>弱引用</code> (随时回收)、 <code>虚引用</code> (最弱的关系，不能取得实例)。</p>
+</li>
+<li><p>如果覆写了 <code>finalize()</code> 方法且有必要，虚拟机会触发 <code>finalize()</code> 方法，且只会调用一次，但并不承诺会等待它运行结束。</p>
+</li>
+<li><p>回收常量: 判断有无对象引用常量池中的常量；</p>
+</li>
+<li><p>回收类: 满足下列三个条件才<strong>可以</strong>被回收。</p>
+<ul>
+<li>该类的所有实例都被回收</li>
+<li>加载该类的ClassLoader已经被回收</li>
+<li>该类对应Class对象没有在任何地方被引用</li>
+</ul>
+</li>
+<li><p>垃圾收集算法: 「标记清除算法」、「复制算法」、「标记整理算法」、「分代收集算法」。</p>
+</li>
+<li><p>垃圾收集器（7种作用于不同分代的收集器）: Serial收集器（Stop the World）、ParNew收集器（多线程版Serial）、Parallel Scavenge收集器、CMS（并发收集、低停顿）、G1收集器（Java 1.7、标记整理、精准控制停顿）</p>
+</li>
+<li><p>内存分配策略: </p>
+<ul>
+<li>对象优先在Eden分配</li>
+<li>大对象直接进入老年代，如数组、字符串</li>
+<li>长期存货的对象将进入老年代，默认年龄达到15岁进入，当然并不是一定达到才可以进入</li>
+</ul>
+</li>
+<li><p>空间分配担保: 每次晋升到老年代的平均大小如果大于老年代的剩余空间大小，则进行一次「Full GC」</p>
+<blockquote>
+<p>Minor GC: 新生代GC；Full GC: 老年代GC</p>
+</blockquote>
+</li>
+</ol>
+<h1 id="类文件结构和类加载"><a href="#类文件结构和类加载" class="headerlink" title="类文件结构和类加载"></a>类文件结构和类加载</h1><ol>
+<li><p>魔数与Class文件版本: 很多图片文件头都存有魔数，比如gif或jpeg。Class文件的魔数是0xCAFEBABE。魔数后面分别是2个字节的次版本号和2个字节的主版本号。版本号从45开始的。<br><img src="http://cdn.wuhaojie.top/160922version.png" alt="笔者的版本"></p>
+</li>
+<li><p>版本号后面紧跟的是常量池容量计数值，从1开始计数。（P143）</p>
+</li>
+<li><p>类加载时会先加载父类，接口则只在用到父接口的时候才加载。</p>
+</li>
+<li><p>类加载过程: <code>加载</code> -&gt; <code>验证</code> -&gt; <code>准备</code> -&gt;<code>（解析）</code>-&gt; <code>初始化</code> -&gt; <code>使用</code> -&gt; <code>卸载</code></p>
+<blockquote>
+<p>解析在某些情况下可以在初始化阶段之后再开始</p>
+</blockquote>
+</li>
+<li><p><code>static</code> 变量在准备阶段就已经分配内存，但通常情况不会为其赋值初始化，初值为0，除非存在 <code>final</code> 修饰，那样便会立即初始化。对于静态变量和静态代码块，编译器先变量赋值，再静态代码块。且先执行父类，即Object中的静态代码块先于任何一个类中的变量赋值和静态代码块。</p>
+</li>
+<li><p>两个类相等不仅要「Class对象相等」，而且「ClassLoader也要相等」。</p>
+</li>
+<li><p><code>双亲委派模型</code> : 如果一个类加载器收到了类加载的请求，它首先不会自己去尝试加载这个类，而是把这个请求委派给父类加载器去完成，每一个层次的类加载器都是如此，因此所有的加载请求最终都应该传送到顶层的启动类加载器中，只有当父加载器反馈自己无法完成这个加载请求（它的搜索范围中没有找到所需的类）时，子加载器才会尝试自己去加载。</p>
+<p><img src="http://cdn.wuhaojie.top/160928classloader.png" alt="双亲委派模型"></p>
+</li>
+</ol>
+<h1 id="4-虚拟机字节码执行引擎补充"><a href="#4-虚拟机字节码执行引擎补充" class="headerlink" title="4. 虚拟机字节码执行引擎补充"></a>4. 虚拟机字节码执行引擎补充</h1><ol>
+<li><p>局部变量Slot回收要满足:</p>
+<ul>
+<li>超出作用域</li>
+<li>有新的局部变量覆盖Slot区</li>
+</ul>
+</li>
+<li><p><code>操作数栈</code> : 例如加法运算中的两个数</p>
+</li>
+<li><p><code>栈帧信息</code> : 一般会把动态连接（指向方法等的符号连接）、方法返回地址与其他附加信息全部归位一类，称为栈帧。</p>
+</li>
+<li><p>对于静态等已经确定了的方法（不会被覆写），调用时直接将符号引用转化为直接引用，这种调用方法称为解析。Java虚拟机中方法调用对应四条指令:</p>
+<ul>
+<li>invokestatic: 调用静态方法</li>
+<li>invokespecial: 调用实例构造器、私有方法和父类方法</li>
+<li>invokevirtual: 调用所有的虚方法，和final修饰的方法</li>
+<li>invokeinterface: 调用接口方法</li>
+</ul>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/03/10/AndroidBoot/" rel="next" title="Android 系统开机流程简析">
+                  <i class="fa fa-chevron-left"></i> Android 系统开机流程简析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/05/05/JavaYouForgot/" rel="prev" title="被你忽略掉的 Java 细节知识">
+                  被你忽略掉的 Java 细节知识 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-虚拟机字节码执行引擎"><span class="nav-number">1.</span> <span class="nav-text">1. 虚拟机字节码执行引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-概述"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 概述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-运行时栈帧结构"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 运行时栈帧结构</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-局部变量表"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 局部变量表</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-操作数栈"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 操作数栈</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-动态连接"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.2.3 动态连接</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-4-方法返回地址"><span class="nav-number">1.2.4.</span> <span class="nav-text">1.2.4 方法返回地址</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-5-附加信息"><span class="nav-number">1.2.5.</span> <span class="nav-text">1.2.5 附加信息</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-方法调用"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 方法调用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-1-解析"><span class="nav-number">1.3.1.</span> <span class="nav-text">1.3.1 解析</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-2-分派"><span class="nav-number">1.3.2.</span> <span class="nav-text">1.3.2 分派</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-静态分派"><span class="nav-number">1.3.2.1.</span> <span class="nav-text">1. 静态分派</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-动态分派"><span class="nav-number">1.3.2.2.</span> <span class="nav-text">2. 动态分派</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-单分派与多分派"><span class="nav-number">1.3.2.3.</span> <span class="nav-text">3. 单分派与多分派</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#4-虚拟机动态分派的实现"><span class="nav-number">1.3.2.4.</span> <span class="nav-text">4. 虚拟机动态分派的实现</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-3-3-动态类型语言支持"><span class="nav-number">1.3.3.</span> <span class="nav-text">1.3.3 动态类型语言支持</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#1-动态类型语言"><span class="nav-number">1.3.3.1.</span> <span class="nav-text">1. 动态类型语言</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#2-JDK-1-7-与动态类型"><span class="nav-number">1.3.3.2.</span> <span class="nav-text">2. JDK 1.7 与动态类型</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#3-java-lang-invoke-包"><span class="nav-number">1.3.3.3.</span> <span class="nav-text">3. java.lang.invoke 包</span></a></li></ol></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-4-基于栈的字节码解释执行引擎"><span class="nav-number">1.4.</span> <span class="nav-text">1.4 基于栈的字节码解释执行引擎</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-4-1-基于栈的指令集和基于寄存器的指令集"><span class="nav-number">1.4.1.</span> <span class="nav-text">1.4.1 基于栈的指令集和基于寄存器的指令集</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-内存分配策略"><span class="nav-number">2.</span> <span class="nav-text">2. 内存分配策略</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-内存分配与回收策略"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 内存分配与回收策略</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-1-对象优先在-Eden-分配"><span class="nav-number">2.1.1.</span> <span class="nav-text">2.1.1 对象优先在 Eden 分配</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-2-大对象直接进入老年代"><span class="nav-number">2.1.2.</span> <span class="nav-text">2.1.2 大对象直接进入老年代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-3-长期存活的对象将进入老年代"><span class="nav-number">2.1.3.</span> <span class="nav-text">2.1.3 长期存活的对象将进入老年代</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-4-动态对象年龄判定"><span class="nav-number">2.1.4.</span> <span class="nav-text">2.1.4 动态对象年龄判定</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#2-1-5-空间分配担保"><span class="nav-number">2.1.5.</span> <span class="nav-text">2.1.5 空间分配担保</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-垃圾收集器与内存分配策略"><span class="nav-number">3.</span> <span class="nav-text">3. 垃圾收集器与内存分配策略</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#类文件结构和类加载"><span class="nav-number">4.</span> <span class="nav-text">类文件结构和类加载</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-虚拟机字节码执行引擎补充"><span class="nav-number">5.</span> <span class="nav-text">4. 虚拟机字节码执行引擎补充</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

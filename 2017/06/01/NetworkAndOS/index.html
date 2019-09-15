@@ -1,0 +1,761 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文将对计算机网络和操作系统的一些细节知识做简单介绍，知识比较偏，一般不做掌握，有一定印象和了解即可。">
+<meta name="keywords" content="经验">
+<meta property="og:type" content="article">
+<meta property="og:title" content="深入计算机网络、操作系统细节知识点">
+<meta property="og:url" content="http://yoursite.com/2017/06/01/NetworkAndOS/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="本文将对计算机网络和操作系统的一些细节知识做简单介绍，知识比较偏，一般不做掌握，有一定印象和了解即可。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.778Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="深入计算机网络、操作系统细节知识点">
+<meta name="twitter:description" content="本文将对计算机网络和操作系统的一些细节知识做简单介绍，知识比较偏，一般不做掌握，有一定印象和了解即可。">
+  <link rel="canonical" href="http://yoursite.com/2017/06/01/NetworkAndOS/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>深入计算机网络、操作系统细节知识点 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/06/01/NetworkAndOS/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">深入计算机网络、操作系统细节知识点
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-06-01 20:00:00" itemprop="dateCreated datePublished" datetime="2017-06-01T20:00:00+08:00">2017-06-01</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机/" itemprop="url" rel="index"><span itemprop="name">计算机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文将对计算机网络和操作系统的一些细节知识做简单介绍，知识比较偏，一般不做掌握，有一定印象和了解即可。</p>
+<a id="more"></a>
+
+<h1 id="计算机网络"><a href="#计算机网络" class="headerlink" title="计算机网络"></a>计算机网络</h1><ol>
+<li><p>HTTP 响应吗:</p>
+<ul>
+<li>301 永久重定向</li>
+<li>302 临时重定向</li>
+<li>401 请求身份验证</li>
+<li>403 服务器拒绝</li>
+</ul>
+</li>
+<li><p>常见应用层协议端口号:</p>
+<ul>
+<li>http 80</li>
+<li>ftp 20/21</li>
+<li>ssh 22</li>
+<li>telnet 23</li>
+<li>smtp 25</li>
+</ul>
+</li>
+<li><p>“随机存取”，指的是当存储器中的消息被读取或写入时，所需要的时间与这段信息所在的位置无关。相对地，有串行访问存储器包括顺序访问存储器（如：磁带）和直接访问存储器（如：磁盘）。</p>
+</li>
+<li><p>RS-485分为两大类：两制线、四制线。其中，前者需要两根数据线，可以进行半双工通信；后者需要四根数据线，可以进行全双工通信。故，RS-485最少有两个数据信息号</p>
+</li>
+<li><p>RIP最多支持的跳数为15，即在源和目的网间所要经过的最多路由器的数目为15，跳数16表示不可达</p>
+</li>
+<li><p>Synchronous Digital Hierarchy – 同步数字系列构成信息高速公路的最基本单元由SHD设备构成，因为需要同步，所以不能丢帧（帧丢失（LOF））</p>
+</li>
+<li><p>典型协议:</p>
+<ul>
+<li>PPP是点对点协议，为在点对点连接上传输多协议数据包提供一个标准方法.</li>
+<li>ICMP是Internet控制管理协议，它是TCP/IP协议族的一个子协议，用于在IP主机、路由器之间传递控制消息。控制消息是指网络通不通、主机是否可达、路由是否可用等网络本身的消息，这些消息虽然不传递用户数据，但是对于用户数据的传递很重要。</li>
+<li>ARP协议是地址解析协议，是根据IP地址获取物理地址的一个TCP/IP协议。主机发送消息时将包含目标IP地址的ARP请求并广播到网络上的所有主机，并接受返回消息，一次确定目标的物理地址；收到返回消息后将该IP地址和物理地址存入本机ARP缓存中并保留一定时间，下次请求时直接查询ARP缓存以节约资源。  </li>
+<li>DHCP是动态主机配置协议，一个局域网的网络协议，使用UDP协议工作，主要是给内部网络或是网络服务供应商自动分配IP地址，给用户或者内部网络管理员作为对所有计算机管理的手段。</li>
+</ul>
+</li>
+</ol>
+<ol start="8">
+<li>表示层为应用层提供服务，表示层是处理所有与数据表示及运输有关的问题，包括转换、加密和压缩 服务</li>
+</ol>
+<ol start="9">
+<li>TCP：状态控制码（Code，Control Flag）<br>标志位字段（U、A、P、R、S、F）：占6比特。各比特的含义如下:<ul>
+<li>URG：紧急比特（urgent）,当URG＝1时，表明紧急指针字段有效,代表该封包为紧急封包。它告诉系统此报文段中有紧急数据，应尽快传送(相当于高优先级的数据)， 且上图中的 Urgent Pointer 字段也会被启用。</li>
+<li>ACK：确认比特（Acknowledge）。只有当ACK＝1时确认号字段才有效,代表这个封包为确认封包。当ACK＝0时，确认号无效。</li>
+<li>PSH：（Push function）若为1时，代表要求对方立即传送缓冲区内的其他对应封包，而无需等缓冲满了才送。</li>
+<li>RST：复位比特(Reset) ,当RST＝1时，表明TCP连接中出现严重差错（如由于主机崩溃或其他原因），必须释放连接，然后再重新建立运输连接。</li>
+<li>SYN：同步比特(Synchronous)，SYN置为1，就表示这是一个连接请求或连接接受报文,通常带有 SYN 标志的封包表示『主动』要连接到对方的意思。。</li>
+<li>FIN：终止比特(Final)，用来释放一个连接。当FIN＝1时，表明此报文段的发送端的数据已发送完毕，并要求释放运输连接。</li>
+</ul>
+</li>
+</ol>
+<ol start="10">
+<li><p>200 系状态码<br>200(成功) 服务器已成功处理了请求。通常，这表示服务器提供了请求的网页。如果您的 robots.txt文件显示为此状态，那么，这表示 Googlebot 已成功检索到该文件。<br>201(已创建) 请求成功且服务器已创建了新的资源。<br>202(已接受) 服务器已接受了请求，但尚未对其进行处理。<br>203(非授权信息) 服务器已成功处理了请求，但返回了可能来自另一来源的信息。<br>204(无内容) 服务器成功处理了请求，但未返回任何内容。<br>205(重置内容) 服务器成功处理了请求，但未返回任何内容。与 204 响应不同，此响应要求请求者重置文档视图(例如清除表单内容以输入新内容)。<br>206(部分内容) 服务器成功处理了部分 GET 请求。</p>
+</li>
+<li><p>断点续传<br>响应头:</p>
+<ul>
+<li>Accept-Ranges: bytes - 该响应头表明服务器支持Range请求,以及服务器所支持的单位是字节(这也是唯一可用的单位).我们还能知道:服务器支持断点续传,以及支持同时下载文件的多个部分,也就是说下载工具可以利用范围请求加速下载该文件.Accept-Ranges: none 响应头表示服务器不支持范围请求.</li>
+<li>Content-Length: 36907 -  Content-Length响应头表明了响应实体的大小,也就是真实的图片文件的大小是36907字节 (37K).</li>
+</ul>
+</li>
+</ol>
+<p>请求头:</p>
+<ul>
+<li>Range: bytes=0-1024</li>
+</ul>
+<ol start="12">
+<li><p>波特率与比特率的换算关系: 比特率 = 波特率 * log2(N). N 为相位</p>
+</li>
+<li><p>HTTP 请求方法:</p>
+<ul>
+<li>GET: 请求 URI 得到资源</li>
+<li>POST: 给服务器添加信息</li>
+<li>OPTION: 询问可以执行的方法</li>
+<li>TRACE: 环回测试远程诊断服务器</li>
+<li>HEAD: 请求首部信息，类似 GET，但不返回 Body</li>
+<li>CONNECT: 用于代理服务器</li>
+</ul>
+</li>
+</ol>
+<ol start="14">
+<li><p>交换机攻击:</p>
+<ul>
+<li>IPS 入侵防御系统</li>
+<li>UTM  安全网关</li>
+<li>IDS 入侵检测系统</li>
+</ul>
+</li>
+<li><p>信元交换又叫异步传输模式（ATM,Asynchronous Transfer Mode)，是一种使用异步时分多路复用的面向分组交换的传输方式。结合了 <code>电路交换技术</code> 延迟小和 <code>分组交换技术</code> 灵活的优点。</p>
+</li>
+<li><p>IP地址类型<br>最初设计互联网络时，为了便于寻址以及层次化构造网络，每个IP地址包括两个标识码（ID），即网络ID和主机ID。同一个物理网络上的所有主机都使用同一个网络ID，网络上的一个主机（包括网络上工作站，服务器和路由器等）有一个主机ID与其对应。IP地址根据网络ID的不同分为5种类型，A类地址、B类地址、C类地址、D类地址和E类地址。  </p>
+<ul>
+<li>A类IP地址<br>一个A类IP地址由1字节的网络地址和3字节主机地址组成，网络地址的最高位必须是“0”， 地址范围从1.0.0.0 到126.0.0.0。可用的A类网络有126个，每个网络能容纳1亿多个主机。  </li>
+<li>B类IP地址<br>一个B类IP地址由2个字节的网络地址和2个字节的主机地址组成，网络地址的最高位必须是“10”，地址范围从128.0.0.0到191.255.255.255。可用的B类网络有16382个，每个网络能容纳6万多个主机 。  </li>
+<li>C类IP地址<br>一个C类IP地址由3字节的网络地址和1字节的主机地址组成，网络地址的最高位必须是“110”。范围从192.0.0.0到223.255.255.255。C类网络可达209万余个，每个网络能容纳254个主机。  </li>
+<li>D类地址用于多点广播（Multicast）。<br>D类IP地址第一个字节以“lll0”开始，它是一个专门保留的地址。它并不指向特定的网络，目前这一类地址被用在多点广播（Multicast）中。多点广播地址用来一次寻址一组计算机，它标识共享同一协议的一组计算机。  </li>
+<li>E类IP地址<br>以“llll0”开始，为将来使用保留。 </li>
+</ul>
+</li>
+<li><p>NETBIOS 是一种局域网协议, NETBEUI 是NETBIOS的一个升级版本</p>
+</li>
+</ol>
+<h1 id="操作系统"><a href="#操作系统" class="headerlink" title="操作系统"></a>操作系统</h1><ol>
+<li><p>I/O控制方式</p>
+<ul>
+<li>程序IO方式，是采用busy-waiting的方式，即CPU会采用轮询的方式来询问数据——-效果最差</li>
+<li>中断IO方式，是设备控制器当取出一个数据之后向CPU发送一个中断，然后CPU将数据从控制器中取到CPU寄存器，再然后转移到内存中。这种方式，CPU是以字节的方式来响应数据的。</li>
+<li>DMA方式，是CPU通过向DMA控制器设定若干参数，然后DMA打开了一条内存到设备的通道，这样，设备（内存）中的数据可以不通过CPU来进行数据交互。缺点是，DMA是多少设备就需要多少DMA，而且，DMA方式下，CPU的访问设备是以数据块为周期的。</li>
+<li>IO通道方式，IO通道相当于一个简单的处理机，有自己的指令，也可以执行指令。指令存储在内存。IO通道相当于一条PCI总线，一条IO通道可以连接所有的设备控制器。然后CPU向IO通道发出指令，IO通道将会自动进行获取数据。另外，IO通道是以一组块为单位进行获取的。</li>
+</ul>
+</li>
+<li><p>强迫性中断和自愿性中断 强迫性中断由随机事件引起而非程序员事先安排, <code>硬件故障中断</code>, <code>程序性中断</code>, <code>外部中断</code> 及 <code>输入/输出中断</code> 是强迫性中断. </p>
+</li>
+<li><p>进程退出时销毁该进程独立拥有的一系列资源，包括文件，网络，内存等等，但是共享内存是进程间通信方式的一种，不仅仅是该进程所独有的，若共享内存销毁后可能会影响其他进程</p>
+</li>
+<li><p>检测死锁对系统资源的分配不加限制，只要有则可以进行分配，允许系统在运行过程中发生死锁，但可通过系统所设置的检测机构，反复检测各进程资源申请和分配情况，及时的检测出死锁的发生，并确定与死锁有关的进程和资源，然后通过解除死锁的措施，将已发生的死锁清除掉。检测死锁不是预防系统卷入死锁。</p>
+</li>
+<li><p>处理死锁的方法:</p>
+<ul>
+<li>预防死锁: 这是一种较简单和直观的事先预防方法。该方法是通过设置某些限制条件，去破坏产生死锁四个必要条件中的一个或几个来预防产生死锁。预防死锁是一种较易实现的方法，已被广泛使用。</li>
+<li>避免死锁: 同样是属于事先预防策略，但它并不是事先采取各种限制措施，去破坏产生死锁的四个必要条件，而是在资源的动态分配过程中，用某种方法防止系统进入不安全状态，从而可以避免死锁。</li>
+<li>检测死锁: 这种方法无须事先采取任何限制性措施，允许进程在运行过程中发生死锁。但可通过检测机构及时地检测出死锁的发生，然后采取适当的措施，把进程从死锁中解脱出来。</li>
+<li>解除死锁: 当检测到系统中已发生死锁时，就采取相应措施，将进程从死锁状态中解脱出来。常用的方法是撤销一些进程，回收它们的资源，将它们分配给已处于阻塞状态的进程，使其继续运行。</li>
+</ul>
+</li>
+</ol>
+<blockquote>
+<p>上述的几种方法，防范程度逐渐减弱，但对应的是资源利用率的提高，以及进程因资源因素而阻塞的频度下降（即并发程度提高）</p>
+</blockquote>
+<ol start="6">
+<li><p>设有m个资源，n个进程，每个进程要调用k个资源，一次只能调用一个，则: m&gt;n(k-1) 即可</p>
+</li>
+<li><p>进程上下文实际上是进程执行活动全过程的静态描述。</p>
+</li>
+<li><p>执行系统调用也是可以中断的，只能说某些操作是不可以被中断的</p>
+</li>
+<li><ul>
+<li>最先适应算法：依次判定后找到第一个满足要求的哈</li>
+<li>循环首次适应算法：每次基于上一次的位置寻找</li>
+<li>最佳适应算法：对空闲区按从小到大排序，第一个满足的就是啦</li>
+<li>最差适应算法：对空闲区按从大到小排序，第一个满足的就是啦</li>
+<li>固定式分区算法：是分区的</li>
+</ul>
+</li>
+<li><p>管道是单向的、先进先出的，它把一个进程的输出和另一个进程的输入连接在一起。一个进程（写进程）在管道的尾部写入数据，另一个进程（读进程）从管道的头部读取数据。</p>
+</li>
+<li><p>影响缺页中断次数和页面大小有关系，但并不只取决于页面大小，还和系统总内存容量等很多因素有关，当系统内存不足时，会发生页面交换，此时也会产生很多次缺页中断，但与页面大小就没有关系了。</p>
+</li>
+</ol>
+<ol start="12">
+<li><p>相比于单道程序设计（内存中仅有一道作业），多道程序设计按照一定的作业调度算法将作业队列中的作业调入内存，使他们共享 CPU 和各种资源，因此需要更大的内存以容纳超过一道的作业。</p>
+</li>
+<li><p>处理机调度的层次</p>
+<ul>
+<li>高级调度: 高级调度又称长程调度或作业调度，它的调度对象是作业。其主要功能是根据某种算法，决定将外存上处于后备队列中的哪几个作业调入内存，为它们创建进程、分配必要的资源，并将它们放入就绪队列。高级调度主要用于多道批处理系统中，而在分时和实时系统中不设置高级调度。</li>
+<li>低级调度: 低级调度又称为进程调度或短程调度，其所调度的对象是进程（或内核级线程）。其主要功能是，根据某种算法，决定就绪队列中的哪个进程应获得处理机，并由分派程序将处理机分配给被选中的进程。进程调度是最基本的一种调度，在多道批处理、分时和实时三种类型的 OS 中，都必须配置这级调度。</li>
+<li>中级调度: 中级调度又称为内存调度。引入中级调度的主要目的是，提高内存利用率和系统吞吐量。为此，应把那些暂时不能运行的进程，调至外存等待，此时进程的状态称为就绪驻外状态（或挂起状态）。当它们已具备运行条件且内存又稍有空闲时，由中级调度来决定，把外存上的那些已具备运行条件的就绪进程再重新调入内存，并修改其状态为就绪状态，挂起在就绪队列上等待。中级调度实际上就是存储器管理中的对换功能。</li>
+</ul>
+</li>
+</ol>
+<ol start="14">
+<li>引起进程阻塞和唤醒的事件：<br>1、向系统请求共享资源失败。进程转变为阻塞状态。<br>2、等待某种操作完成。比如进程启动了I/O设备，必须等I/O操作完成后，进程才能继续。<br>3、新数据尚未到达。对于合作的进程，如果一个进程A需要先获得另一进程B提供的数据后，才能对该数据进程处理，只要数据尚未到达，进程A只能阻塞。当进程B提供数据后，便可以去唤醒进程A。<br>4、等待新任务到达，用于特定的系统进程。它们每当完成任务后，就把自己阻塞起来，等待新任务。</li>
+</ol>
+<ol start="15">
+<li><p>通道解决并行性，缓冲解决速度差异</p>
+</li>
+<li><p>挂起操作的原因:<br>挂起原语 <code>Suspend</code>，激活原语 <code>Active</code></p>
+<ul>
+<li>终端用户的需要。当终端用户在自己的程序运行期间发现有可以问题，希望暂停自己的程序的运行，使之停止下来，以便用户研究其执行情况或对程序进行修改</li>
+<li>父进程请求。有时父进程希望挂起自己的某个子进程，一边考察和修改该子进程，或者协调各子进程间的活动</li>
+<li>负荷调节的需要。当实时系统中的工作负荷较重，已可能影响到对实时任务的控制时，可由系统把一些不重要的进程挂起，以保证系统能正常运行</li>
+<li>操作系统的需要。操作系统有时希望挂起某些进程，以便检查运行中的资源使用情况或进行记账</li>
+</ul>
+</li>
+<li><p>多级队列和多级反馈队列<br>多级队列：该算法将系统中的进程就绪队列从一个拆分为若干个，将不同类型或性质的进程固定分配在不同的就绪队列，不同的就绪队列采用不同的调度算法，一个就绪队列中的进程可以设置不同的优先级，不同的就绪队列本身也可以设置不同的优先级。<br>多级队列调度算法由于设置多个就绪队列，因此对每个就绪队列就可以实施不同的调度算法，因此，系统针对不同用户进程的需求，很容易提供多种调度策略。</p>
+</li>
+</ol>
+<p>多级反馈队列：1）设置多个就绪队列。在系统中设置多个就绪队列，并未每个队列赋予不同的优先级。第一个队列的优先级最高，第二个次之，其余的优先级逐个降低。该算法为不同的队列中的进程所赋予的执行时间片的大小也各不相同，在优先级愈高的队列中，其时间片就愈小。<br>2）每个队列都采用FCFS算法。3）按队列优先级调度。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/05/05/JavaYouForgot/" rel="next" title="被你忽略掉的 Java 细节知识">
+                  <i class="fa fa-chevron-left"></i> 被你忽略掉的 Java 细节知识
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/07/15/HTTPQWZN/" rel="prev" title="HTTP 协议揭秘">
+                  HTTP 协议揭秘 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#计算机网络"><span class="nav-number">1.</span> <span class="nav-text">计算机网络</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#操作系统"><span class="nav-number">2.</span> <span class="nav-text">操作系统</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

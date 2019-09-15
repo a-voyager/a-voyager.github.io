@@ -1,0 +1,767 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文主要介绍曾经让笔者混淆、模糊不清的四十五条 Java 细节知识，这些知识被你忽略掉了吗？来看看你是不是对这些概念掌握了…">
+<meta name="keywords" content="Java,经验">
+<meta property="og:type" content="article">
+<meta property="og:title" content="被你忽略掉的 Java 细节知识">
+<meta property="og:url" content="http://yoursite.com/2017/05/05/JavaYouForgot/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="本文主要介绍曾经让笔者混淆、模糊不清的四十五条 Java 细节知识，这些知识被你忽略掉了吗？来看看你是不是对这些概念掌握了…">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.755Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="被你忽略掉的 Java 细节知识">
+<meta name="twitter:description" content="本文主要介绍曾经让笔者混淆、模糊不清的四十五条 Java 细节知识，这些知识被你忽略掉了吗？来看看你是不是对这些概念掌握了…">
+  <link rel="canonical" href="http://yoursite.com/2017/05/05/JavaYouForgot/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>被你忽略掉的 Java 细节知识 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/05/05/JavaYouForgot/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">被你忽略掉的 Java 细节知识
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-05-05 20:00:00" itemprop="dateCreated datePublished" datetime="2017-05-05T20:00:00+08:00">2017-05-05</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文主要介绍曾经让笔者混淆、模糊不清的四十五条 Java 细节知识，这些知识被你忽略掉了吗？来看看你是不是对这些概念掌握了…</p>
+<a id="more"></a>
+
+
+<ol>
+<li><p>静态代码块、构造代码块、构造函数同时存在时的执行顺序：静态代码块 -&gt; 构造代码块 -&gt; 构造函数</p>
+</li>
+<li><p>为什么不支持多继承呢？因为当一个类同时继承两个父类时，两个父类中有相同的功能，那么子类对象调用该功能时，运行哪一个呢？</p>
+</li>
+<li><p>父类中通常是不会出现同名成员变量的，因为父类中只要定义了，子类就不用在定义了，直接继承过来用就可以了。</p>
+</li>
+<li><p>子类的所有构造函数中的第一行，其实都有一条隐身的语句super();</p>
+</li>
+<li><p>接口: 成员变量：public static final; 成员方法：public abstract; 注意 abstract 与 static 不能共存，所以接口中的方法不是静态的。</p>
+</li>
+<li><p>抽象类和接口的区别: </p>
+<ul>
+<li>抽象类只能被继承，而且只能单继承，接口需要被实现，而且可以多实现</li>
+<li>抽象类中可以定义非抽象方法，子类可以直接继承使用。接口都有抽象方法，需要子类去实现</li>
+<li>抽象类使用的是 <code>is-a</code> 关系，接口使用的是 <code>like-a</code> 关系</li>
+<li>抽象类的成员修饰符可以自定义，接口中的成员修饰符是固定的</li>
+</ul>
+</li>
+<li><p>多态: 父类引用或者接口的引用指向了自己的子类对象</p>
+<ul>
+<li>成员变量: 无论编译和运行，成员变量参考的都是引用变量所属的类中的成员变量。(成员变量 — 编译运行都看 = 左边 )</li>
+<li>成员函数: 在子父类中，对于一模一样的成员函数，有一个特性：覆盖。(成员函数 — 编译看 = 左边，运行看 = 右边 )</li>
+<li>静态函数: 静态方法，其实不所属于对象，而是所属于该方法所在的类。(静态函数 — 编译运行都看 = 左边 )</li>
+</ul>
+</li>
+<li><p>内部类</p>
+<ul>
+<li>可以直接访问外部类中的成员。而外部类想要访问内部类，必须要建立内部类的对象</li>
+<li>如果内部类被静态修饰，相当于外部类，会出现访问局限性，只能访问外部类中的静态成员</li>
+<li>如果内部类中定义了静态成员，那么该内部类必须是静态的</li>
+<li>当内部类被定义在局部位置上，只能访问局部中被 <code>final</code> 修饰的局部变量</li>
+</ul>
+</li>
+<li><p>异常体系<br>Throwable：可抛出的<br> |–Error：错误，一般情况下，不编写针对性的代码进行处理，通常是 <code>jvm</code> 发生的，需要对程序进行修正<br> |–Exception：异常，可以有针对性的处理方式</p>
+<blockquote>
+<p>try对应多个catch时，如果有父类的catch语句块，一定要放在下面</p>
+</blockquote>
+<p>异常分两种：</p>
+<ul>
+<li>编译时被检查的异常，只要是Exception及其子类都是编译时被检测的异常</li>
+<li>运行时异常，其中Exception有一个特殊的子类RuntimeException，以及RuntimeException的子类是运行异常，也就说这个异常是编译时不被检查的异常</li>
+</ul>
+<blockquote>
+<p>System.exit(0);  //退出jvm，只有这种情况finally不执行</p>
+</blockquote>
+</li>
+</ol>
+<ol start="10">
+<li><p>Runnable 接口出现的原因:</p>
+<ul>
+<li>因为实现Runnable接口可以避免单继承的局限性</li>
+<li>将线程要执行的任务封装成了对象, 便于扩展</li>
+</ul>
+</li>
+<li><p>同步(synchronized):</p>
+<ul>
+<li>实例方法使用的锁是 <code>this</code> 锁</li>
+<li>类方法使用的 <code>类字节码</code> 锁</li>
+</ul>
+</li>
+<li><p>同步是隐式的锁操作，而 <code>Lock</code> 对象是显示的锁操作，它的出现就替代了同步。<code>Lock</code> 接口中并没有直接操作等待唤醒的方法，而是将这些方式又单独封装到了一个对象中。这个对象就是 <code>Condition</code>，将 <code>Object</code> 中的三个方法进行单独的封装。并提供了功能一致的方法 <code>await()</code>、<code>signal()</code>、<code>signalAll()</code> 体现新版本对象的好处。</p>
+</li>
+<li><p>StringBuffer 和 StringBuilder 的区别:</p>
+<ul>
+<li>StringBuffer线程安全, StringBuilder线程不安全</li>
+<li>单线程操作，使用StringBuilder 效率高; 多线程操作，使用StringBuffer 安全</li>
+</ul>
+</li>
+</ol>
+<ol start="14">
+<li><p>基本数据类型包装类中，只有 <code>Character</code> 类没有 <code>parse(...)</code> 方法</p>
+</li>
+<li><p>Map 集合对比:</p>
+<ul>
+<li>Hashtable：底层是哈希表数据结构，是线程同步的。不可以存储null键，null值</li>
+<li>HashMap：底层是哈希表数据结构，是线程不同步的。可以存储null键，null值。替代了Hashtable</li>
+<li>TreeMap：底层是二叉树结构，可以对map集合中的键进行指定顺序的排序，JDK 1.8 中源码表现为红黑树</li>
+</ul>
+<blockquote>
+<p>Map 中要保证键的唯一性</p>
+</blockquote>
+</li>
+</ol>
+<ol start="16">
+<li><p>InputStreamReader isr = new InputStreamReader(new FileInputStream(“a.txt”),”gbk”); 指定编码</p>
+</li>
+<li><p>递归: 当一个功能被重复使用，而每一次使用该功能时的参数不确定，都由上次的功能元素结果来确定</p>
+</li>
+<li><p>RandomAccessFile:</p>
+<ul>
+<li>该对象即可读取，又可写入</li>
+<li>该对象中的定义了一个大型的byte数组，通过定义指针来操作这个数组</li>
+<li>可以通过该对象的getFilePointer()获取指针的位置，通过seek()方法设置指针的位置</li>
+<li>该对象操作的源和目的必须是文件</li>
+<li>其实该对象内部封装了字节读取流和字节写入流</li>
+</ul>
+<blockquote>
+<p>注意：实现随机访问，最好是数据有规律，比如实现多线程下载</p>
+</blockquote>
+</li>
+<li><p>静态数据不能被序列化，因为静态数据不在堆内存中，是存储在静态方法区中；如何将非静态的数据不进行序列化？用transient 关键字修饰此变量即可</p>
+</li>
+<li><p>逻辑端口：用于标识进程的逻辑地址，不同进程的标识；有效端口：0<del>65535，其中0</del>1024系统使用或保留端口</p>
+</li>
+<li><p>反射技术：其实就是动态加载一个指定的类，并获取该类中的所有的内容</p>
+<ul>
+<li>clazz.getMethods();//获取的是该类中的公有方法和父类中的公有方法</li>
+<li>clazz.getDeclaredMethods();//获取本类中的方法，包含私有方法</li>
+</ul>
+</li>
+<li><p>类和接口的区别: 当一个类在初始化时，要求其父类全部都已经初始化过了，但是一个接口在初始化时，并不要求其父接口全部都完成了初始化，只有真正使用到父接口的时候（如引用接口中定义的常量）才会初始化</p>
+</li>
+</ol>
+<ol start="23">
+<li>wait()、notify()和notifyAll()是 Object类 中的方法 ；Condition是在java 1.5中才出现的，它用来替代传统的Object的wait()、notify()实现线程间的协作，相比使用Object的wait()、 notify()，使用Condition1的await()、signal()这种方式实现线程间协作更加安全和高效。 线程的互斥锁机制：synchronized，lock，condition</li>
+</ol>
+<ol start="24">
+<li><p>数组复制效率: System.arraycopy &gt; clone &gt; System.copyOf &gt; for循环</p>
+</li>
+<li><p>方法的重写（override）两同两小一大原则：</p>
+<ul>
+<li>方法名相同，参数类型相同</li>
+<li>子类返回类型小于等于父类方法返回类型，</li>
+<li>子类抛出异常小于等于父类方法抛出异常，</li>
+<li>子类访问权限大于等于父类方法访问权限。</li>
+</ul>
+</li>
+<li><p>值传递不可以改变原变量的内容和地址；引用传递不可以改变原变量的地址，但可以改变原变量的内容；</p>
+</li>
+<li><p>Byte,Short,Integer,Long,Character这5种整型的包装类也只是在对应值小于等于127并且大于等于-128时才可使用常量池，因为他们至占用一个字节(-128~127);<br>再者Integer.valueOf方法中也有判断，如果传递的整型变量&gt;= -128并且小于127时会返回IntegerCache类中一个静态数组中的某一个对象， 否则会返回一个新的Integer对象,代码如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">static</span> Integer <span class="title">valueOf</span><span class="params">(<span class="keyword">int</span> i)</span> </span>&#123;</span><br><span class="line">	<span class="keyword">assert</span> IntegerCache.high &gt;= <span class="number">127</span>;</span><br><span class="line">	<span class="keyword">if</span> (i &gt;= IntegerCache.low &amp;&amp; i &lt;= IntegerCache.high)</span><br><span class="line">	    <span class="keyword">return</span> IntegerCache.cache[i + (-IntegerCache.low)];</span><br><span class="line">	<span class="keyword">return</span> <span class="keyword">new</span> Integer(i);</span><br><span class="line">    &#125;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<p>new Integer(59) 在堆中分配。</p>
+<ol start="28">
+<li><p><init>() 和 <cinit>() 中先执行父类，再初始化变量，最后执行语句块。</cinit></init></p>
+</li>
+<li><p>逻辑运算</p>
+<ul>
+<li>短路：在逻辑表达式中，如果能通过逻辑运算符左边表达式的值就能推算出整个表达式的值，那么将不再继续执行逻辑运算符右边的表达式。（&amp;&amp;，||）</li>
+<li>非短路：始终执行逻辑表达式两边的表达式。（&amp;，|） </li>
+</ul>
+</li>
+<li><p>super.getClass() 得到的依然是runtime当前类，若要得到真正的父类，需要用super.getClass().getSuperclass()</p>
+</li>
+<li><p>方法重载：同一类中的相同的方法名，参数表必须不同，方法的返回类型、修饰符可以相同，也可不同。</p>
+</li>
+</ol>
+<ol start="32">
+<li><p>volatile: volatile 变量提供顺序和可见性保证，例如，JVM 或者 JIT为了获得更好的性能会对语句重排序，但是 volatile 类型变量即使在没有同步块的情况下赋值也不会与其他语句重排序。 volatile 提供 happens-before 的保证，确保一个线程的修改能对其他线程是可见的。某些情况下，volatile 还能提供原子性，如读 64 位数据类型，像 long 和 double 都不是原子的，但 volatile 类型的 double 和 long 就是原子的。</p>
+</li>
+<li><p>在使用 wait() 中，使用 while(需要等待资源条件) 来代替直接使用，这样可以双重判断资源被满足并且被唤醒。</p>
+</li>
+<li><p>哪个类包含 clone 方法？是 Cloneable 还是 Object？java.lang.Cloneable 是一个标示性接口，不包含任何方法，clone 方法在 object 类中定义。并且需要知道 clone() 方法是一个本地方法，这意味着它是由 c 或 c++ 或 其他本地语言实现的。</p>
+</li>
+<li><p>a = a + b 与 a += b 的区别: += 隐式的将加操作的结果类型强制转换为持有结果的类型。如果后者相加，如 byte、short 或者 int，首先会将它们提升到 int 类型，然后在执行加法操作。</p>
+</li>
+<li><p>Switch 中可以使用 String 吗？从 Java 7 开始，我们可以在 switch case 中使用字符串，但这仅仅是一个语法糖。内部实现在 switch 中使用字符串的 hash code。</p>
+</li>
+<li><p>JIT 代表即时编译（Just In Time<br>compilation），当代码执行的次数超过一定的阈值时，会将 Java<br>字节码转换为本地代码，如，主要的热点代码会被准换为本地代码，这样有利大幅度提高 Java 应用的性能。</p>
+</li>
+<li><p>Java 中堆和栈: JVM 中堆和栈属于不同的内存区域，使用目的也不同。栈常用于保存方法帧和局部变量，而对象总是在堆上分配。栈通常都比堆小，也不会在多个线程之间共享，而堆被整个 JVM 的所有线程共享。</p>
+</li>
+<li><p>LinkedList 中 getFirst()/element()/peek() 返回元素但不移除，当列表为空时，peek() 返回 null 而不抛出异常；removeFirst()/remove()/poll() 都是移除并返回头，当列表为空时，poll() 返回 null 而不抛出异常。</p>
+</li>
+<li><p>Dalvik VM 并不是一个 Java 虚拟机，它没有遵循 Java 虚拟机规范，不能直接执行 Java 的 Class 文件，使用的是寄存器架构而不是 JVM 中常见的栈架构。但是它与 Java 又有着千丝万缕的联系，它执行的 dex(Dalvik Executable) 文件可以通过 Class 文件转化而来，使用 Java 语法编写应用程序，可以直接使用大部分的 Java API 等。</p>
+</li>
+<li><p>HashMap 中, Entry是数组, 数组中的每个元素上挂这个一条链表. 链表法就是将相同hash值的对象组织成一个链表放在hash值对应的槽位; 开放地址法是通过一个探测算法, 当某个槽位已经被占据的情况下继续查找下一个可以使用的槽位</p>
+</li>
+<li><p>虚拟机在首次加载Java类时，会对静态初始化块、静态成员变量、静态方法进行一次初始化。我们不要去纠结这里的顺序，一般来说我们只需要知道，静态方法一般在最后。类实例创建过程：按照父子继承关系进行初始化，首先执行父类的初始化块部分，然后是父类的构造方法；再执行本类继承的子类的初始化块，最后是子类的构造方法。类实例销毁时候，首先销毁子类部分，再销毁父类部分。</p>
+</li>
+<li><p>java 中可以有多个重载的 main 方法，只有 public static void main(String[] args){} 是函数入口。</p>
+</li>
+<li><p>Java 中的函数都必须用 {} 括起来，不管是一条语句还是多条语句</p>
+</li>
+<li><p>throws用于在方法上声明该方法不需要处理的异常类型,用在方法上后面跟异常类名 可以是多个异常类；throw用于抛出具体异常类的对象,用在方法内 后面跟异常对象只能是一个异常类型实体.</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/04/01/JavaJVM/" rel="next" title="深入理解 Java 虚拟机">
+                  <i class="fa fa-chevron-left"></i> 深入理解 Java 虚拟机
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/06/01/NetworkAndOS/" rel="prev" title="深入计算机网络、操作系统细节知识点">
+                  深入计算机网络、操作系统细节知识点 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,640 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="在开发中，常常会用到回调模型，为了避免回调监听未被主动释放，导致内存泄露，我们会用到 WeakReference 来存放回调引用，然而要注意的是回调类被回收的坑。本文记录笔者开发中遇到弱引用回调被回收的坑及思考。">
+<meta name="keywords" content="Java">
+<meta property="og:type" content="article">
+<meta property="og:title" content="弱引用回调引发的坑">
+<meta property="og:url" content="http://yoursite.com/2018/05/03/WeakReferenceProblem/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="在开发中，常常会用到回调模型，为了避免回调监听未被主动释放，导致内存泄露，我们会用到 WeakReference 来存放回调引用，然而要注意的是回调类被回收的坑。本文记录笔者开发中遇到弱引用回调被回收的坑及思考。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180503-201328@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180503-202013@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180503-205729@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180503-210345@2x.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/WX20180503-212007@2x.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.759Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="弱引用回调引发的坑">
+<meta name="twitter:description" content="在开发中，常常会用到回调模型，为了避免回调监听未被主动释放，导致内存泄露，我们会用到 WeakReference 来存放回调引用，然而要注意的是回调类被回收的坑。本文记录笔者开发中遇到弱引用回调被回收的坑及思考。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/WX20180503-201328@2x.png">
+  <link rel="canonical" href="http://yoursite.com/2018/05/03/WeakReferenceProblem/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>弱引用回调引发的坑 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2018/05/03/WeakReferenceProblem/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">弱引用回调引发的坑
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2018-05-03 21:30:00" itemprop="dateCreated datePublished" datetime="2018-05-03T21:30:00+08:00">2018-05-03</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>在开发中，常常会用到回调模型，为了避免回调监听未被主动释放，导致内存泄露，我们会用到 WeakReference 来存放回调引用，然而要注意的是回调类被回收的坑。本文记录笔者开发中遇到弱引用回调被回收的坑及思考。</p>
+<a id="more"></a>
+
+<h1 id="奇怪的现象"><a href="#奇怪的现象" class="headerlink" title="奇怪的现象"></a>奇怪的现象</h1><p>平常的一天，像往常一样敲着项目代码，今天要完成的需求是为我们的自定义 View 添加一个回调，当用户操作自定义 View 时，会回调指定的监听器。</p>
+<p>很容易的一个需求，常规写法很快写出来了：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyView</span> <span class="keyword">extends</span> <span class="title">LinearLayout</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 回调引用</span></span><br><span class="line">    <span class="keyword">private</span> OnItemSelectedListener mListener;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 回调接口定义</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">OnItemSelectedListener</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">onSelect</span><span class="params">(String text)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置回调</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setListener</span><span class="params">(OnItemSelectedListener listener)</span> </span>&#123;</span><br><span class="line">        mListener = listener;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 释放回调</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">dispose</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        mListener = <span class="keyword">null</span>;</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">something</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 回调</span></span><br><span class="line">        <span class="keyword">if</span> (mListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">            mListener.onSelect(text);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这时候发现，调用方设置回调后，可能并不会主动调用 <code>dispose()</code> 方法对监听进行释放，所以我们简单优化一下：</p>
+<p>使用弱引用代替强引用，这样当调用方的 <code>Listener</code> 被回收时，弱引用会自动被释放掉，不会造成内存泄露：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">MyView</span> <span class="keyword">extends</span> <span class="title">LinearLayout</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 回调弱引用</span></span><br><span class="line">    <span class="keyword">private</span> WeakReference&lt;OnItemSelectedListener&gt; mListener;</span><br><span class="line">    </span><br><span class="line">    <span class="comment">// 回调接口定义</span></span><br><span class="line">    <span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">OnItemSelectedListener</span> </span>&#123;</span><br><span class="line">        <span class="function"><span class="keyword">void</span> <span class="title">onSelect</span><span class="params">(String text)</span></span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// 设置回调</span></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">setListener</span><span class="params">(OnItemSelectedListener listener)</span> </span>&#123;</span><br><span class="line">        mListener = <span class="keyword">new</span> WeakReference&lt;&gt;(listener);</span><br><span class="line">    &#125;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">    </span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">something</span><span class="params">()</span> </span>&#123;</span><br><span class="line">        ...</span><br><span class="line">        <span class="comment">// 回调</span></span><br><span class="line">        <span class="keyword">if</span> (mListener != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// 弱应用取出实例</span></span><br><span class="line">            OnItemSelectedListener listener = mListener.get();</span><br><span class="line">            <span class="keyword">if</span> (listener != <span class="keyword">null</span>) &#123;</span><br><span class="line">                listener.onSelect(text);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    ...</span><br><span class="line"> </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这样确实没什么问题，<code>WeakReference</code> 并不会强持有引用。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">initView</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    myView.setListener(<span class="keyword">new</span> MyView.OnItemSelectedListener() &#123;</span><br><span class="line">        <span class="meta">@Override</span></span><br><span class="line">        <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onSelect</span><span class="params">(String text)</span> </span>&#123;</span><br><span class="line">            ...</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然而，当这样使用时，发现一个奇怪的现象：某些时候回调的 <code>onSelect()</code> 方法不会被回调，或者是仅仅在初期能够回调，过一会儿就不被回调了。</p>
+<h1 id="大胆猜测"><a href="#大胆猜测" class="headerlink" title="大胆猜测"></a>大胆猜测</h1><p>没错，很神奇的现象，接下来我们使用调试工具进行一步步调试，发现更神奇，<code>listener</code> 竟然为 <code>null</code>，如图：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180503-201328@2x.png" alt="WX20180503-201328@2x.png"></p>
+<p>弱引用什么时候才会为 <code>null</code> 呢？</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180503-202013@2x.png" alt="WX20180503-202013@2x.png"></p>
+<p>源码中的文档已经告诉我们，当被引用的实例被 GC 回收的时候会返回 <code>null</code>，而且关于 <code>referent</code> 变量的状态是由虚拟机特殊对待的：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="keyword">abstract</span> <span class="class"><span class="keyword">class</span> <span class="title">Reference</span>&lt;<span class="title">T</span>&gt; </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> T referent;         <span class="comment">/* Treated specially by GC */</span></span><br><span class="line"></span><br><span class="line">    <span class="keyword">volatile</span> ReferenceQueue&lt;? <span class="keyword">super</span> T&gt; queue;</span><br><span class="line">    </span><br><span class="line">    ...</span><br><span class="line">        </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>那么，可以猜想到为什么会出现这样的情况，就是：我们的匿名内部类被 GC 回收掉了。</p>
+<p>具体而言，对于 <code>new</code> 出来的 <code>OnItemSelectedListener</code> 实例只有 <code>MyView</code> 中有一个弱引用对其引用，而不存在任何一个强引用对其引用，这样当 GC 到来时，就会将其标记为即将被回收的对象，并排队执行 <code>finalize()</code> 方法，然后很快在下一次 GC 到来时将其回收。</p>
+<p>这样一来，也就解释了为什么刚开始能正常工作，之后 <code>listener</code> 一直为 <code>null</code> 了。</p>
+<h1 id="实验证实"><a href="#实验证实" class="headerlink" title="实验证实"></a>实验证实</h1><p>刚刚只是进行一个猜测，下面来做一个实验验证一下我们的想法。</p>
+<p>（1）声明一个回调接口</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">interface</span> <span class="title">Callback</span> </span>&#123;</span><br><span class="line">    <span class="function"><span class="keyword">void</span> <span class="title">call</span><span class="params">()</span></span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（2）我们的测试类</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InnerClassGc</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">public</span> WeakReference&lt;Callback&gt; reference;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 匿名内部类</span></span><br><span class="line">        Callback callback = <span class="keyword">new</span> Callback() &#123;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">// do something</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                <span class="keyword">super</span>.finalize();</span><br><span class="line">                <span class="comment">// 监控被垃圾回收</span></span><br><span class="line">                System.out.println(<span class="string">"base finalize()"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        reference = <span class="keyword">new</span> WeakReference&lt;&gt;(callback);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里的回调 <code>Callback</code> 中，重写了 <code>finalize()</code> 方法，该方法将在实例被垃圾回收时调用，这里能方便我们看实例是否被回收</p>
+<p>（3）测试</p>
+<p>首先测试首次正常的情况：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实例化</span></span><br><span class="line">InnerClassGc innerClassGc = <span class="keyword">new</span> InnerClassGc();</span><br><span class="line"><span class="comment">// 调用</span></span><br><span class="line">innerClassGc.fun();</span><br><span class="line"><span class="comment">// 检查是否被回收</span></span><br><span class="line">Callback callback = innerClassGc.reference.get();</span><br><span class="line">System.out.println(callback);</span><br></pre></td></tr></table></figure>
+
+<p>此时，即便是弱引用，但没有发生垃圾回收情况，所以 <code>callback</code> 局部变量没有被回收，运行结果如下：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180503-205729@2x.png" alt="WX20180503-205729@2x.png"></p>
+<p>接下来模拟存在垃圾回收的情况，我们手动调用 <code>System.gc()</code> 来触发诱导 JVM 进行垃圾回收：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 实例化</span></span><br><span class="line">InnerClassGc innerClassGc = <span class="keyword">new</span> InnerClassGc();</span><br><span class="line"><span class="comment">// 调用</span></span><br><span class="line">innerClassGc.fun();</span><br><span class="line"><span class="comment">// ***** 触发gc *****</span></span><br><span class="line">System.gc();</span><br><span class="line"><span class="comment">// 检查是否被回收</span></span><br><span class="line">Callback callback = innerClassGc.reference.get();</span><br><span class="line">System.out.println(callback);</span><br></pre></td></tr></table></figure>
+
+<p>再看运行结果：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180503-210345@2x.png" alt="WX20180503-210345@2x.png"></p>
+<p>结果正如所想，在脱离函数的局部作用域后，强引用失效，垃圾回收将不存在其它强引用的 <code>callback</code> 实例回收了，导致弱引用 <code>get()</code> 为 <code>null</code>。</p>
+<h1 id="进一步思考"><a href="#进一步思考" class="headerlink" title="进一步思考"></a>进一步思考</h1><p>到了这里，可能读者已经明白如何解决这个问题了，在函数内部的变量会被垃圾回收，如果将它移到类成员变量级别，类成员变量级的强引用在类销毁的时候才会失效。在这之前的整个过程，由于强引用的存在，实例不会被回收，弱应用 <code>WeakReference</code> 也将一直有数据，故最容易的解决方案就是指定一个类成员变量强引用它：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">InnerClassGc</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> WeakReference&lt;Callback&gt; reference;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">private</span> Callback callback;</span><br><span class="line"></span><br><span class="line">    <span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">fun</span><span class="params">()</span> </span>&#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// 类成员变量赋值</span></span><br><span class="line">        callback = <span class="keyword">new</span> Callback() &#123;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">call</span><span class="params">()</span> </span>&#123;</span><br><span class="line">                <span class="comment">// do something</span></span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">            <span class="meta">@Override</span></span><br><span class="line">            <span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">finalize</span><span class="params">()</span> <span class="keyword">throws</span> Throwable </span>&#123;</span><br><span class="line">                <span class="keyword">super</span>.finalize();</span><br><span class="line">                System.out.println(<span class="string">"base finalize()"</span>);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;;</span><br><span class="line"></span><br><span class="line">        reference = <span class="keyword">new</span> WeakReference&lt;&gt;(callback);</span><br><span class="line"></span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>执行结果如下：</p>
+<p><img src="http://cdn.wuhaojie.top/WX20180503-212007@2x.png" alt="WX20180503-212007@2x.png"></p>
+<p>总体来说，弱引用其实就是不额外增加强引用的情况下，能够取得类的实例，可以帮助我们避免许多容易引起内存泄露的情况，但在使用的过程中仍需小心，避免遇见笔者的问题。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/03/30/BetterRouter/" rel="next" title="来看一个更有趣的 Router">
+                  <i class="fa fa-chevron-left"></i> 来看一个更有趣的 Router
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/10/11/AndroidDataBindingComprehension/" rel="prev" title="DataBinding 内部隐藏的秘密">
+                  DataBinding 内部隐藏的秘密 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#奇怪的现象"><span class="nav-number">1.</span> <span class="nav-text">奇怪的现象</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#大胆猜测"><span class="nav-number">2.</span> <span class="nav-text">大胆猜测</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#实验证实"><span class="nav-number">3.</span> <span class="nav-text">实验证实</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#进一步思考"><span class="nav-number">4.</span> <span class="nav-text">进一步思考</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

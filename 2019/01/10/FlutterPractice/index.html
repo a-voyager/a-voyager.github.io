@@ -1,0 +1,725 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="Flutter 是一个基于 Dart 的移动开发平台，旨在帮助开发者在 iOS 和 Android 两个平台上开发高质量的跨平台应用，并在去年12 月的 Flutter Live 2018 大会上正式发布 1.0 正式版。 最近我也对 Flutter 进行了一个初步的了解和实践，过程中踩了许多坑，查了许多资料，使得自己对 Flutter 有了更进一步的理解和思考。 在本文中，我将分享自己在 Flu">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Flutter 实践心路历程">
+<meta property="og:url" content="http://yoursite.com/2019/01/10/FlutterPractice/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="Flutter 是一个基于 Dart 的移动开发平台，旨在帮助开发者在 iOS 和 Android 两个平台上开发高质量的跨平台应用，并在去年12 月的 Flutter Live 2018 大会上正式发布 1.0 正式版。 最近我也对 Flutter 进行了一个初步的了解和实践，过程中踩了许多坑，查了许多资料，使得自己对 Flutter 有了更进一步的理解和思考。 在本文中，我将分享自己在 Flu">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-140955.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-141302.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-141550.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142205.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142238.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142414.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142448.png">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142511.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142534.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142548.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142608.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142822.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-01-10-142850.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.774Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Flutter 实践心路历程">
+<meta name="twitter:description" content="Flutter 是一个基于 Dart 的移动开发平台，旨在帮助开发者在 iOS 和 Android 两个平台上开发高质量的跨平台应用，并在去年12 月的 Flutter Live 2018 大会上正式发布 1.0 正式版。 最近我也对 Flutter 进行了一个初步的了解和实践，过程中踩了许多坑，查了许多资料，使得自己对 Flutter 有了更进一步的理解和思考。 在本文中，我将分享自己在 Flu">
+<meta name="twitter:image" content="https://cdn.wuhaojie.top/2019-01-10-140955.jpg">
+  <link rel="canonical" href="http://yoursite.com/2019/01/10/FlutterPractice/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Flutter 实践心路历程 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/01/10/FlutterPractice/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Flutter 实践心路历程
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-01-10 22:30:00" itemprop="dateCreated datePublished" datetime="2019-01-10T22:30:00+08:00">2019-01-10</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>Flutter 是一个基于 Dart 的移动开发平台，旨在帮助开发者在 iOS 和 Android 两个平台上开发高质量的跨平台应用，并在去年12 月的 Flutter Live 2018 大会上正式发布 1.0 正式版。</p>
+<p>最近我也对 Flutter 进行了一个初步的了解和实践，过程中踩了许多坑，查了许多资料，使得自己对 Flutter 有了更进一步的理解和思考。</p>
+<p>在本文中，我将分享自己在 Flutter 实践中的那些心路历程，主要涉及 Flutter 和 Native 混合工程开发的一些理解，希望能对大家有所帮助。</p>
+<a id="more"></a>
+
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-140955.jpg" alt="flutter"></p>
+<h1 id="关于工程依赖问题的理解"><a href="#关于工程依赖问题的理解" class="headerlink" title="# 关于工程依赖问题的理解"></a># 关于工程依赖问题的理解</h1><h2 id="总会遇到的几种工程类型"><a href="#总会遇到的几种工程类型" class="headerlink" title="总会遇到的几种工程类型"></a>总会遇到的几种工程类型</h2><p>首先，明确一下在 Flutter 项目中会常遇到的工程类型，大致分为四种：</p>
+<p>1、Application 类型</p>
+<p>即标准化的 Flutter 工程，包含 Dart 层、由 Android 及 iOS 组成的Native 层</p>
+<p>2、Flutter Module 类型</p>
+<p>这是官方为现有 Native 工程引入 Flutter 提供的一种解决方案，它是一个可被 Native 工程依赖的 Module，仅包含 Dart 层，但其实 Module 内部隐藏了 Native 子工程。</p>
+<p>3、Plugin 类型</p>
+<p>通常是被发布的 Flutter 三方包形式，注意既包含 Dart 层，也包含 Native 层</p>
+<p>4、Package 类型</p>
+<p>仅包含 Dart 层的工程</p>
+<blockquote>
+<p>也许可以不太恰当地将 Plugin 比作 AAR 包，将 Package 比作 Jar 包</p>
+</blockquote>
+<h2 id="Flutter-工程如何被依赖的"><a href="#Flutter-工程如何被依赖的" class="headerlink" title="Flutter 工程如何被依赖的"></a>Flutter 工程如何被依赖的</h2><p>关于 Flutter 工程被 Native 工程依赖的问题，大致分为 2 种需要被解决的依赖对象，下文依次分析。</p>
+<h3 id="Flutter-框架本身"><a href="#Flutter-框架本身" class="headerlink" title="Flutter 框架本身"></a>Flutter 框架本身</h3><p>在 Flutter 项目的 Android 子工程中，app 层的 build.gradle 中被添加了一些代码，主要是对版本号的设置和对 flutter.gradle 的 apply，如下：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">def</span> flutterRoot = localProperties.getProperty(<span class="string">'flutter.sdk'</span>)	<span class="comment">// 获取 Flutter SDK 的路径</span></span><br><span class="line"><span class="keyword">if</span> (flutterRoot == <span class="literal">null</span>) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> GradleException(<span class="string">"Flutter SDK not found. Define location with flutter.sdk in the local.properties file."</span>)</span><br><span class="line">&#125;</span><br><span class="line">...</span><br><span class="line">apply <span class="string">from:</span> <span class="string">"$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"</span>	<span class="comment">// apply Flutter SDK 下的 flutter.gradle</span></span><br></pre></td></tr></table></figure>
+
+<p>flutter.gradle 中做了些事情，来看看：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">buildscript &#123;</span><br><span class="line">    repositories &#123;</span><br><span class="line">        google()</span><br><span class="line">        jcenter()</span><br><span class="line">    &#125;</span><br><span class="line">    dependencies &#123;</span><br><span class="line">        classpath <span class="string">'com.android.tools.build:gradle:3.2.1'</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line">apply <span class="string">plugin:</span> FlutterPlugin	<span class="comment">// 应用 FlutterPlugin 插件</span></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>主要的工作都在 FlutterPlugin 中，首先是找到对应平台的 Jar 文件：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">String flutterRootPath = resolveProperty(project, <span class="string">"flutter.sdk"</span>, System.env.FLUTTER_ROOT)</span><br><span class="line">flutterRoot = project.file(flutterRootPath)</span><br><span class="line">String flutterExecutableName = Os.isFamily(Os.FAMILY_WINDOWS) ? "flutter.bat" : <span class="string">"flutter"</span></span><br><span class="line">flutterExecutable = Paths.get(flutterRoot.absolutePath, <span class="string">"bin"</span>, flutterExecutableName).toFile(); <span class="comment">// 找到 Flutter SDK 下的 flutter 脚本</span></span><br><span class="line"></span><br><span class="line">...</span><br><span class="line"></span><br><span class="line">Path baseEnginePath = Paths.get(flutterRoot.absolutePath, <span class="string">"bin"</span>, <span class="string">"cache"</span>, <span class="string">"artifacts"</span>, <span class="string">"engine"</span>)</span><br><span class="line">debugFlutterJar = baseEnginePath.resolve(<span class="string">"android-$&#123;targetArch&#125;"</span>).resolve(<span class="string">"flutter.jar"</span>).toFile()	<span class="comment">// 找到对应平台的 flutter.jar</span></span><br></pre></td></tr></table></figure>
+
+<p>Flutter/bin/cache/artifacts/engine 目录如下：</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-141302.jpg" alt="Engine 目录"></p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 如果没有找到 jar 文件，则使用「 flutter precache 」命令生成</span></span><br><span class="line"><span class="keyword">if</span> (!debugFlutterJar.isFile()) &#123;</span><br><span class="line">  project.exec &#123;</span><br><span class="line">    executable flutterExecutable.absolutePath</span><br><span class="line">    args <span class="string">"--suppress-analytics"</span></span><br><span class="line">    args <span class="string">"precache"</span></span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (!debugFlutterJar.isFile()) &#123;</span><br><span class="line">    <span class="keyword">throw</span> <span class="keyword">new</span> GradleException(<span class="string">"Unable to find flutter.jar in SDK: $&#123;debugFlutterJar&#125;"</span>)</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// x86 的 jar 和 so 库</span></span><br><span class="line">flutterX86Jar = project.file(<span class="string">"$&#123;project.buildDir&#125;/$&#123;AndroidProject.FD_INTERMEDIATES&#125;/flutter/flutter-x86.jar"</span>)</span><br><span class="line">Task flutterX86JarTask = project.tasks.create(<span class="string">"$&#123;flutterBuildPrefix&#125;X86Jar"</span>, Jar) &#123;</span><br><span class="line">  destinationDir flutterX86Jar.parentFile</span><br><span class="line">  archiveName flutterX86Jar.name</span><br><span class="line">  from(<span class="string">"$&#123;flutterRoot&#125;/bin/cache/artifacts/engine/android-x86/libflutter.so"</span>) &#123;</span><br><span class="line">    into <span class="string">"lib/x86"</span></span><br><span class="line">  &#125;</span><br><span class="line">  from(<span class="string">"$&#123;flutterRoot&#125;/bin/cache/artifacts/engine/android-x64/libflutter.so"</span>) &#123;</span><br><span class="line">    into <span class="string">"lib/x86_64"</span></span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 遍历为每种 buildTypes 依赖</span></span><br><span class="line">project.android.buildTypes.each &#123; addFlutterJarApiDependency(project, it, flutterX86JarTask) &#125;</span><br><span class="line">project.android.buildTypes.whenObjectAdded &#123; addFlutterJarApiDependency(project, it, flutterX86JarTask) &#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 添加构建 Flutter Dart 代码的 Task</span></span><br><span class="line">project.extensions.create(<span class="string">"flutter"</span>, FlutterExtension)</span><br><span class="line">project.afterEvaluate <span class="keyword">this</span>.&amp;addFlutterTask</span><br></pre></td></tr></table></figure>
+
+<h3 id="引入三方-Plugin-包中的-Native-子工程"><a href="#引入三方-Plugin-包中的-Native-子工程" class="headerlink" title="引入三方 Plugin 包中的 Native 子工程"></a>引入三方 Plugin 包中的 Native 子工程</h3><p>在 Flutter 项目的 pubspec.yaml 文件中，可声明项目依赖三方 Plugin 包，当执行 flutter packages get 命令时，会从仓库下载对应的源码包（Flutter 中所有的依赖都是基于下载源码进行依赖的），并将每一个包以 key - value 的形式将名称和路径保存在工程目录的 .flutter-plugins 文件中：</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">hybrid_stack_manager=/xxx/xxx/Flutter/.pub-cache/hosted/pub.dartlang.org/hybrid_stack_manager-0.1.0/</span><br><span class="line">path_provider=/Users/xxx/xxx/Flutter/.pub-cache/hosted/pub.dartlang.org/path_provider-0.4.1/</span><br></pre></td></tr></table></figure>
+
+<p>来看 Gradle 中对 Plugin 包依赖的处理方法：</p>
+<figure class="highlight groovy"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 从 .flutter-plugins 文件中读取所有的三方依赖 Plugins</span></span><br><span class="line">File pluginsFile = <span class="keyword">new</span> File(project.projectDir.parentFile.parentFile, <span class="string">'.flutter-plugins'</span>)</span><br><span class="line">Properties plugins = readPropertiesIfExist(pluginsFile)</span><br><span class="line"></span><br><span class="line"><span class="comment">// 遍历三方 Plugins 文件地址，并让工程依赖它</span></span><br><span class="line">plugins.each &#123; name, _ -&gt;</span><br><span class="line">  <span class="keyword">def</span> pluginProject = project.rootProject.findProject(<span class="string">":$name"</span>)</span><br><span class="line">  project.dependencies &#123;</span><br><span class="line">    <span class="keyword">if</span> (project.getConfigurations().findByName(<span class="string">"implementation"</span>)) &#123;</span><br><span class="line">      implementation pluginProject</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      compile pluginProject</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// 让每一个三方库包的 Native 工程也依赖 flutter 的 jar 包</span></span><br><span class="line">  pluginProject.afterEvaluate <span class="keyword">this</span>.&amp;addFlutterJarCompileOnlyDependency</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="混合工程页面栈的问题"><a href="#混合工程页面栈的问题" class="headerlink" title="# 混合工程页面栈的问题"></a># 混合工程页面栈的问题</h1><h2 id="Native-中被熟知的栈管理"><a href="#Native-中被熟知的栈管理" class="headerlink" title="Native 中被熟知的栈管理"></a>Native 中被熟知的栈管理</h2><p>Android 中通过 startActivity 启动 Activity，iOS 中的 navigationController 启动 ViewController，各自也都实现了一套页面栈机制，并且有丰富的路由管理三方库，这些都是 Native 开发者所熟知的，这里不在赘述。</p>
+<h2 id="Flutter-项目中的页面路由"><a href="#Flutter-项目中的页面路由" class="headerlink" title="Flutter 项目中的页面路由"></a>Flutter 项目中的页面路由</h2><h3 id="简单场景的用法"><a href="#简单场景的用法" class="headerlink" title="简单场景的用法"></a>简单场景的用法</h3><p>Flutter 中通过 Navigator 中心化的管理者来对页面栈进行管理，用法简洁、清晰。首先是对「路由名」和「控件」的对应关系进行声明：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> MaterialApp(</span><br><span class="line">  home: <span class="keyword">new</span> Screen1(),</span><br><span class="line">  routes: &lt;<span class="built_in">String</span>, WidgetBuilder&gt; &#123;</span><br><span class="line">    <span class="string">'/screen1'</span>: (BuildContext context) =&gt; <span class="keyword">new</span> Screen1(),</span><br><span class="line">    <span class="string">'/screen2'</span> : (BuildContext context) =&gt; <span class="keyword">new</span> Screen2(),</span><br><span class="line">    <span class="string">'/screen3'</span> : (BuildContext context) =&gt; <span class="keyword">new</span> Screen3(),</span><br><span class="line">    <span class="string">'/screen4'</span> : (BuildContext context) =&gt; <span class="keyword">new</span> Screen4()</span><br><span class="line">  &#125;,</span><br><span class="line">)</span><br></pre></td></tr></table></figure>
+
+<p>接下来可以进行 push 操作进行新页面的加载：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">new</span> RaisedButton(</span><br><span class="line">   onPressed:()&#123;</span><br><span class="line">   Navigator.of(context).pushNamed(<span class="string">'/screen2'</span>);	<span class="comment">// Screen2 入栈</span></span><br><span class="line">&#125;,</span><br><span class="line">   child: <span class="keyword">new</span> Text(<span class="string">"Push to Screen 2"</span>),</span><br><span class="line">),</span><br></pre></td></tr></table></figure>
+
+<p>对于页面栈切换的相关方法调用，参数可以是路由名称，也可以是构造的 Route<t> 实例，便于灵活管理和参数传递</t></p>
+<p>页面出栈，Flutter 提供了 pop 方法，同时提供 maybePop 和 canPop 方法来处理到达栈底的情况：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Navigator.of(context).pop();</span><br></pre></td></tr></table></figure>
+
+<h3 id="关于页面替换的场景"><a href="#关于页面替换的场景" class="headerlink" title="关于页面替换的场景"></a>关于页面替换的场景</h3><p>页面替换是什么意思呢？分为两种情况，依次介绍。</p>
+<h4 id="开启新页面并杀掉自身"><a href="#开启新页面并杀掉自身" class="headerlink" title="开启新页面并杀掉自身"></a>开启新页面并杀掉自身</h4><p>这是一种很常见的应用场景，比如 Splash Activity 到 MainActivity，或者登录页登录成功后到 MainActivity，都属于这种场景。对于这种场景，在 Android 开发中，我们通常是先 startActivity，再 finish 掉当前的 Activity，这样展示的便是启动一个新 Activity 的动画，并随即展示新 Activity 的界面。</p>
+<p>而在 Flutter 中，提供的则是 pushAndReplace 的方法：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Navigator.of(context).pushReplacementNamed(<span class="string">'/screen4'</span>);</span><br></pre></td></tr></table></figure>
+
+<p>调用前后的栈结构如图所示：</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-141550.jpg" alt="栈结构"></p>
+<h4 id="杀掉自身并回到旧页面"><a href="#杀掉自身并回到旧页面" class="headerlink" title="杀掉自身并回到旧页面"></a>杀掉自身并回到旧页面</h4><p>典型的应用场景为：在一个新页面修改配置信息后，按「保存」回到前一页面，比如商品列表的筛选界面，筛选信息保存后回到商品列表页面，此时会仅展示离开的动画。Android 中 Activity 栈不太易于实现该效果，通常方法是以 startActivityForResult 启动新页面，退出新页面时展示离开动画，同时回调前一页面的 onActivityResult 方法，在其中可对数据进行刷新。</p>
+<p>而在 Flutter 中，可以用页面栈很好地实现该效果：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Navigator.popAndPushNamed(context, <span class="string">'/screen4'</span>);</span><br></pre></td></tr></table></figure>
+
+<p>这种方法会把当前的页面 pop 掉，仅展示离开动画，同时将新页面入栈。</p>
+<h4 id="再如移除栈顶页面场景"><a href="#再如移除栈顶页面场景" class="headerlink" title="再如移除栈顶页面场景"></a>再如移除栈顶页面场景</h4><p>移除栈顶页面简单说就是 Android 中的 <code>FLAG_ACTIVITY_CLEAR_TOP</code> 标记。应用场景很多，比如：在商品页面选购商品后，会有购物车、订单确认、支付确认等许多个后续页面依次排列在栈中，而当用户支付完成时，会直接回到最初的商品页面，同时 clear 掉栈中其上的所有页面。</p>
+<p>对于这种场景，Flutter 也提供了支持：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Navigator.popUntil(context, ModalRoute.withName(<span class="string">'/screen2'</span>));</span><br></pre></td></tr></table></figure>
+
+<p>第二个参数表示何时停止 pop 操作，此处含义为遇到路由为 /screen2 是停止 pop。同时，还提供可以先 pop 再 push 的方法，这才是最像 <code>FLAG_ACTIVITY_CLEAR_TOP</code> 的特性：</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">Navigator.of(context).pushNamedAndRemoveUntil(<span class="string">'/screen4'</span>, ModalRoute.withName(<span class="string">'/screen1'</span>));</span><br></pre></td></tr></table></figure>
+
+<h4 id="现状与未来"><a href="#现状与未来" class="headerlink" title="现状与未来"></a>现状与未来</h4><p>Flutter 中原生的 Navigator 路由方式，不论是 API 的 push 和 pop 操作，还是内部维护的 history 路由队列，都可以说是简洁而不失优雅的设计，同时业界阿里也在基于原生，推进 Flutter 的 Annotation_Route 注解式路由方案。</p>
+<p>然而，在当今各种组件化盛行的时代， Native 界早已充斥着各家大名鼎鼎的 Router 方案，它们无一不具备零耦合、参数注入、跨组件等强大特性，Flutter 的 Router 能否胜任这些场景确实还真的值得考量。</p>
+<blockquote>
+<p>而如果 Flutter 这种路由模式得到了肯定，又会不会反过来带进 Native 端呢</p>
+</blockquote>
+<h3 id="混合页面栈如何管理"><a href="#混合页面栈如何管理" class="headerlink" title="混合页面栈如何管理"></a>混合页面栈如何管理</h3><p>话说回来，单纯 Flutter 应用的路由问题，基于其强大的 SDK，无论怎么都好解决。而相比起来，现阶段 Flutter 和 Native 混合的页面栈才是最大的问题。</p>
+<p>混合页面栈什么意思呢？指的是 Native 页面和 Flutter 页面相互夹杂，存在于用户视角的全局栈中，这种问题的复杂性源于两个点：</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142205.jpg" alt="栈"></p>
+<p>1、Flutter 和 Native 两端各自实现了一套互不相容的栈机制，且 Native 端对栈的控制权几乎为零；</p>
+<p>2、双端相互唤起和释放页面如何通信的问题。</p>
+<h4 id="解决思路"><a href="#解决思路" class="headerlink" title="解决思路"></a>解决思路</h4><p>接下来，将分析该问题解决的思路以及实现的案例。</p>
+<p>问题一相对复杂，先看问题二：如何解决 Flutter 页面和 Native 页面相互唤起和释放，首先明确的是，Flutter 并没有提供对 Native 页面操作的方法，Native 端也没有提供对 Flutter 页面操作的方法，所以不可直接调用，思路转变为：页面上，还是各自控制各自的页面，只需要相互发个消息告知你需要我怎么操作页面即可。</p>
+<p>这样一来，问题变得更加容易，Flutter 提供了和 Native 端通信的框架（关于此通信框架后文会对其进行介绍），我们可以分别在 Flutter 端和 Native 端初始化时，提供页面的操作方法，同时注册对方的消息通道，收到对方的消息时，对自身页面进行操作，如图：</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142238.jpg" alt="消息通道"></p>
+<blockquote>
+<p>在 Flutter 的官方教程中，仅提出 Flutter 端调用 Native 的 Method Channel 方法调用通信通道，但事实上，SDK 也提供了 Native 端调用 Flutter 端方法的 API，是一个双向通道</p>
+</blockquote>
+<p>回过头来看问题一，两端的栈机制不一致，那么如何维护管理两个页面栈呢？又由谁来维护这个公共栈呢？</p>
+<p>如果交给 Flutter 端维护，则需要 Flutter 端维护 Activity 或 Native 的视图唯一引用，而 Native 的页面在 Flutter 端并不存在对应实体，无法直接操作，这样一来该方案显然是件成本高昂的事情；</p>
+<p>而如果交给 Native 端维护，情况会好很多，因为 Flutter 在 Native 端以 FlutterView 的实体类存在，可以对其进行管理操作。</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142414.jpg" alt="Flutter Activity"></p>
+<p>在 Native 端，每一个 Flutter 页面都使用包含一个 FlutterView 实例的 Activity 表示，即 Activity 作为 FlutterView 的 Container，这样不论是 Flutter 页面还是 Native 页面，都表现为 Activity。</p>
+<p>当启动 Native 的 Activity 时，我们直接通过 startActivity 启动即可，没什么问题；</p>
+<p>当启动包含 Flutter 的 Activity 时，我们实例化并初始化 FlutterView，并在 onCreate 方法中注册一个 Method Channel，用于提供 Flutter 端页面路由路径名，当 FlutterView 渲染时，会执行 main 方法，在方法中，我们可以调用 Native 端注册好的 Method Channel 来获取路由名，然后执行跳转，如图：</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142448.png" alt="流程"></p>
+<h4 id="别急，还有一个问题"><a href="#别急，还有一个问题" class="headerlink" title="别急，还有一个问题"></a>别急，还有一个问题</h4><p>这样做确实解决了 Flutter 和 Native 混合栈的问题，也能很好地完成入栈出栈。可是，FlutterView 的实例化和初始化成本是非常高昂的，这样每启动一个包含 Flutter 的 Activity 都会极耗系统资源。</p>
+<p>关于这个问题，大致有这几种方案可以解决：</p>
+<p>1、Fragment 封装</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142511.jpg" alt="Fragment 封装"></p>
+<p>2、Flutter 引擎单例化</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142534.jpg" alt="Flutter 引擎单例化"></p>
+<p>3、连续 Flutter 页面在一个 Activity 展示</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142548.jpg" alt="连续 Flutter"></p>
+<h4 id="有没有做好的轮子"><a href="#有没有做好的轮子" class="headerlink" title="有没有做好的轮子"></a>有没有做好的轮子</h4><p>阿里闲鱼出了个 hybrid_stack_manager，运用上述方案 2 和 3 结合的方式</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142608.jpg" alt="hybrid-stack-manangement"></p>
+<h4 id="有坑吗？有一些"><a href="#有坑吗？有一些" class="headerlink" title="有坑吗？有一些"></a>有坑吗？有一些</h4><p>1、没有不行的事，不行就修改源码一把梭</p>
+<p>hybrid_stack_manager 库中需要对 Flutter 的路由进行一些定制化的操作，会用到 Flutter SDK 中的一些私有字段。在 Java 中我们通常可以使用反射的方式来获取类的信息，在 Dart 中其实也是支持反射机制的，但可能因为一些不可描述的原因，为了 Flutter 的稳定性，Flutter 中禁用了 Dart 的反射机制。</p>
+<blockquote>
+<p>Flutter 中没有反射机制，所以一些 Java 中很多有趣的东西在 Flutter 中都难以实现，比如 Gson 这类便捷式 JSON 序列化和反序列化工具</p>
+</blockquote>
+<p>所以如果需要引入库会让修改 Flutter SDK 的源码后，再进行编译引入。</p>
+<figure class="highlight dart"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">List</span>&lt;Route&lt;<span class="keyword">dynamic</span>&gt;&gt; <span class="keyword">get</span> history =&gt; _history;</span><br></pre></td></tr></table></figure>
+
+<p>2、Cocoapods 的 Bug 让 iOS 编译失败</p>
+<p>Cocoapods 是 iOS 的包管理工具，因为一些 Bug 会导致在编译 Flutter 三方包时，找不到 Flutter SDK 的相关依赖，可以通过开发者自行修改 Cocoapods 自动生成的脚本文件来解决该问题</p>
+<p>或许 hybrid_stack_manager 还不太完善，也可能还有很多坑没有被踩到，但相信随着生态圈的健全，这些问题都会得到完美的解决。</p>
+<h1 id="谈谈-Flutter-与-Native-通信"><a href="#谈谈-Flutter-与-Native-通信" class="headerlink" title="# 谈谈 Flutter 与 Native 通信"></a># 谈谈 Flutter 与 Native 通信</h1><h2 id="方法调用"><a href="#方法调用" class="headerlink" title="方法调用"></a>方法调用</h2><p>Flutter 中提供 MethodChannel 进行方法调用，其是一个双向的通信通道，提供 Flutter 调用 Native 的方法和 Native 调用 Flutter 的方法</p>
+<p><img src="https://cdn.wuhaojie.top/2019-01-10-142822.jpg" alt="MethodChannel"></p>
+<h2 id="事件监听"><a href="#事件监听" class="headerlink" title="事件监听"></a>事件监听</h2><p>EventChannel 是 Flutter 提供的事件流监听机制，类似 Android 中的 Handler</p>
+<h2 id="基本消息传递"><a href="#基本消息传递" class="headerlink" title="基本消息传递"></a>基本消息传递</h2><p>对于字符串和半结构化的信息，可以使用 BasicMessageChannel 进行消息的传递</p>
+<h1 id="如何工程化开发"><a href="#如何工程化开发" class="headerlink" title="# 如何工程化开发"></a># 如何工程化开发</h1><h2 id="组件分离"><a href="#组件分离" class="headerlink" title="组件分离"></a>组件分离</h2><p><img src="https://cdn.wuhaojie.top/2019-01-10-142850.png" alt="组件分离"></p>
+<p>1、对于依赖 Native 的组件，单独由 Flutter Plugin 完成</p>
+<p>2、对于 UI 等纯 Dart 组件，可以由 Dart Packages 完成</p>
+<h2 id="工程隔离实施思路"><a href="#工程隔离实施思路" class="headerlink" title="工程隔离实施思路"></a>工程隔离实施思路</h2><p>1、Flutter SDK 要单独拉一份</p>
+<p>2、Flutter SDK 需要 wrap，像 Gradlew 一样，避免版本差异</p>
+<h1 id="还想深入了解？"><a href="#还想深入了解？" class="headerlink" title="# 还想深入了解？"></a># 还想深入了解？</h1><p>想对本文中提到一些技术点更加深入了解，可继续查阅下列几篇文章：</p>
+<p><a href="https://github.com/alibaba-flutter/annotation_route" target="_blank" rel="noopener">一个以注解方式实现的路由映射解决方案</a></p>
+<p><a href="https://medium.com/flutter-community/flutter-push-pop-push-1bb718b13c31" target="_blank" rel="noopener">Flutter: Push, Pop, Push</a></p>
+<p><a href="https://github.com/flutter/flutter/issues/15559" target="_blank" rel="noopener">How to manage page stack in flutter/native hybrid App?</a></p>
+<p><a href="https://juejin.im/post/5b84ff6a6fb9a019f47d1cc9" target="_blank" rel="noopener">深入理解 Flutter Platform Channel</a></p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2018/11/18/Books2018/" rel="next" title="我的 2018 年书单分享">
+                  <i class="fa fa-chevron-left"></i> 我的 2018 年书单分享
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/03/14/SQLite/" rel="prev" title="临到 “坑” 时方恨少的 SQLite 细节知识">
+                  临到 “坑” 时方恨少的 SQLite 细节知识 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#关于工程依赖问题的理解"><span class="nav-number">1.</span> <span class="nav-text"># 关于工程依赖问题的理解</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#总会遇到的几种工程类型"><span class="nav-number">1.1.</span> <span class="nav-text">总会遇到的几种工程类型</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flutter-工程如何被依赖的"><span class="nav-number">1.2.</span> <span class="nav-text">Flutter 工程如何被依赖的</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#Flutter-框架本身"><span class="nav-number">1.2.1.</span> <span class="nav-text">Flutter 框架本身</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#引入三方-Plugin-包中的-Native-子工程"><span class="nav-number">1.2.2.</span> <span class="nav-text">引入三方 Plugin 包中的 Native 子工程</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#混合工程页面栈的问题"><span class="nav-number">2.</span> <span class="nav-text"># 混合工程页面栈的问题</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#Native-中被熟知的栈管理"><span class="nav-number">2.1.</span> <span class="nav-text">Native 中被熟知的栈管理</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#Flutter-项目中的页面路由"><span class="nav-number">2.2.</span> <span class="nav-text">Flutter 项目中的页面路由</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#简单场景的用法"><span class="nav-number">2.2.1.</span> <span class="nav-text">简单场景的用法</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#关于页面替换的场景"><span class="nav-number">2.2.2.</span> <span class="nav-text">关于页面替换的场景</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#开启新页面并杀掉自身"><span class="nav-number">2.2.2.1.</span> <span class="nav-text">开启新页面并杀掉自身</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#杀掉自身并回到旧页面"><span class="nav-number">2.2.2.2.</span> <span class="nav-text">杀掉自身并回到旧页面</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#再如移除栈顶页面场景"><span class="nav-number">2.2.2.3.</span> <span class="nav-text">再如移除栈顶页面场景</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#现状与未来"><span class="nav-number">2.2.2.4.</span> <span class="nav-text">现状与未来</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#混合页面栈如何管理"><span class="nav-number">2.2.3.</span> <span class="nav-text">混合页面栈如何管理</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#解决思路"><span class="nav-number">2.2.3.1.</span> <span class="nav-text">解决思路</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#别急，还有一个问题"><span class="nav-number">2.2.3.2.</span> <span class="nav-text">别急，还有一个问题</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#有没有做好的轮子"><span class="nav-number">2.2.3.3.</span> <span class="nav-text">有没有做好的轮子</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#有坑吗？有一些"><span class="nav-number">2.2.3.4.</span> <span class="nav-text">有坑吗？有一些</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#谈谈-Flutter-与-Native-通信"><span class="nav-number">3.</span> <span class="nav-text"># 谈谈 Flutter 与 Native 通信</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#方法调用"><span class="nav-number">3.1.</span> <span class="nav-text">方法调用</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#事件监听"><span class="nav-number">3.2.</span> <span class="nav-text">事件监听</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#基本消息传递"><span class="nav-number">3.3.</span> <span class="nav-text">基本消息传递</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#如何工程化开发"><span class="nav-number">4.</span> <span class="nav-text"># 如何工程化开发</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#组件分离"><span class="nav-number">4.1.</span> <span class="nav-text">组件分离</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#工程隔离实施思路"><span class="nav-number">4.2.</span> <span class="nav-text">工程隔离实施思路</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#还想深入了解？"><span class="nav-number">5.</span> <span class="nav-text"># 还想深入了解？</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

@@ -1,0 +1,669 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="0. 前言本文将对自定义View的原理和方法进行简要讲解，通过此文，你将学到:  安卓的View架构 View的绘图机制 自定义View的方法步骤">
+<meta name="keywords" content="经验,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="浅谈自定义View">
+<meta property="og:url" content="http://yoursite.com/2016/05/26/customView/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="0. 前言本文将对自定义View的原理和方法进行简要讲解，通过此文，你将学到:  安卓的View架构 View的绘图机制 自定义View的方法步骤">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160526tree.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160526treeOfUI.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.757Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="浅谈自定义View">
+<meta name="twitter:description" content="0. 前言本文将对自定义View的原理和方法进行简要讲解，通过此文，你将学到:  安卓的View架构 View的绘图机制 自定义View的方法步骤">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160526tree.png">
+  <link rel="canonical" href="http://yoursite.com/2016/05/26/customView/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>浅谈自定义View | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/05/26/customView/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">浅谈自定义View
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-05-26 17:00:00" itemprop="dateCreated datePublished" datetime="2016-05-26T17:00:00+08:00">2016-05-26</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-前言"><a href="#0-前言" class="headerlink" title="0. 前言"></a>0. 前言</h1><p>本文将对自定义View的原理和方法进行简要讲解，通过此文，你将学到:</p>
+<ul>
+<li>安卓的View架构</li>
+<li>View的绘图机制</li>
+<li>自定义View的方法步骤<a id="more"></a>
+
+
+
+</li>
+</ul>
+<h1 id="1-View控件的架构"><a href="#1-View控件的架构" class="headerlink" title="1. View控件的架构"></a>1. View控件的架构</h1><h2 id="1-1-View和ViewGroup"><a href="#1-1-View和ViewGroup" class="headerlink" title="1.1 View和ViewGroup"></a>1.1 View和ViewGroup</h2><p>Android中，控件大致可以分为两大类:</p>
+<ul>
+<li>View控件</li>
+<li>ViewGroup控件</li>
+</ul>
+<p>它们都会在界面中占得一块矩形区域。View控件是单个的视图控件，是一个独立的最小个体，View控件之间互不相容，比如系统的Button、TextView等控件；ViewGroup控件便是包容View控件的容器，比如系统的LinearLayout、FrameLayout、以及安卓5.0后增加的基于FrameLayout的CardView等。</p>
+<blockquote>
+<p> 请注意，这里说的是View控件而不是说安卓源码中的View类，因为在源码中，ViewGroup其实是继承自View的，View在源码中的类继承关系如图所示:<br><img src="http://cdn.wuhaojie.top/160526tree.png" alt="View继承关系"></p>
+</blockquote>
+<h2 id="1-2-View树"><a href="#1-2-View树" class="headerlink" title="1.2 View树"></a>1.2 View树</h2><p>由于ViewGroup和View之间存在缠绵的包容关系，便有了View树这一说法，什么是View树呢，其实就是View容器和View构成多层次视图所形成的树形结构，也就是树根是ViewParent，其子为ViewGroup，ViewGroup又可以有View和ViewGroup子树。安卓界面的View树如图所示:</p>
+<p><img src="http://cdn.wuhaojie.top/160526treeOfUI.png" alt="View树"></p>
+<p>每个Activity都包含一个Window对象，在Android中Window对象通常由PhoneWindow来实现。PhoneWindow将一个DecorView设置为整个应用窗口的根View。DecorView作为窗口界面的顶层视图，封装了一些窗口操作的通用方法。可以说，DecorView将要显示的具体内容呈现在了PhoneWindow上，这里面的所有View的监听事件，都通过WindowManagerService来进行接收，并通过Activity对象来回调相应的onClickListener。在显示上，它将屏幕分成两部分，一个是TitleView，另一个是ContentView。看到这里，大家一定看见了一个非常熟悉的布局——ContentView。它是一个ID为content的Framelayout，activity_main.xml就是设置在这样一个Framelayout里。</p>
+<blockquote>
+<p>通过上述结构便可以推导出，如过用户通过调用requestWindowFeature(…)来设置窗口的属性，那么必须在setContentView(…)之前调用才能生效，因为Window是在ContentView之前绘制的。</p>
+</blockquote>
+<h1 id="2-自定义View"><a href="#2-自定义View" class="headerlink" title="2. 自定义View"></a>2. 自定义View</h1><p>通常情况下，有以下三种方法来实现自定义View:</p>
+<ul>
+<li>对现有控件进行扩展</li>
+<li>通过组合来实现新的控件</li>
+<li>完全重写View来实现全新控件</li>
+</ul>
+<h1 id="2-1-View绘制流程"><a href="#2-1-View绘制流程" class="headerlink" title="2.1 View绘制流程"></a>2.1 View绘制流程</h1><p>在自定义View中，我们需要对系统的绘图机制作一定了解:<br>整个View树的绘图流程是在ViewRootImpl类的performTraversals()方法开始的，该函数做的执行过程主要是根据之前设置的状态，判断是否重新计算视图大小(measure)、是否重新放置视图的位置(layout)、以及是否重绘 (draw)，其核心也就是通过判断来选择顺序执行这三个方法。</p>
+<h2 id="2-1-1-第一步-递归测量View大小"><a href="#2-1-1-第一步-递归测量View大小" class="headerlink" title="2.1.1 第一步: 递归测量View大小"></a>2.1.1 第一步: 递归测量View大小</h2><p>在现实生活中，如果我们要去画一个图形，就必须知道它的大小和位置。同样，Android系统在绘制View前，也必须对View进行测量，即告诉系统该画一个多大的View。这个过程在onMeasure()方法中进行，View中的onMeasure方法如下:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</span><br><span class="line">    setMeasuredDimension(getDefaultSize(getSuggestedMinimumWidth(), widthMeasureSpec),</span><br><span class="line">            getDefaultSize(getSuggestedMinimumHeight(), heightMeasureSpec));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Android系统给我们提供了一个设计短小精悍却功能强大的类——MeasureSpec类，通过它来帮助我们测量View。MeasureSpec是一个32位的int值，其中高2位为测量的模式，低30位为测量的大小，在计算中使用位运算的原因是为了提高并优化效率。<br>测量的模式可以为以下三种:</p>
+<ul>
+<li>EXACTLY<br>即精确值模式，当我们将控件的layout_width属性或layout_height属性指定为具体数值时，比如andorid:layout_width=”100dp”，或者指定为match_parent属性时（占据父View的大小），系统使用的是EXACTLY模式。</li>
+<li>AT_MOST<br>即最大值模式，当控件的layout_width属性或layout_height属性指定为wrap_content时，控件大小一般随着控件的子空间或内容的变化而变化，此时控件的尺寸只要不超过父控件允许的最大尺寸即可。</li>
+<li>UNSPECIFIED<br>这个属性比较奇怪——它不指定其大小测量模式，View想多大就多大，通常情况下在绘制自定义View时才会使用。</li>
+</ul>
+<blockquote>
+<p>View类默认的onMeasure()方法只支持EXACTLY模式，所以如果在自定义控件的时候不重写onMeasure()方法的话，就只能使用EXACTLY模式。</p>
+</blockquote>
+<p>此处贴上一段模板代码:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onMeasure</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec, <span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">super</span>.onMeasure(widthMeasureSpec, heightMeasureSpec);</span><br><span class="line">    setMeasuredDimension(measureWidth(widthMeasureSpec), measureHeight(heightMeasureSpec));</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureHeight</span><span class="params">(<span class="keyword">int</span> heightMeasureSpec)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> result = <span class="number">0</span>;</span><br><span class="line">    <span class="comment">// 取得高2位和低30位</span></span><br><span class="line">    <span class="keyword">int</span> specMode = MeasureSpec.getMode(heightMeasureSpec);</span><br><span class="line">    <span class="keyword">int</span> specSize = MeasureSpec.getSize(heightMeasureSpec);</span><br><span class="line">    <span class="keyword">if</span> (specMode == MeasureSpec.EXACTLY) &#123;</span><br><span class="line">        <span class="comment">// 如果是match_parent属性，不需要修改</span></span><br><span class="line">        result = specSize;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="comment">// 如果是wrap_content属性，则需要一个固定值</span></span><br><span class="line">        result = <span class="number">100</span>;</span><br><span class="line">        <span class="keyword">if</span> (specMode == MeasureSpec.AT_MOST) &#123;</span><br><span class="line">            <span class="comment">// 为防止显示不全，需要取固定值和测量值当中的小者</span></span><br><span class="line">            result = Math.min(result, specSize);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">int</span> <span class="title">measureWidth</span><span class="params">(<span class="keyword">int</span> widthMeasureSpec)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">int</span> result = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">int</span> specMode = MeasureSpec.getMode(widthMeasureSpec);</span><br><span class="line">    <span class="keyword">int</span> specSize = MeasureSpec.getSize(widthMeasureSpec);</span><br><span class="line">    <span class="keyword">if</span> (specMode == MeasureSpec.EXACTLY) &#123;</span><br><span class="line">        result = specSize;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        result = <span class="number">200</span>;</span><br><span class="line">        <span class="keyword">if</span> (specMode == MeasureSpec.AT_MOST) &#123;</span><br><span class="line">            result = Math.min(result, specSize);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> result;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>另外，ViewGroup在测量时通过遍历所有子View，调用子View的Measure方法来获得每一个子View的测量结果，从而确定自身的大小。</p>
+<h2 id="2-1-2-第二步-递归确定View位置"><a href="#2-1-2-第二步-递归确定View位置" class="headerlink" title="2.1.2 第二步: 递归确定View位置"></a>2.1.2 第二步: 递归确定View位置</h2><p>整个layout过程比较容易理解，也是从顶层父View向子View的递归调用view.layout方法的过程，即父View根据上一步measure子View所得到的布局大小和布局参数，将子View放在合适的位置上。具体layout核心主要有以下几点:</p>
+<ul>
+<li>View.layout方法可被重载，ViewGroup.layout为final的不可重载，ViewGroup.onLayout为abstract的，子类必须重载实现自己的位置逻辑。</li>
+<li>measure操作完成后得到的是对每个View经测量过的measuredWidth和measuredHeight，layout操作完成之后得到的是对每个View进行位置分配后的mLeft、mTop、mRight、mBottom，这些值都是相对于父View来说的。</li>
+<li>凡是layout_XXX的布局属性基本都针对的是包含子View的ViewGroup的，当对一个没有父容器的View设置相关layout_XXX属性是没有任何意义的。</li>
+<li>使用View的getWidth()和getHeight()方法来获取View测量的宽高，必须保证这两个方法在onLayout流程之后被调用才能返回有效值。</li>
+</ul>
+<h2 id="2-1-3-第三步-递归绘制View"><a href="#2-1-3-第三步-递归绘制View" class="headerlink" title="2.1.3 第三步: 递归绘制View"></a>2.1.3 第三步: 递归绘制View</h2><p>绘制View过程发生在onDrawe(canvas)方法中，在方法中使用Canvas对象作为参数，并通过它来绘制图形和文字来实现各种复杂的效果，也是自定义View中非常关键的一步，比如TextView中，在onDraw中实现绘制文本:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">onDraw</span><span class="params">(Canvas canvas)</span> </span>&#123;</span><br><span class="line">    restartMarqueeIfNeeded();</span><br><span class="line">    <span class="comment">// Draw the background for this view</span></span><br><span class="line">    <span class="keyword">super</span>.onDraw(canvas);</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">int</span> color = mCurTextColor;</span><br><span class="line"></span><br><span class="line">    mTextPaint.setColor(color);</span><br><span class="line">    mTextPaint.drawableState = getDrawableState();</span><br><span class="line"></span><br><span class="line">   ...</span><br><span class="line">   </span><br><span class="line">    <span class="keyword">if</span> (mEditor != <span class="keyword">null</span>) &#123;</span><br><span class="line">        mEditor.onDraw(canvas, layout, highlight, mHighlightPaint, cursorOffsetVertical);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        layout.draw(canvas, highlight, mHighlightPaint, cursorOffsetVertical);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span> (mMarquee != <span class="keyword">null</span> &amp;&amp; mMarquee.shouldDrawGhost()) &#123;</span><br><span class="line">        <span class="keyword">final</span> <span class="keyword">float</span> dx = mMarquee.getGhostOffset();</span><br><span class="line">        canvas.translate(layout.getParagraphDirection(<span class="number">0</span>) * dx, <span class="number">0.0f</span>);</span><br><span class="line">        layout.draw(canvas, highlight, mHighlightPaint, cursorOffsetVertical);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    canvas.restore();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>所以在自定义View中需要对onDraw方法进行重写，但在自定义ViewGroup则不需要，除非ViewGroup需要有背景。</p>
+<h2 id="2-2-View常见回调方法"><a href="#2-2-View常见回调方法" class="headerlink" title="2.2 View常见回调方法"></a>2.2 View常见回调方法</h2><p>在View中通常有以下一些比较重要的回调方法:</p>
+<ul>
+<li>onFinishInflate()：从XML加载组件后回调。</li>
+<li>onSizeChanged()：组件大小改变时回调。</li>
+<li>onMeasure()：回调该方法来进行测量。</li>
+<li>onLayout()：回调该方法来确定显示的位置。</li>
+<li>onTouchEvent()：监听到触摸事件时回调。</li>
+</ul>
+<p>当然，创建自定义View的时候，并不需要重写所有的方法，只需要重写特定条件的回调方法即可。这也是Android控件架构灵活性的体现。</p>
+<h1 id="3-自定义View的一般步骤"><a href="#3-自定义View的一般步骤" class="headerlink" title="3. 自定义View的一般步骤"></a>3. 自定义View的一般步骤</h1><p>自定义View一般采用一下步骤:</p>
+<ol>
+<li>定义attrs.xml属性</li>
+<li>继承View，在构造函数中获取属性</li>
+<li>在onSizeChanged方法中初始化</li>
+<li>重写onMeasure方法</li>
+<li>重写onDraw方法</li>
+</ol>
+<h1 id="参考"><a href="#参考" class="headerlink" title="参考"></a>参考</h1><ol>
+<li>《Android群英传》</li>
+<li><a href="http://www.jianshu.com/p/1c051a1e9683" target="_blank" rel="noopener">Android控件架构详解</a></li>
+<li><a href="http://blog.csdn.net/yanbober/article/details/46128379" target="_blank" rel="noopener">Android应用层View绘制流程与源码分析</a></li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/04/25/SimpleNewsCode/" rel="next" title="《简易新闻》源码分析">
+                  <i class="fa fa-chevron-left"></i> 《简易新闻》源码分析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/07/18/divide-conquer/" rel="prev" title="分治法之快排&随机化">
+                  分治法之快排&随机化 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-前言"><span class="nav-number">1.</span> <span class="nav-text">0. 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-View控件的架构"><span class="nav-number">2.</span> <span class="nav-text">1. View控件的架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-View和ViewGroup"><span class="nav-number">2.1.</span> <span class="nav-text">1.1 View和ViewGroup</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-View树"><span class="nav-number">2.2.</span> <span class="nav-text">1.2 View树</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-自定义View"><span class="nav-number">3.</span> <span class="nav-text">2. 自定义View</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-1-View绘制流程"><span class="nav-number">4.</span> <span class="nav-text">2.1 View绘制流程</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-1-第一步-递归测量View大小"><span class="nav-number">4.1.</span> <span class="nav-text">2.1.1 第一步: 递归测量View大小</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-2-第二步-递归确定View位置"><span class="nav-number">4.2.</span> <span class="nav-text">2.1.2 第二步: 递归确定View位置</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-3-第三步-递归绘制View"><span class="nav-number">4.3.</span> <span class="nav-text">2.1.3 第三步: 递归绘制View</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-View常见回调方法"><span class="nav-number">4.4.</span> <span class="nav-text">2.2 View常见回调方法</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-自定义View的一般步骤"><span class="nav-number">5.</span> <span class="nav-text">3. 自定义View的一般步骤</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#参考"><span class="nav-number">6.</span> <span class="nav-text">参考</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

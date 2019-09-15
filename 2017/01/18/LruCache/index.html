@@ -1,0 +1,611 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="0. 前言学过操作系统这门课的朋友都还记得 LRU 这个算法吧，中文名叫”最近最久未使用”，它是用在页面置换策略中的一种很巧妙的淘汰算法，而在 Android 中，也有一个缓存淘汰机制用到了它，叫做 LruCache，它也可以说是一个精妙的设计吧，这篇博文中，笔者将带领大家剖析它源码中的精妙之处…">
+<meta name="keywords" content="Android,源码分析">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android LruCache 源码分析">
+<meta property="og:url" content="http://yoursite.com/2017/01/18/LruCache/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="0. 前言学过操作系统这门课的朋友都还记得 LRU 这个算法吧，中文名叫”最近最久未使用”，它是用在页面置换策略中的一种很巧妙的淘汰算法，而在 Android 中，也有一个缓存淘汰机制用到了它，叫做 LruCache，它也可以说是一个精妙的设计吧，这篇博文中，笔者将带领大家剖析它源码中的精妙之处…">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.760Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android LruCache 源码分析">
+<meta name="twitter:description" content="0. 前言学过操作系统这门课的朋友都还记得 LRU 这个算法吧，中文名叫”最近最久未使用”，它是用在页面置换策略中的一种很巧妙的淘汰算法，而在 Android 中，也有一个缓存淘汰机制用到了它，叫做 LruCache，它也可以说是一个精妙的设计吧，这篇博文中，笔者将带领大家剖析它源码中的精妙之处…">
+  <link rel="canonical" href="http://yoursite.com/2017/01/18/LruCache/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Android LruCache 源码分析 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/01/18/LruCache/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android LruCache 源码分析
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-01-18 12:00:00" itemprop="dateCreated datePublished" datetime="2017-01-18T12:00:00+08:00">2017-01-18</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="0-前言"><a href="#0-前言" class="headerlink" title="0. 前言"></a>0. 前言</h1><p>学过操作系统这门课的朋友都还记得 <code>LRU</code> 这个算法吧，中文名叫”最近最久未使用”，它是用在页面置换策略中的一种很巧妙的淘汰算法，而在 <code>Android</code> 中，也有一个缓存淘汰机制用到了它，叫做 <code>LruCache</code>，它也可以说是一个精妙的设计吧，这篇博文中，笔者将带领大家剖析它源码中的精妙之处…</p>
+<a id="more"></a>
+
+<h1 id="1-初始化"><a href="#1-初始化" class="headerlink" title="1. 初始化"></a>1. 初始化</h1><p><code>LruCache</code> 类源码位于 <code>android.util.LruCache</code> 包下，大家也可以同步阅读。第一件事，便是看其实例化过程，只有一个带参数的构造函数，参数的意思是缓存最大支持的内存容量，注意哦，不是数量，是占用空间的容量:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="title">LruCache</span><span class="params">(<span class="keyword">int</span> maxSize)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (maxSize &lt;= <span class="number">0</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> IllegalArgumentException(<span class="string">"maxSize &lt;= 0"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 赋值</span></span><br><span class="line">    <span class="keyword">this</span>.maxSize = maxSize;</span><br><span class="line">    <span class="comment">// 创建 HashMap</span></span><br><span class="line">    <span class="comment">// 参数：初始容量为0；加载因子为0.75；以最近最久未使用排序</span></span><br><span class="line">    <span class="keyword">this</span>.map = <span class="keyword">new</span> LinkedHashMap&lt;K, V&gt;(<span class="number">0</span>, <span class="number">0.75f</span>, <span class="keyword">true</span>);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>它将最大容量赋给了成员变量，还创建了一个 <code>LinkedHashMap</code>，它是一个循环链表，前面两个参数不要紧，关键在最后一个参数，最后一个参数含义是”是否以最近访问的顺序排序”，也就是说，如果为 <code>true</code>，那么 <code>HashMap</code> 的链表将会以最近访问的元素在尾部，很久没访问的元素在头部的顺序来排序，在 <code>LinkedHashMap</code> 的源码中可以证实这一说法:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 调用此函数说明产生一次访问记录</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> V <span class="title">get</span><span class="params">(Object key)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// 遍历链表</span></span><br><span class="line">    <span class="keyword">for</span> (...; e != <span class="keyword">null</span>; e = e.next) &#123;</span><br><span class="line">        K eKey = e.key;</span><br><span class="line">        <span class="comment">// 如果找到值</span></span><br><span class="line">        <span class="keyword">if</span> (eKey == key || ...) &#123;</span><br><span class="line">            <span class="keyword">if</span> (accessOrder)</span><br><span class="line">                <span class="comment">// 将结点e移至循环链表尾部</span></span><br><span class="line">                makeTail((LinkedEntry&lt;K, V&gt;) e);</span><br><span class="line">            <span class="keyword">return</span> e.value;</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">void</span> <span class="title">makeTail</span><span class="params">(LinkedEntry&lt;K, V&gt; e)</span> </span>&#123;</span><br><span class="line">    e.prv.nxt = e.nxt;</span><br><span class="line">    e.nxt.prv = e.prv;</span><br><span class="line">    <span class="comment">// 将 e 去除</span></span><br><span class="line">    <span class="comment">// --------------------</span></span><br><span class="line">    <span class="comment">// |                  ↓</span></span><br><span class="line">    <span class="comment">// pre      e        nxt</span></span><br><span class="line">    <span class="comment">//  ↑                 |</span></span><br><span class="line">    <span class="comment">//  -------------------</span></span><br><span class="line">    </span><br><span class="line">    LinkedEntry&lt;K, V&gt; header = <span class="keyword">this</span>.header;</span><br><span class="line">    LinkedEntry&lt;K, V&gt; oldTail = header.prv;</span><br><span class="line">    e.nxt = header;</span><br><span class="line">    e.prv = oldTail;</span><br><span class="line">    oldTail.nxt = header.prv = e;</span><br><span class="line">    <span class="comment">// 将 e 加在循环链表尾部: </span></span><br><span class="line">    <span class="comment">// Tail（header的前面一个元素） 和 Header 中间</span></span><br><span class="line">    <span class="comment">// -------------- --------------</span></span><br><span class="line">    <span class="comment">// |            ↓ ↓            |</span></span><br><span class="line">    <span class="comment">// tail          e           header</span></span><br><span class="line">    <span class="comment">// ↑            | |            ↑</span></span><br><span class="line">    <span class="comment">// -------------- --------------</span></span><br><span class="line">    modCount++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>并且，通过 <code>LinkedHashMap#eldest()</code> 方法可以返回最老的结点:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> Entry&lt;K, V&gt; <span class="title">eldest</span><span class="params">()</span> </span>&#123;</span><br><span class="line">    <span class="comment">// 头第一个结点便是最老的节点</span></span><br><span class="line">    LinkedEntry&lt;K, V&gt; eldest = header.nxt;</span><br><span class="line">    <span class="comment">// 如果 header 的下一个结点就是 header </span></span><br><span class="line">    <span class="comment">// 说明该循环链表为空</span></span><br><span class="line">    <span class="keyword">return</span> eldest != header ? eldest : <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="2-添加"><a href="#2-添加" class="headerlink" title="2. 添加"></a>2. 添加</h1><p>初始化步骤为我们提供了一个可供存储缓存的循环链表，还提供好了 <code>LRU</code> 排序。接下来看看如何添加一个缓存记录的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> V <span class="title">put</span><span class="params">(K key, V value)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">if</span> (key == <span class="keyword">null</span> || value == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">throw</span> <span class="keyword">new</span> NullPointerException(<span class="string">"key == null || value == null"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    V previous;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        putCount++; <span class="comment">// 放入的次数 调用 remove() 不会减少</span></span><br><span class="line">        size += safeSizeOf(key, value); <span class="comment">// 占用的大小 默认为1 供子类重写 sizeOf()</span></span><br><span class="line">        previous = map.put(key, value); <span class="comment">// 放入 LinkedHashMap 返回值表示先前是否存在有记录</span></span><br><span class="line">        <span class="keyword">if</span> (previous != <span class="keyword">null</span>) &#123; <span class="comment">// 如果之前缓存中存在有记录，那么并没有放入</span></span><br><span class="line">            size -= safeSizeOf(key, previous);  <span class="comment">// 所以大小要减少</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (previous != <span class="keyword">null</span>) &#123;</span><br><span class="line">        entryRemoved(<span class="keyword">false</span>, key, previous, value);  <span class="comment">// 调用供子类覆写的方法</span></span><br><span class="line">    &#125;</span><br><span class="line">    trimToSize(maxSize);    <span class="comment">// 重建大小 淘汰旧的元素</span></span><br><span class="line">    <span class="keyword">return</span> previous;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>不少的代码，其实就是两步，先将缓存结点添加进 <code>LinkedHashMap</code>，然后调用 <code>trimToSize(maxSize)</code> 检查大小并淘汰。接下来看看是如何淘汰就节点的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">trimToSize</span><span class="params">(<span class="keyword">int</span> maxSize)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">while</span> (<span class="keyword">true</span>) &#123;</span><br><span class="line">        K key;</span><br><span class="line">        V value;</span><br><span class="line">        <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">            ...</span><br><span class="line">            Map.Entry&lt;K, V&gt; toEvict = map.eldest(); <span class="comment">// 返回最老的元素</span></span><br><span class="line">            <span class="keyword">if</span> (toEvict == <span class="keyword">null</span>) &#123;</span><br><span class="line">                <span class="keyword">break</span>;</span><br><span class="line">            &#125;</span><br><span class="line">            key = toEvict.getKey();</span><br><span class="line">            value = toEvict.getValue();</span><br><span class="line">            map.remove(key); <span class="comment">// 移除该元素</span></span><br><span class="line">            size -= safeSizeOf(key, value); <span class="comment">// 减小大小</span></span><br><span class="line">            evictionCount++; <span class="comment">// 移除的次数</span></span><br><span class="line">        &#125;</span><br><span class="line">        <span class="comment">// 子类重写方法以实现具体的移除策略</span></span><br><span class="line">        entryRemoved(<span class="keyword">true</span>, key, value, <span class="keyword">null</span>);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>上面两段代码都提到了 <code>entryRemoved()</code> 方法，这其实是一个供子类扩展功能的方法，它可以被子类覆写，比如可以再增加一级磁盘缓存，那么磁盘上的添加和移除缓存方法就需要子类来重写了:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 子类重写方法 以实现具体的移除策略</span></span><br><span class="line"><span class="comment">// 参数一 表示 是否是被淘汰出去的</span></span><br><span class="line"><span class="comment">// 参数三 表示 移除了一个旧的值 用新的值来替换</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> <span class="keyword">void</span> <span class="title">entryRemoved</span><span class="params">(<span class="keyword">boolean</span> evicted, K key, V oldValue, V newValue)</span> </span>&#123;&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">// 子类重写方法 以实现具体的添加策略</span></span><br><span class="line"><span class="comment">// 参数一 表示 键值对的键</span></span><br><span class="line"><span class="function"><span class="keyword">protected</span> V <span class="title">create</span><span class="params">(K key)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">null</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="3-取出"><a href="#3-取出" class="headerlink" title="3. 取出"></a>3. 取出</h1><p>添加好了缓存就可以取出来用了，接下来看是如何取出来的:</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">final</span> V <span class="title">get</span><span class="params">(K key)</span> </span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    V mapValue;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        mapValue = map.get(key);</span><br><span class="line">        <span class="keyword">if</span> (mapValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">            hitCount++; <span class="comment">// 用到的元素数目 越大相当于利用率越高</span></span><br><span class="line">            <span class="keyword">return</span> mapValue; <span class="comment">// 找到了就直接返回</span></span><br><span class="line">        &#125;</span><br><span class="line">        missCount++;    <span class="comment">// 没有找到元素 丢失的缓存数目</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="comment">// 如果缓存容器中没有值 就调用 create() 方法再创建</span></span><br><span class="line">    V createdValue = create(key);</span><br><span class="line">    <span class="keyword">if</span> (createdValue == <span class="keyword">null</span>) &#123;</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">null</span>;    <span class="comment">// 创建不成功 返回 null</span></span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">synchronized</span> (<span class="keyword">this</span>) &#123;</span><br><span class="line">        createCount++; <span class="comment">// 创建次数</span></span><br><span class="line">        mapValue = map.put(key, createdValue);  <span class="comment">// 放入缓存 特别注意 返回值是表示之前是否存在有相同值</span></span><br><span class="line">        <span class="keyword">if</span> (mapValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="comment">// There was a conflict so undo that last put</span></span><br><span class="line">            map.put(key, mapValue); <span class="comment">// 如果不为空 说明之前就存在 那么再次放之前的引用就可以了</span></span><br><span class="line">        &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">            size += safeSizeOf(key, createdValue);  <span class="comment">// 放入成功的话就增加大小空间</span></span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (mapValue != <span class="keyword">null</span>) &#123;</span><br><span class="line">        entryRemoved(<span class="keyword">false</span>, key, createdValue, mapValue);   <span class="comment">// 调用</span></span><br><span class="line">        <span class="keyword">return</span> mapValue;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        trimToSize(maxSize);    <span class="comment">// 如果放进去了 就得再次淘汰</span></span><br><span class="line">        <span class="keyword">return</span> createdValue;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其实完成的内容也很简单，就是从 <code>LinkedHashMap</code> 中取出，如果有就返回，如果没有就调用子类的 <code>create(key)</code> 方法，最后要记得验证是否需要淘汰最近最久未使用的元素。</p>
+<h1 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h1><p><code>LruCache</code> 的源码还是很简单的，但它很巧妙地结合 <code>LinkedHashMap</code> 实现了 <code>LRU</code> 算法，可以说非常值得一读！</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/源码分析/" rel="tag"># 源码分析</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/01/06/OnClickListener/" rel="next" title="Android 中多次设置 OnClickListener 只执行一次吗？">
+                  <i class="fa fa-chevron-left"></i> Android 中多次设置 OnClickListener 只执行一次吗？
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/02/10/UbuntuAndroid/" rel="prev" title="Ubuntu 下真机调试 Android">
+                  Ubuntu 下真机调试 Android <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#0-前言"><span class="nav-number">1.</span> <span class="nav-text">0. 前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#1-初始化"><span class="nav-number">2.</span> <span class="nav-text">1. 初始化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-添加"><span class="nav-number">3.</span> <span class="nav-text">2. 添加</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-取出"><span class="nav-number">4.</span> <span class="nav-text">3. 取出</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#总结"><span class="nav-number">5.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

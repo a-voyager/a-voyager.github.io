@@ -1,0 +1,740 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="不知读者在平时的 Android 或 Java 开发中，对于 Class 如何加载至虚拟机中并执行，存在过多多少少的好奇吗？ 或许你和笔者一样，读过好几本有关 JVM 的书籍，又或看过好几篇讲解 Class 加载的博文，但总感觉脱离源码的理论学习未免太过晦涩难懂。 故本文就从 Android Native 源码的角度，简略阅读分析下 Class 加载的部分关键流程代码实现，希望读者和我都能够从此次">
+<meta name="keywords" content="Java,Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="看 Android 是如何加载 Class 的">
+<meta property="og:url" content="http://yoursite.com/2019/07/15/AndroidNativeClassLoad/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="不知读者在平时的 Android 或 Java 开发中，对于 Class 如何加载至虚拟机中并执行，存在过多多少少的好奇吗？ 或许你和笔者一样，读过好几本有关 JVM 的书籍，又或看过好几篇讲解 Class 加载的博文，但总感觉脱离源码的理论学习未免太过晦涩难懂。 故本文就从 Android Native 源码的角度，简略阅读分析下 Class 加载的部分关键流程代码实现，希望读者和我都能够从此次">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-07-17-040418.png">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-07-18-032702.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.775Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="看 Android 是如何加载 Class 的">
+<meta name="twitter:description" content="不知读者在平时的 Android 或 Java 开发中，对于 Class 如何加载至虚拟机中并执行，存在过多多少少的好奇吗？ 或许你和笔者一样，读过好几本有关 JVM 的书籍，又或看过好几篇讲解 Class 加载的博文，但总感觉脱离源码的理论学习未免太过晦涩难懂。 故本文就从 Android Native 源码的角度，简略阅读分析下 Class 加载的部分关键流程代码实现，希望读者和我都能够从此次">
+<meta name="twitter:image" content="https://cdn.wuhaojie.top/2019-07-17-040418.png">
+  <link rel="canonical" href="http://yoursite.com/2019/07/15/AndroidNativeClassLoad/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>看 Android 是如何加载 Class 的 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/07/15/AndroidNativeClassLoad/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">看 Android 是如何加载 Class 的
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-07-15 17:30:00" itemprop="dateCreated datePublished" datetime="2019-07-15T17:30:00+08:00">2019-07-15</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+                  ，
+                
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/Java/" itemprop="url" rel="index"><span itemprop="name">Java</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>不知读者在平时的 Android 或 Java 开发中，对于 Class 如何加载至虚拟机中并执行，存在过多多少少的好奇吗？</p>
+<p>或许你和笔者一样，读过好几本有关 JVM 的书籍，又或看过好几篇讲解 Class 加载的博文，但总感觉脱离源码的理论学习未免太过晦涩难懂。</p>
+<p>故本文就从 Android Native 源码的角度，简略阅读分析下 Class 加载的部分关键流程代码实现，希望读者和我都能够从此次分析中有所收获。</p>
+<a id="more"></a>
+
+
+<h3 id="双亲委派模型"><a href="#双亲委派模型" class="headerlink" title="双亲委派模型"></a>双亲委派模型</h3><p>首先，讲 Class 的加载，避免不了双亲委派模型，其实很好理解，就是将 Class 的加载优先代理给父级 Class Loader 进行处理，实现在 Java 层，直接看代码</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">protected</span> Class&lt;?&gt; loadClass(String name, <span class="keyword">boolean</span> resolve)</span><br><span class="line">    <span class="keyword">throws</span> ClassNotFoundException</span><br><span class="line">&#123;</span><br><span class="line">        <span class="comment">// 判断是否已经加载过</span></span><br><span class="line">        Class&lt;?&gt; c = findLoadedClass(name);</span><br><span class="line">        <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</span><br><span class="line">            <span class="keyword">try</span> &#123;</span><br><span class="line">            		<span class="comment">// 优先交给父级 Class Loader</span></span><br><span class="line">                <span class="keyword">if</span> (parent != <span class="keyword">null</span>) &#123;</span><br><span class="line">                    c = parent.loadClass(name, <span class="keyword">false</span>);</span><br><span class="line">                &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">                		<span class="comment">// Bootstrap Class Loader</span></span><br><span class="line">                    c = findBootstrapClassOrNull(name);</span><br><span class="line">                &#125;</span><br><span class="line">            &#125; <span class="keyword">catch</span> (ClassNotFoundException e) &#123;</span><br><span class="line">            &#125;</span><br><span class="line"></span><br><span class="line">						<span class="comment">// 再由当前 Class Loader 处理</span></span><br><span class="line">            <span class="keyword">if</span> (c == <span class="keyword">null</span>) &#123;</span><br><span class="line">                c = findClass(name);</span><br><span class="line">            &#125;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">return</span> c;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Class-加载的-Native-层入口"><a href="#Class-加载的-Native-层入口" class="headerlink" title="Class 加载的 Native 层入口"></a>Class 加载的 Native 层入口</h3><p>Native 层的类加载是从 Class.forname 方法开始的，实现在 art/runtime/native/java_lang_Class.cc 文件中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> jclass <span class="title">Class_classForName</span><span class="params">(JNIEnv* env, jclass, jstring javaName, jboolean initialize,</span></span></span><br><span class="line"><span class="function"><span class="params">                                 jobject javaLoader)</span> </span>&#123;</span><br><span class="line">  ...</span><br><span class="line">  </span><br><span class="line">  Handle&lt;mirror::Class&gt; c(</span><br><span class="line">      hs.NewHandle(class_linker-&gt;FindClass(soa.Self(), descriptor.c_str(), class_loader)));</span><br><span class="line">  <span class="keyword">if</span> (c == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span> (cnfe != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">      <span class="comment">// Make sure allocation didn't fail with an OOME.</span></span><br><span class="line">      env-&gt;Throw(cnfe);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">if</span> (initialize) &#123;</span><br><span class="line">    class_linker-&gt;EnsureInitialized(soa.Self(), c, <span class="literal">true</span>, <span class="literal">true</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> soa.AddLocalReference&lt;jclass&gt;(c.Get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>ClassLinker::FindClass 的实现有以下流程</p>
+<ol>
+<li>类名是单个字符，查找基本类型的 Class</li>
+<li>从已加载的 Class Table 中查找，确保 Class 已经 Resolve 后直接返回</li>
+<li>Class Loader 为空，则从 boot_class_path_ 中查找类</li>
+<li>如果是数组，则运行时创建数组 Class；非数组，则从 BaseDexClassLoader 中查找</li>
+<li>插入到 Class Loader 的 Class Table 记录中</li>
+</ol>
+<h3 id="基本类型的-Class-寻找"><a href="#基本类型的-Class-寻找" class="headerlink" title="基本类型的 Class 寻找"></a>基本类型的 Class 寻找</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">mirror::Class* ClassLinker::CreatePrimitiveClass(Thread* self, Primitive::Type type) &#123;</span><br><span class="line">  ObjPtr&lt;mirror::Class&gt; klass =</span><br><span class="line">      AllocClass(self, mirror::Class::PrimitiveClassSize(image_pointer_size_));</span><br><span class="line">  <span class="keyword">if</span> (UNLIKELY(klass == <span class="literal">nullptr</span>)) &#123;</span><br><span class="line">    self-&gt;AssertPendingOOMException();</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> InitializePrimitiveClass(klass, type);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="在堆上开辟内存"><a href="#在堆上开辟内存" class="headerlink" title="在堆上开辟内存"></a>在堆上开辟内存</h4><p><img src="https://cdn.wuhaojie.top/2019-07-17-040418.png" alt="image-20190717120418590"></p>
+<blockquote>
+<p>kMovingClasses 定义在 art/runtime/globals.h:100 常量中，当不支持 Mark-Compact GC 时，恒为 true</p>
+</blockquote>
+<h4 id="初始化-Class"><a href="#初始化-Class" class="headerlink" title="初始化 Class"></a>初始化 Class</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line">mirror::Class* ClassLinker::InitializePrimitiveClass(ObjPtr&lt;mirror::Class&gt; primitive_class,</span><br><span class="line">                                                     Primitive::Type type) &#123;</span><br><span class="line">  ...</span><br><span class="line">  Handle&lt;mirror::Class&gt; h_class(hs.NewHandle(primitive_class));</span><br><span class="line">  ObjectLock&lt;mirror::Class&gt; lock(self, h_class);</span><br><span class="line">  <span class="comment">// 初始化 Class</span></span><br><span class="line">  <span class="comment">// 注意: 基本类型的 Class 竟然是 public final abstract</span></span><br><span class="line">  h_class-&gt;SetAccessFlags(kAccPublic | kAccFinal | kAccAbstract);</span><br><span class="line">  h_class-&gt;SetPrimitiveType(type);</span><br><span class="line">  h_class-&gt;SetIfTable(GetClassRoot(kJavaLangObject)-&gt;GetIfTable());</span><br><span class="line">  mirror::Class::SetStatus(h_class, mirror::Class::kStatusInitialized, self);</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">char</span>* descriptor = Primitive::Descriptor(type);</span><br><span class="line">  <span class="comment">// 放进已加载的 Class Table</span></span><br><span class="line">  ObjPtr&lt;mirror::Class&gt; existing = InsertClass(descriptor,</span><br><span class="line">                                               h_class.Get(),</span><br><span class="line">                                               ComputeModifiedUtf8Hash(descriptor));</span><br><span class="line">  CHECK(existing == <span class="literal">nullptr</span>) &lt;&lt; <span class="string">"InitPrimitiveClass("</span> &lt;&lt; type &lt;&lt; <span class="string">") failed"</span>;</span><br><span class="line">  <span class="keyword">return</span> h_class.Get();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="启动类的寻找"><a href="#启动类的寻找" class="headerlink" title="启动类的寻找"></a>启动类的寻找</h3><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (descriptor[<span class="number">0</span>] != <span class="string">'['</span> &amp;&amp; class_loader == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  <span class="comment">// 非数组类，并且应用 boot_class_loader，则从 boot_class_path_ 查找</span></span><br><span class="line">  ClassPathEntry pair = FindInClassPath(descriptor, hash, boot_class_path_);</span><br><span class="line">  <span class="keyword">if</span> (pair.second != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    <span class="comment">// 定义 Class</span></span><br><span class="line">    <span class="keyword">return</span> DefineClass(self,</span><br><span class="line">                       descriptor,</span><br><span class="line">                       hash,</span><br><span class="line">                       ScopedNullHandle&lt;mirror::ClassLoader&gt;(),</span><br><span class="line">                       *pair.first,</span><br><span class="line">                       *pair.second);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    <span class="comment">// 未找到</span></span><br><span class="line">    ObjPtr&lt;mirror::Throwable&gt; pre_allocated =</span><br><span class="line">        Runtime::Current()-&gt;GetPreAllocatedNoClassDefFoundError();</span><br><span class="line">    self-&gt;SetException(pre_allocated);</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>FindInClassPath 函数中，通过遍历 boot_class_path_ 寻找正确的 Class Def</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">for</span> (<span class="keyword">const</span> DexFile* dex_file : class_path) &#123;</span><br><span class="line">  <span class="keyword">const</span> DexFile::ClassDef* dex_class_def = OatDexFile::FindClassDef(*dex_file, descriptor, hash);</span><br><span class="line">  <span class="keyword">if</span> (dex_class_def != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> ClassPathEntry(dex_file, dex_class_def);</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>在 DexFile 中查找 Class Def 是对 TypeLookupTable 表进行 hash 查找</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">const</span> DexFile::ClassDef* OatFile::OatDexFile::FindClassDef(<span class="keyword">const</span> DexFile&amp; dex_file,</span><br><span class="line">                                                           <span class="keyword">const</span> <span class="keyword">char</span>* descriptor,</span><br><span class="line">                                                           <span class="keyword">size_t</span> hash) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (LIKELY((oat_dex_file != <span class="literal">nullptr</span>) &amp;&amp; (oat_dex_file-&gt;GetTypeLookupTable() != <span class="literal">nullptr</span>))) &#123;</span><br><span class="line">    <span class="comment">// 从 TypeLookupTable 中查找 Class Def</span></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">uint32_t</span> class_def_idx = oat_dex_file-&gt;GetTypeLookupTable()-&gt;Lookup(descriptor, hash);</span><br><span class="line">    <span class="keyword">return</span> (class_def_idx != DexFile::kDexNoIndex) ? &amp;dex_file.GetClassDef(class_def_idx) : <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">const</span> DexFile::TypeId* type_id = dex_file.FindTypeId(descriptor);</span><br><span class="line">  <span class="keyword">if</span> (type_id != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    dex::TypeIndex type_idx = dex_file.GetIndexForTypeId(*type_id);</span><br><span class="line">    <span class="keyword">return</span> dex_file.FindClassDef(type_idx);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Class Def 的结构定义中主要是 Class 文件各部分内容的地址信息</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">ClassDef</span> &#123;</span></span><br><span class="line">  dex::TypeIndex class_idx_;  <span class="comment">// index into type_ids_ array for this class</span></span><br><span class="line">  <span class="keyword">uint16_t</span> pad1_;  <span class="comment">// padding = 0</span></span><br><span class="line">  <span class="keyword">uint32_t</span> access_flags_;</span><br><span class="line">  dex::TypeIndex superclass_idx_;  <span class="comment">// index into type_ids_ array for superclass</span></span><br><span class="line">  <span class="keyword">uint16_t</span> pad2_;  <span class="comment">// padding = 0</span></span><br><span class="line">  <span class="keyword">uint32_t</span> interfaces_off_;  <span class="comment">// file offset to TypeList</span></span><br><span class="line">  dex::StringIndex source_file_idx_;  <span class="comment">// index into string_ids_ for source file name</span></span><br><span class="line">  <span class="keyword">uint32_t</span> annotations_off_;  <span class="comment">// file offset to annotations_directory_item</span></span><br><span class="line">  <span class="keyword">uint32_t</span> class_data_off_;  <span class="comment">// file offset to class_data_item</span></span><br><span class="line">  <span class="keyword">uint32_t</span> static_values_off_;  <span class="comment">// file offset to EncodedArray</span></span><br><span class="line">  ...</span><br><span class="line">&#125;;</span><br></pre></td></tr></table></figure>
+
+<h3 id="Class-的定义"><a href="#Class-的定义" class="headerlink" title="Class 的定义"></a>Class 的定义</h3><p>拿到 ClassDef，接下来则是调用 ClassLinker::DefineClass，定义在 art/runtime/class_linker.cc:2693</p>
+<h4 id="内部-Class"><a href="#内部-Class" class="headerlink" title="内部 Class"></a>内部 Class</h4><p>判断是否为 JDK 内部 Class，若是内部 Class，则直接赋值为已完成创建的系统 Class</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ljava/lang/Object;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kJavaLangObject));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ljava/lang/Class;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kJavaLangClass));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ljava/lang/String;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kJavaLangString));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ljava/lang/ref/Reference;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kJavaLangRefReference));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ljava/lang/DexCache;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kJavaLangDexCache));</span><br><span class="line">&#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"Ldalvik/system/ClassExt;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">  klass.Assign(GetClassRoot(kDalvikSystemClassExt));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="在堆中分配内存"><a href="#在堆中分配内存" class="headerlink" title="在堆中分配内存"></a>在堆中分配内存</h4><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">klass.Assign(AllocClass(self, SizeOfClassWithoutEmbeddedTables(dex_file, dex_class_def)));</span><br></pre></td></tr></table></figure>
+
+<h4 id="对-Class-进行-PreDefine"><a href="#对-Class-进行-PreDefine" class="headerlink" title="对 Class 进行 PreDefine"></a>对 Class 进行 PreDefine</h4><p>实现在 art/runtime/openjdkjvmti/ti_class.cc:133 中 ClassPreDefine 方法</p>
+<p>其中，首先拷贝 DexFile 并发送全局事件给 Transformer 来进行 Hook 处理（猜测是暴露给应用层进行 Dex 预处理）</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;FixedUpDexFile&gt; dex_file_copy(FixedUpDexFile::Create(initial_dex_file));</span><br><span class="line"><span class="comment">// 发送事件</span></span><br><span class="line">event_handler-&gt;DispatchEvent&lt;ArtJvmtiEvent::kClassFileLoadHookNonRetransformable&gt;(...);</span><br><span class="line">event_handler-&gt;DispatchEvent&lt;ArtJvmtiEvent::kClassFileLoadHookRetransformable&gt;(...);</span><br></pre></td></tr></table></figure>
+
+<p>Hook 预处理后，会生成新的 DexFile 和 ClassDef</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="built_in">std</span>::<span class="built_in">unique_ptr</span>&lt;<span class="keyword">const</span> art::DexFile&gt; dex_file(MakeSingleDexFile(self,</span><br><span class="line">                                                             descriptor,</span><br><span class="line">                                                             initial_dex_file.GetLocation(),</span><br><span class="line">                                                             final_len,</span><br><span class="line">                                                             final_dex_data));</span><br></pre></td></tr></table></figure>
+
+<h4 id="注册-DexFile"><a href="#注册-DexFile" class="headerlink" title="注册 DexFile"></a>注册 DexFile</h4><p>ClassLinker::RegisterDexFile 方法实现 DexFile 的注册，此处会通过 FindDexCacheDataLocked 方法，尝试从缓存中读取，此处讨论首次无缓存的情况。首先会对 Class Loader 进行必要的初始化</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Allocator 分配器</span></span><br><span class="line">LinearAlloc* <span class="keyword">const</span> linear_alloc = GetOrCreateAllocatorForClassLoader(class_loader);</span><br><span class="line">DCHECK(linear_alloc != <span class="literal">nullptr</span>);</span><br><span class="line">ClassTable* table;</span><br><span class="line">&#123;</span><br><span class="line"><span class="function">WriterMutexLock <span class="title">mu</span><span class="params">(self, *Locks::classlinker_classes_lock_)</span></span>;</span><br><span class="line"><span class="comment">// 添加 Class Table</span></span><br><span class="line">table = InsertClassTableForClassLoader(class_loader);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>这里跟进下 Class Table 是如何加进去的</p>
+<p><img src="https://cdn.wuhaojie.top/2019-07-18-032702.png" alt="image-20190718112701529"></p>
+<p>DexFile 的注册关键代码如下</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 初始化 DexCache，其中包含 string、type、field 等的空间初始化</span></span><br><span class="line">mirror::DexCache::InitializeDexCache(self,</span><br><span class="line">                                   h_dex_cache.Get(),</span><br><span class="line">                                   h_location.Get(),</span><br><span class="line">                                   &amp;dex_file,</span><br><span class="line">                                   linear_alloc,</span><br><span class="line">                                   image_pointer_size_);</span><br><span class="line"><span class="comment">// 注册逻辑</span></span><br><span class="line">RegisterDexFileLocked(dex_file, h_dex_cache.Get(), h_class_loader.Get());</span><br></pre></td></tr></table></figure>
+
+<p>注册 DexFile 其实就是将其放在全局变量 dex_caches_ 中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 找到旧的记录</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">auto</span> it = dex_caches_.begin(); it != dex_caches_.end(); ) &#123;</span><br><span class="line">  DexCacheData data = *it;</span><br><span class="line">  <span class="keyword">if</span> (self-&gt;IsJWeakCleared(data.weak_root)) &#123;</span><br><span class="line">    vm-&gt;DeleteWeakGlobalRef(self, data.weak_root);</span><br><span class="line">    it = dex_caches_.erase(it);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    ++it;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line">jweak dex_cache_jweak = vm-&gt;AddWeakGlobalRef(self, dex_cache);</span><br><span class="line">dex_cache-&gt;SetDexFile(&amp;dex_file);</span><br><span class="line">DexCacheData data;</span><br><span class="line">data.weak_root = dex_cache_jweak;</span><br><span class="line">data.dex_file = dex_cache-&gt;GetDexFile();</span><br><span class="line">data.resolved_methods = dex_cache-&gt;GetResolvedMethods();</span><br><span class="line">data.class_table = ClassTableForClassLoader(class_loader);</span><br><span class="line">DCHECK(data.class_table != <span class="literal">nullptr</span>);</span><br><span class="line"><span class="comment">// 放在 dex_caches_</span></span><br><span class="line">dex_caches_.push_back(data);</span><br></pre></td></tr></table></figure>
+
+<p>最后确保 Class Loader 相同，DexCache 中的 Class Loader 要和当前加载的 Class Loader 一致，这里直接判断 Class Table 是否相同来实现</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line">ObjPtr&lt;mirror::DexCache&gt; ClassLinker::EnsureSameClassLoader(</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (data.class_table != ClassTableForClassLoader(class_loader)) &#123;</span><br><span class="line">    self-&gt;ThrowNewExceptionF(<span class="string">"Ljava/lang/InternalError;"</span>,</span><br><span class="line">                             <span class="string">"Attempt to register dex file %s with multiple class loaders"</span>,</span><br><span class="line">                             data.dex_file-&gt;GetLocation().c_str());</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> dex_cache;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，DexFile 注册就完成了，将 DexCache 置放在 kClass 即可</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">klass-&gt;SetDexCache(dex_cache);</span><br></pre></td></tr></table></figure>
+
+<h4 id="配置-Class-字段"><a href="#配置-Class-字段" class="headerlink" title="配置 Class 字段"></a>配置 Class 字段</h4><p>ClassLinker::SetupClass 中对 Class 的信息字段进行了配置</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> ClassLinker::SetupClass(<span class="keyword">const</span> DexFile&amp; dex_file,</span><br><span class="line">                             <span class="keyword">const</span> DexFile::ClassDef&amp; dex_class_def,</span><br><span class="line">                             Handle&lt;mirror::Class&gt; klass,</span><br><span class="line">                             ObjPtr&lt;mirror::ClassLoader&gt; class_loader) &#123;</span><br><span class="line">  ...</span><br><span class="line">  <span class="comment">// Class</span></span><br><span class="line">  klass-&gt;SetClass(GetClassRoot(kJavaLangClass));</span><br><span class="line">  <span class="keyword">uint32_t</span> access_flags = dex_class_def.GetJavaAccessFlags();</span><br><span class="line">  CHECK_EQ(access_flags &amp; ~kAccJavaFlagsMask, <span class="number">0U</span>);</span><br><span class="line">  <span class="comment">// 修饰符</span></span><br><span class="line">  klass-&gt;SetAccessFlags(access_flags);</span><br><span class="line">  klass-&gt;SetClassLoader(class_loader);</span><br><span class="line">  DCHECK_EQ(klass-&gt;GetPrimitiveType(), Primitive::kPrimNot);</span><br><span class="line">  mirror::Class::SetStatus(klass, mirror::Class::kStatusIdx, <span class="literal">nullptr</span>);</span><br><span class="line"></span><br><span class="line">  <span class="comment">// ClassDef</span></span><br><span class="line">  klass-&gt;SetDexClassDefIndex(dex_file.GetIndexForClassDef(dex_class_def));</span><br><span class="line">  klass-&gt;SetDexTypeIndex(dex_class_def.class_idx_);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h4 id="添加到-Class-Table"><a href="#添加到-Class-Table" class="headerlink" title="添加到 Class Table"></a>添加到 Class Table</h4><p>ClassLinker::InsertClass 方法中将 Class 哈希插入到 Class Table 中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ClassTable* <span class="keyword">const</span> class_table = InsertClassTableForClassLoader(class_loader);</span><br><span class="line">ObjPtr&lt;mirror::Class&gt; existing = class_table-&gt;Lookup(descriptor, hash);</span><br><span class="line"><span class="keyword">if</span> (existing != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  <span class="keyword">return</span> existing.Ptr();</span><br><span class="line">&#125;</span><br><span class="line">VerifyObject(klass);</span><br><span class="line">class_table-&gt;InsertWithHash(klass, hash);</span><br></pre></td></tr></table></figure>
+
+<h4 id="加载-Class"><a href="#加载-Class" class="headerlink" title="加载 Class"></a>加载 Class</h4><p>ClassLinker::LoadClass 中对类成员进行加载</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> ClassLinker::LoadClass(Thread* self,</span><br><span class="line">                            <span class="keyword">const</span> DexFile&amp; dex_file,</span><br><span class="line">                            <span class="keyword">const</span> DexFile::ClassDef&amp; dex_class_def,</span><br><span class="line">                            Handle&lt;mirror::Class&gt; klass) &#123;</span><br><span class="line">  <span class="comment">// 获取 Class 数据的地址偏移</span></span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">uint8_t</span>* class_data = dex_file.GetClassData(dex_class_def);</span><br><span class="line">  <span class="keyword">if</span> (class_data == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    <span class="comment">// 无字段和方法的类或接口</span></span><br><span class="line">    <span class="keyword">return</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  LoadClassMembers(self, dex_file, class_data, klass);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>类成员加载的实现在 ClassLinker::LoadClassMembers 方法中</p>
+<p>第一步，加载静态变量</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br></pre></td><td class="code"><pre><span class="line">LinearAlloc* <span class="keyword">const</span> allocator = GetAllocatorForClassLoader(klass-&gt;GetClassLoader());</span><br><span class="line"><span class="comment">// DexFile 字段迭代器</span></span><br><span class="line"><span class="function">ClassDataItemIterator <span class="title">it</span><span class="params">(dex_file, class_data)</span></span>;</span><br><span class="line">LengthPrefixedArray&lt;ArtField&gt;* sfields = AllocArtFieldArray(self,</span><br><span class="line">                                                            allocator,</span><br><span class="line">                                                            <span class="comment">// 静态变量数目</span></span><br><span class="line">                                                            it.NumStaticFields());</span><br><span class="line"><span class="keyword">size_t</span> num_sfields = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">uint32_t</span> last_field_idx = <span class="number">0u</span>;</span><br><span class="line"><span class="comment">// 迭代器的 next() 方法，会将地址下移，赋值给迭代器的 filed 字段</span></span><br><span class="line"><span class="keyword">for</span> (; it.HasNextStaticField(); it.Next()) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> field_idx = it.GetMemberIndex();</span><br><span class="line">  ...</span><br><span class="line">  <span class="keyword">if</span> (num_sfields == <span class="number">0</span> || LIKELY(field_idx &gt; last_field_idx)) &#123;</span><br><span class="line">    <span class="comment">// 递增地加载每个字段</span></span><br><span class="line">    LoadField(it, klass, &amp;sfields-&gt;At(num_sfields));</span><br><span class="line">    ++num_sfields;</span><br><span class="line">    last_field_idx = field_idx;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LoadFiled 为每个 Field 进行初始化，包括地址、所属 Class 以及修饰符</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> ClassLinker::LoadField(<span class="keyword">const</span> ClassDataItemIterator&amp; it,</span><br><span class="line">                            Handle&lt;mirror::Class&gt; klass,</span><br><span class="line">                            ArtField* dst) &#123;</span><br><span class="line">  <span class="keyword">const</span> <span class="keyword">uint32_t</span> field_idx = it.GetMemberIndex();</span><br><span class="line">  dst-&gt;SetDexFieldIndex(field_idx);</span><br><span class="line">  dst-&gt;SetDeclaringClass(klass.Get());</span><br><span class="line">  dst-&gt;SetAccessFlags(it.GetFieldAccessFlags());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>注意，迭代器之所以能够按序遍历，先从 static 开始，是因为地址排序就是按如此的顺序</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">inline</span> <span class="keyword">void</span> <span class="title">Next</span><span class="params">()</span> </span>&#123;</span><br><span class="line">  pos_++;</span><br><span class="line">  <span class="keyword">if</span> (pos_ &lt; EndOfStaticFieldsPos()) &#123;</span><br><span class="line">    last_idx_ = GetMemberIndex();</span><br><span class="line">    ReadClassDataField();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ == EndOfStaticFieldsPos() &amp;&amp; NumInstanceFields() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    last_idx_ = <span class="number">0</span>;  <span class="comment">// transition to next array, reset last index</span></span><br><span class="line">    ReadClassDataField();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ &lt; EndOfInstanceFieldsPos()) &#123;</span><br><span class="line">    last_idx_ = GetMemberIndex();</span><br><span class="line">    ReadClassDataField();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ == EndOfInstanceFieldsPos() &amp;&amp; NumDirectMethods() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    last_idx_ = <span class="number">0</span>;  <span class="comment">// transition to next array, reset last index</span></span><br><span class="line">    ReadClassDataMethod();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ &lt; EndOfDirectMethodsPos()) &#123;</span><br><span class="line">    last_idx_ = GetMemberIndex();</span><br><span class="line">    ReadClassDataMethod();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ == EndOfDirectMethodsPos() &amp;&amp; NumVirtualMethods() &gt; <span class="number">0</span>) &#123;</span><br><span class="line">    last_idx_ = <span class="number">0</span>;  <span class="comment">// transition to next array, reset last index</span></span><br><span class="line">    ReadClassDataMethod();</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (pos_ &lt; EndOfVirtualMethodsPos()) &#123;</span><br><span class="line">    last_idx_ = GetMemberIndex();</span><br><span class="line">    ReadClassDataMethod();</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    DCHECK(!HasNext());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>第二步，加载实例字段</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Load instance fields.</span></span><br><span class="line">LengthPrefixedArray&lt;ArtField&gt;* ifields = AllocArtFieldArray(self,</span><br><span class="line">                                                            allocator,</span><br><span class="line">                                                            it.NumInstanceFields());</span><br><span class="line"><span class="keyword">size_t</span> num_ifields = <span class="number">0u</span>;</span><br><span class="line">last_field_idx = <span class="number">0u</span>;</span><br><span class="line"><span class="keyword">for</span> (; it.HasNextInstanceField(); it.Next()) &#123;</span><br><span class="line">  <span class="keyword">uint32_t</span> field_idx = it.GetMemberIndex();</span><br><span class="line">  DCHECK_GE(field_idx, last_field_idx);  <span class="comment">// Ordering enforced by DexFileVerifier.</span></span><br><span class="line">  <span class="keyword">if</span> (num_ifields == <span class="number">0</span> || LIKELY(field_idx &gt; last_field_idx)) &#123;</span><br><span class="line">    DCHECK_LT(num_ifields, it.NumInstanceFields());</span><br><span class="line">    LoadField(it, klass, &amp;ifields-&gt;At(num_ifields));</span><br><span class="line">    ++num_ifields;</span><br><span class="line">    last_field_idx = field_idx;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LoadField 与静态字段实现一致，不赘述。</p>
+<p>静态字段和实例字段都加载完后，为 Class 赋值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">klass-&gt;SetSFieldsPtr(sfields);</span><br><span class="line">klass-&gt;SetIFieldsPtr(ifields);</span><br></pre></td></tr></table></figure>
+
+<p>第三步，加载方法</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 先赋值地址</span></span><br><span class="line">klass-&gt;SetMethodsPtr(</span><br><span class="line">    AllocArtMethodArray(self, allocator, it.NumDirectMethods() + it.NumVirtualMethods()),</span><br><span class="line">    it.NumDirectMethods(),</span><br><span class="line">    it.NumVirtualMethods());</span><br><span class="line"><span class="keyword">size_t</span> class_def_method_index = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">uint32_t</span> last_dex_method_index = DexFile::kDexNoIndex;</span><br><span class="line"><span class="keyword">size_t</span> last_class_def_method_index = <span class="number">0</span>;</span><br><span class="line"><span class="comment">// 普通方法</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; it.HasNextDirectMethod(); i++, it.Next()) &#123;</span><br><span class="line">  ArtMethod* method = klass-&gt;GetDirectMethodUnchecked(i, image_pointer_size_);</span><br><span class="line">  <span class="comment">// 加载方法</span></span><br><span class="line">  LoadMethod(dex_file, it, klass, method);</span><br><span class="line">  <span class="comment">// 链接代码</span></span><br><span class="line">  LinkCode(<span class="keyword">this</span>, method, oat_class_ptr, class_def_method_index);</span><br><span class="line">  <span class="keyword">uint32_t</span> it_method_index = it.GetMemberIndex();</span><br><span class="line">  <span class="keyword">if</span> (last_dex_method_index == it_method_index) &#123;</span><br><span class="line">    <span class="comment">// 重复</span></span><br><span class="line">    method-&gt;SetMethodIndex(last_class_def_method_index);</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    method-&gt;SetMethodIndex(class_def_method_index);</span><br><span class="line">    last_dex_method_index = it_method_index;</span><br><span class="line">    last_class_def_method_index = class_def_method_index;</span><br><span class="line">  &#125;</span><br><span class="line">  class_def_method_index++;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 抽象方法</span></span><br><span class="line"><span class="keyword">for</span> (<span class="keyword">size_t</span> i = <span class="number">0</span>; it.HasNextVirtualMethod(); i++, it.Next()) &#123;</span><br><span class="line">  ArtMethod* method = klass-&gt;GetVirtualMethodUnchecked(i, image_pointer_size_);</span><br><span class="line">  LoadMethod(dex_file, it, klass, method);</span><br><span class="line">  DCHECK_EQ(class_def_method_index, it.NumDirectMethods() + i);</span><br><span class="line">  LinkCode(<span class="keyword">this</span>, method, oat_class_ptr, class_def_method_index);</span><br><span class="line">  class_def_method_index++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，看具体的 ClassLinker::LoadMethod 方法的实现</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> ClassLinker::LoadMethod(<span class="keyword">const</span> DexFile&amp; dex_file,</span><br><span class="line">                             <span class="keyword">const</span> ClassDataItemIterator&amp; it,</span><br><span class="line">                             Handle&lt;mirror::Class&gt; klass,</span><br><span class="line">                             ArtMethod* dst) &#123;</span><br><span class="line">  <span class="comment">// 基本属性赋值</span></span><br><span class="line">  dst-&gt;SetDexMethodIndex(dex_method_idx);</span><br><span class="line">  dst-&gt;SetDeclaringClass(klass.Get());</span><br><span class="line">  dst-&gt;SetCodeItemOffset(it.GetMethodCodeItemOffset());</span><br><span class="line">  dst-&gt;SetDexCacheResolvedMethods(klass-&gt;GetDexCache()-&gt;GetResolvedMethods(), image_pointer_size_);</span><br><span class="line"></span><br><span class="line">  <span class="keyword">uint32_t</span> access_flags = it.GetMethodAccessFlags();</span><br><span class="line"></span><br><span class="line">  <span class="keyword">if</span> (UNLIKELY(<span class="built_in">strcmp</span>(<span class="string">"finalize"</span>, method_name) == <span class="number">0</span>)) &#123;</span><br><span class="line">    <span class="comment">// 设置 finalize 属性</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="built_in">strcmp</span>(<span class="string">"V"</span>, dex_file.GetShorty(method_id.proto_idx_)) == <span class="number">0</span>) &#123;</span><br><span class="line">      <span class="comment">// Void return type.</span></span><br><span class="line">      <span class="keyword">if</span> (klass-&gt;GetClassLoader() != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        <span class="comment">// 非 BootClassLoader 的，均可 finalize</span></span><br><span class="line">        klass-&gt;SetFinalizable();</span><br><span class="line">      &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        <span class="built_in">std</span>::<span class="built_in">string</span> temp;</span><br><span class="line">        <span class="keyword">const</span> <span class="keyword">char</span>* klass_descriptor = klass-&gt;GetDescriptor(&amp;temp);</span><br><span class="line">        <span class="comment">// The Enum class declares a "final" finalize() method to prevent subclasses from</span></span><br><span class="line">        <span class="comment">// introducing a finalizer. We don't want to set the finalizable flag for Enum or its</span></span><br><span class="line">        <span class="comment">// subclasses, so we exclude it here.</span></span><br><span class="line">        <span class="comment">// We also want to avoid setting the flag on Object, where we know that finalize() is</span></span><br><span class="line">        <span class="comment">// empty.</span></span><br><span class="line">        <span class="keyword">if</span> (<span class="built_in">strcmp</span>(klass_descriptor, <span class="string">"Ljava/lang/Object;"</span>) != <span class="number">0</span> &amp;&amp;</span><br><span class="line">            <span class="built_in">strcmp</span>(klass_descriptor, <span class="string">"Ljava/lang/Enum;"</span>) != <span class="number">0</span>) &#123;</span><br><span class="line">          <span class="comment">// 非 Object、非 Enum 也可 finalize</span></span><br><span class="line">          klass-&gt;SetFinalizable();</span><br><span class="line">        &#125;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (method_name[<span class="number">0</span>] == <span class="string">'&lt;'</span>) &#123;</span><br><span class="line">    <span class="keyword">bool</span> is_init = (<span class="built_in">strcmp</span>(<span class="string">"&lt;init&gt;"</span>, method_name) == <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">bool</span> is_clinit = !is_init &amp;&amp; (<span class="built_in">strcmp</span>(<span class="string">"&lt;clinit&gt;"</span>, method_name) == <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span> (UNLIKELY(!is_init &amp;&amp; !is_clinit)) &#123;</span><br><span class="line">      <span class="comment">// 如果是非实例或静态初始化方法</span></span><br><span class="line">      LOG(WARNING) &lt;&lt; <span class="string">"Unexpected '&lt;' at start of method name "</span> &lt;&lt; method_name;</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      <span class="comment">// 初始化方法，但却无修饰符</span></span><br><span class="line">      <span class="keyword">if</span> (UNLIKELY((access_flags &amp; kAccConstructor) == <span class="number">0</span>)) &#123;</span><br><span class="line">        LOG(WARNING) &lt;&lt; method_name &lt;&lt; <span class="string">" didn't have expected constructor access flag in class "</span></span><br><span class="line">            &lt;&lt; klass-&gt;PrettyDescriptor() &lt;&lt; <span class="string">" in dex file "</span> &lt;&lt; dex_file.GetLocation();</span><br><span class="line">        <span class="comment">// 则加上构造器修饰符</span></span><br><span class="line">        access_flags |= kAccConstructor;</span><br><span class="line">      &#125;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="comment">// 权限修饰符</span></span><br><span class="line">  dst-&gt;SetAccessFlags(access_flags);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>LinkCode 的工作主要是对 Method 的入口地址进行赋值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">void</span> OatFile::OatMethod::LinkMethod(ArtMethod* method) <span class="keyword">const</span> &#123;</span><br><span class="line">  CHECK(method != <span class="literal">nullptr</span>);</span><br><span class="line">  method-&gt;SetEntryPointFromQuickCompiledCode(GetQuickCode());</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">inline</span> <span class="keyword">const</span> <span class="keyword">void</span>* OatFile::OatMethod::GetQuickCode() <span class="keyword">const</span> &#123;</span><br><span class="line">  <span class="keyword">return</span> GetOatPointer&lt;<span class="keyword">const</span> <span class="keyword">void</span>*&gt;(GetCodeOffset());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>至此，Class 的 Define 过程就结束了，可以看到主要是对 Class 对象进行内存分配和属性赋值。</p>
+<h3 id="数组-Class-的创建"><a href="#数组-Class-的创建" class="headerlink" title="数组 Class 的创建"></a>数组 Class 的创建</h3><p>对于数组的 Class，其数组元素是由 Class Loader 进行加载的，而本身则并不是，而是运行时创建的，具体实现在 ClassLinker::CreateArrayClass 方法中。</p>
+<blockquote>
+<p>数组类的描述符是以 “[“ 中括号前缀的，如 “[C”、”[[[[B” 或 “[Ljava/lang/String;”</p>
+</blockquote>
+<p>首先，通过递归 FindClass 方法获取元素的 Class</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">MutableHandle&lt;mirror::Class&gt; component_type(hs.NewHandle(FindClass(self, descriptor + <span class="number">1</span>,</span><br><span class="line">                                                                   class_loader)));</span><br></pre></td></tr></table></figure>
+
+<p>拿到元素的 Class 类型后，会断言其 null 或 void，之后判断当前 Class Loader 与 数组元素的 Class Loader 是否相同</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (class_loader.Get() != component_type-&gt;GetClassLoader()) &#123;</span><br><span class="line">  <span class="comment">// 如果 Class Loader 不同，那应该使用</span></span><br><span class="line">  ObjPtr&lt;mirror::Class&gt; new_class =</span><br><span class="line">      LookupClass(self, descriptor, hash, component_type-&gt;GetClassLoader());</span><br><span class="line">  <span class="keyword">if</span> (new_class != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> new_class.Ptr();</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>接下来，对于元素 Class 为内置类型的 Array，赋值为预加载的 Class，而对于用户定义的 Class 则分配内存空间</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">auto</span> new_class = hs.NewHandle&lt;mirror::Class&gt;(<span class="literal">nullptr</span>);</span><br><span class="line"><span class="keyword">if</span> (UNLIKELY(!init_done_)) &#123;</span><br><span class="line">  <span class="comment">// 内置类型</span></span><br><span class="line">  <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"[Ljava/lang/Class;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kClassArrayClass));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"[Ljava/lang/Object;"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kObjectArrayClass));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, GetClassRootDescriptor(kJavaLangStringArrayClass)) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kJavaLangStringArrayClass));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"[C"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kCharArrayClass));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"[I"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kIntArrayClass));</span><br><span class="line">  &#125; <span class="keyword">else</span> <span class="keyword">if</span> (<span class="built_in">strcmp</span>(descriptor, <span class="string">"[J"</span>) == <span class="number">0</span>) &#123;</span><br><span class="line">    new_class.Assign(GetClassRoot(kLongArrayClass));</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br><span class="line"><span class="comment">// 非内置类型</span></span><br><span class="line"><span class="keyword">if</span> (new_class == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  <span class="comment">// 直接新开辟内存进行分配</span></span><br><span class="line">  new_class.Assign(AllocClass(self, mirror::Array::ClassSize(image_pointer_size_)));</span><br><span class="line">  <span class="keyword">if</span> (new_class == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    self-&gt;AssertPendingOOMException();</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  new_class-&gt;SetComponentType(component_type.Get());</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>对 Class 的基本属性进行赋值</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">ObjPtr&lt;mirror::Class&gt; java_lang_Object = GetClassRoot(kJavaLangObject);</span><br><span class="line">new_class-&gt;SetSuperClass(java_lang_Object);</span><br><span class="line">new_class-&gt;SetVTable(java_lang_Object-&gt;GetVTable());</span><br><span class="line">new_class-&gt;SetPrimitiveType(Primitive::kPrimNot);</span><br><span class="line">new_class-&gt;SetClassLoader(component_type-&gt;GetClassLoader());</span><br><span class="line"><span class="keyword">if</span> (component_type-&gt;IsPrimitive()) &#123;</span><br><span class="line">  new_class-&gt;SetClassFlags(mirror::kClassFlagNoReferenceFields);</span><br><span class="line">&#125; <span class="keyword">else</span> &#123;</span><br><span class="line">  new_class-&gt;SetClassFlags(mirror::kClassFlagObjectArray);</span><br><span class="line">&#125;</span><br><span class="line">mirror::Class::SetStatus(new_class, mirror::Class::kStatusLoaded, self);</span><br><span class="line">new_class-&gt;PopulateEmbeddedVTable(image_pointer_size_);</span><br><span class="line">ImTable* object_imt = java_lang_Object-&gt;GetImt(image_pointer_size_);</span><br><span class="line">new_class-&gt;SetImt(object_imt, image_pointer_size_);</span><br><span class="line">mirror::Class::SetStatus(new_class, mirror::Class::kStatusInitialized, self);</span><br><span class="line">&#123;</span><br><span class="line">  <span class="comment">// 单例接口 java/lang/Cloneable 和 java/io/Serializable</span></span><br><span class="line">  ObjPtr&lt;mirror::IfTable&gt; array_iftable = array_iftable_.Read();</span><br><span class="line">  CHECK(array_iftable != <span class="literal">nullptr</span>);</span><br><span class="line">  new_class-&gt;SetIfTable(array_iftable);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">int</span> access_flags = new_class-&gt;GetComponentType()-&gt;GetAccessFlags();</span><br><span class="line"><span class="comment">// 丢弃修饰符</span></span><br><span class="line">access_flags &amp;= kAccJavaFlagsMask;</span><br><span class="line"><span class="comment">// 添加 "abstract final"</span></span><br><span class="line">access_flags |= kAccAbstract | kAccFinal;</span><br><span class="line">access_flags &amp;= ~kAccInterface;</span><br><span class="line">new_class-&gt;SetAccessFlags(access_flags);</span><br></pre></td></tr></table></figure>
+
+<p>最后，置入 Class Table 中并返回</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line">ObjPtr&lt;mirror::Class&gt; existing = InsertClass(descriptor, new_class.Get(), hash);</span><br><span class="line"><span class="keyword">if</span> (existing == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  Runtime::Current()-&gt;GetRuntimeCallbacks()-&gt;ClassLoad(new_class);</span><br><span class="line">  Runtime::Current()-&gt;GetRuntimeCallbacks()-&gt;ClassPrepare(new_class, new_class);</span><br><span class="line"></span><br><span class="line">  jit::Jit::NewTypeLoadedIfUsingJit(new_class.Get());</span><br><span class="line">  <span class="keyword">return</span> new_class.Get();</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="非启动类的寻找"><a href="#非启动类的寻找" class="headerlink" title="非启动类的寻找"></a>非启动类的寻找</h3><p>对于非 Boot Class Loader 的类，Class 的加载是在 ClassLinker::FindClassInBaseDexClassLoader 方法中实现的</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line">FindClassInBaseDexClassLoader(soa, self, descriptor, hash, class_loader, &amp;result_ptr);</span><br><span class="line">...</span><br><span class="line"><span class="keyword">return</span> result_ptr.Ptr();</span><br></pre></td></tr></table></figure>
+
+<p>首先，对 Boot Class Loader 进行判断，满足则跳转到 Boot Class 的流程</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span> (IsBootClassLoader(soa, class_loader.Get())) &#123;</span><br><span class="line">  <span class="comment">// The boot class loader, search the boot class path.</span></span><br><span class="line">  ClassPathEntry pair = FindInClassPath(descriptor, hash, boot_class_path_);</span><br><span class="line">  <span class="keyword">if</span> (pair.second != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    ObjPtr&lt;mirror::Class&gt; klass = LookupClass(self, descriptor, hash, <span class="literal">nullptr</span>);</span><br><span class="line">    <span class="keyword">if</span> (klass != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">      *result = EnsureResolved(self, descriptor, klass);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">      *result = DefineClass(self,</span><br><span class="line">                            descriptor,</span><br><span class="line">                            hash,</span><br><span class="line">                            ScopedNullHandle&lt;mirror::ClassLoader&gt;(),</span><br><span class="line">                            *pair.first,</span><br><span class="line">                            *pair.second);</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">if</span> (*result == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">      CHECK(self-&gt;IsExceptionPending()) &lt;&lt; descriptor;</span><br><span class="line">      self-&gt;ClearException();</span><br><span class="line">    &#125;</span><br><span class="line">  &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">    *result = <span class="literal">nullptr</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>判断 Class 是否满足 PathClassLoader 或 DexClassLoader，否则为不支持的 Class Loader</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 不支持的 Class Loader</span></span><br><span class="line"><span class="keyword">if</span> (soa.Decode&lt;mirror::Class&gt;(WellKnownClasses::dalvik_system_PathClassLoader) !=</span><br><span class="line">    class_loader-&gt;GetClass()) &#123;</span><br><span class="line">  <span class="keyword">if</span> (soa.Decode&lt;mirror::Class&gt;(WellKnownClasses::dalvik_system_DexClassLoader) !=</span><br><span class="line">      class_loader-&gt;GetClass()) &#123;</span><br><span class="line">    *result = <span class="literal">nullptr</span>;</span><br><span class="line">    <span class="keyword">return</span> <span class="literal">false</span>;</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后，找到对应的 DexFile 地址</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br></pre></td><td class="code"><pre><span class="line">ArtField* <span class="keyword">const</span> cookie_field =</span><br><span class="line">    jni::DecodeArtField(WellKnownClasses::dalvik_system_DexFile_cookie);</span><br><span class="line">ArtField* <span class="keyword">const</span> dex_file_field =</span><br><span class="line">    jni::DecodeArtField(WellKnownClasses::dalvik_system_DexPathList__Element_dexFile);</span><br><span class="line">ObjPtr&lt;mirror::Object&gt; dex_path_list =</span><br><span class="line">    jni::DecodeArtField(WellKnownClasses::dalvik_system_BaseDexClassLoader_pathList)-&gt;</span><br><span class="line">        GetObject(class_loader.Get());</span><br></pre></td></tr></table></figure>
+
+<p>然后从 DexFile 中拿到 Class 定义，再走 Class 定义的流程就完成 Class 的加载</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br></pre></td><td class="code"><pre><span class="line">ObjPtr&lt;mirror::Object&gt; dex_file = dex_file_field-&gt;GetObject(element);</span><br><span class="line"><span class="keyword">if</span> (dex_file != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  ObjPtr&lt;mirror::LongArray&gt; long_array = cookie_field-&gt;GetObject(dex_file)-&gt;AsLongArray();</span><br><span class="line">  <span class="keyword">if</span> (long_array == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    LOG(WARNING) &lt;&lt; <span class="string">"Null DexFile::mCookie for "</span> &lt;&lt; descriptor;</span><br><span class="line">    <span class="keyword">break</span>;</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">int32_t</span> long_array_size = long_array-&gt;GetLength();</span><br><span class="line">  <span class="comment">// 遍历</span></span><br><span class="line">  <span class="keyword">for</span> (<span class="keyword">int32_t</span> j = kDexFileIndexStart; j &lt; long_array_size; ++j) &#123;</span><br><span class="line">    <span class="keyword">const</span> DexFile* cp_dex_file = <span class="keyword">reinterpret_cast</span>&lt;<span class="keyword">const</span> DexFile*&gt;(<span class="keyword">static_cast</span>&lt;<span class="keyword">uintptr_t</span>&gt;(</span><br><span class="line">        long_array-&gt;GetWithoutChecks(j)));</span><br><span class="line">    <span class="comment">// 拿 Class 的定义</span></span><br><span class="line">    <span class="keyword">const</span> DexFile::ClassDef* dex_class_def =</span><br><span class="line">        OatDexFile::FindClassDef(*cp_dex_file, descriptor, hash);</span><br><span class="line">    <span class="keyword">if</span> (dex_class_def != <span class="literal">nullptr</span>) &#123;</span><br><span class="line">      ObjPtr&lt;mirror::Class&gt; klass = DefineClass(self,</span><br><span class="line">                                         descriptor,</span><br><span class="line">                                         hash,</span><br><span class="line">                                         class_loader,</span><br><span class="line">                                         *cp_dex_file,</span><br><span class="line">                                         *dex_class_def);</span><br><span class="line">      <span class="keyword">if</span> (klass == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">        CHECK(self-&gt;IsExceptionPending()) &lt;&lt; descriptor;</span><br><span class="line">        self-&gt;ClearException();</span><br><span class="line">        <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">      &#125;</span><br><span class="line">      *result = klass;</span><br><span class="line">      <span class="keyword">return</span> <span class="literal">true</span>;</span><br><span class="line">    &#125;</span><br><span class="line">  &#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="更新-Class-Table"><a href="#更新-Class-Table" class="headerlink" title="更新 Class Table"></a>更新 Class Table</h3><p>Class 寻找的最后一步，就是将已实例化的 Class 对象置入到 Class Table 中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line">ClassTable* <span class="keyword">const</span> class_table = InsertClassTableForClassLoader(class_loader.Get());</span><br><span class="line">old = class_table-&gt;Lookup(descriptor, hash);</span><br><span class="line"><span class="keyword">if</span> (old == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">  old = result_ptr;</span><br><span class="line">  <span class="keyword">if</span> (descriptor_equals) &#123;</span><br><span class="line">    class_table-&gt;InsertWithHash(result_ptr.Ptr(), hash);</span><br><span class="line">    Runtime::Current()-&gt;GetHeap()-&gt;WriteBarrierEveryFieldOf(class_loader.Get());</span><br><span class="line">  &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>Class Table 是 Native 层存放 Class 的集合类，在 Java 层表现为 Class Loader 中的 classTable 地址指针</p>
+</blockquote>
+<p>获取 Class Table 的逻辑实现在 ClassLinker::InsertClassTableForClassLoader 方法中</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line">ClassTable* ClassLinker::InsertClassTableForClassLoader(ObjPtr&lt;mirror::ClassLoader&gt; class_loader) &#123;</span><br><span class="line">  <span class="keyword">if</span> (class_loader == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    <span class="keyword">return</span> &amp;boot_class_table_;</span><br><span class="line">  &#125;</span><br><span class="line">  ClassTable* class_table = class_loader-&gt;GetClassTable();</span><br><span class="line">  <span class="keyword">if</span> (class_table == <span class="literal">nullptr</span>) &#123;</span><br><span class="line">    RegisterClassLoader(class_loader); <span class="comment">// 开辟新空间存放 Class Table</span></span><br><span class="line">    class_table = class_loader-&gt;GetClassTable();</span><br><span class="line">    DCHECK(class_table != <span class="literal">nullptr</span>);</span><br><span class="line">  &#125;</span><br><span class="line">  <span class="keyword">return</span> class_table;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="总结"><a href="#总结" class="headerlink" title="总结"></a>总结</h3><p>回顾本文，跟进了基本类型 Class、数组类 Class、一般类 Class 查找和定义过程的 Native 层实现，能够让读者对 Android 中 Class 的加载过程有进一步的理解。而此时，本文对 Class 加载的分析就基本结束了，但对于理解完整的 Class 加载过程，文中提及的仅仅是冰山一角，还需要我们多钻研多学习。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Java/" rel="tag"># Java</a>
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/06/12/xcrash/" rel="next" title="xCrash 实现简析">
+                  <i class="fa fa-chevron-left"></i> xCrash 实现简析
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-3"><a class="nav-link" href="#双亲委派模型"><span class="nav-number">1.</span> <span class="nav-text">双亲委派模型</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-加载的-Native-层入口"><span class="nav-number">2.</span> <span class="nav-text">Class 加载的 Native 层入口</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#基本类型的-Class-寻找"><span class="nav-number">3.</span> <span class="nav-text">基本类型的 Class 寻找</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#在堆上开辟内存"><span class="nav-number">3.1.</span> <span class="nav-text">在堆上开辟内存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#初始化-Class"><span class="nav-number">3.2.</span> <span class="nav-text">初始化 Class</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#启动类的寻找"><span class="nav-number">4.</span> <span class="nav-text">启动类的寻找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#Class-的定义"><span class="nav-number">5.</span> <span class="nav-text">Class 的定义</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#内部-Class"><span class="nav-number">5.1.</span> <span class="nav-text">内部 Class</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#在堆中分配内存"><span class="nav-number">5.2.</span> <span class="nav-text">在堆中分配内存</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#对-Class-进行-PreDefine"><span class="nav-number">5.3.</span> <span class="nav-text">对 Class 进行 PreDefine</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#注册-DexFile"><span class="nav-number">5.4.</span> <span class="nav-text">注册 DexFile</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#配置-Class-字段"><span class="nav-number">5.5.</span> <span class="nav-text">配置 Class 字段</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#添加到-Class-Table"><span class="nav-number">5.6.</span> <span class="nav-text">添加到 Class Table</span></a></li><li class="nav-item nav-level-4"><a class="nav-link" href="#加载-Class"><span class="nav-number">5.7.</span> <span class="nav-text">加载 Class</span></a></li></ol></li><li class="nav-item nav-level-3"><a class="nav-link" href="#数组-Class-的创建"><span class="nav-number">6.</span> <span class="nav-text">数组 Class 的创建</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#非启动类的寻找"><span class="nav-number">7.</span> <span class="nav-text">非启动类的寻找</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#更新-Class-Table"><span class="nav-number">8.</span> <span class="nav-text">更新 Class Table</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#总结"><span class="nav-number">9.</span> <span class="nav-text">总结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

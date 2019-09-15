@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="xCrash 是爱奇艺最近开源在 Github 的 Crash 捕获工具（https://github.com/iqiyi/xCrash）； xCrash 是一个安卓 APP 的崩溃捕获库，它支持捕获 Native 崩溃和 Java 异常； xCrash 能在 App 进程崩溃时，在你指定的目录中生成一个 tombstone 文件（格式与安卓系统的 tombstone 文件类似），并且，不需要 r">
+<meta name="keywords" content="Android">
+<meta property="og:type" content="article">
+<meta property="og:title" content="xCrash 实现简析">
+<meta property="og:url" content="http://yoursite.com/2019/06/12/xcrash/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="xCrash 是爱奇艺最近开源在 Github 的 Crash 捕获工具（https://github.com/iqiyi/xCrash）； xCrash 是一个安卓 APP 的崩溃捕获库，它支持捕获 Native 崩溃和 Java 异常； xCrash 能在 App 进程崩溃时，在你指定的目录中生成一个 tombstone 文件（格式与安卓系统的 tombstone 文件类似），并且，不需要 r">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-09-09-120505.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-09-09-120550.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-09-09-120617.jpg">
+<meta property="og:image" content="https://cdn.wuhaojie.top/2019-09-09-120658.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.772Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="xCrash 实现简析">
+<meta name="twitter:description" content="xCrash 是爱奇艺最近开源在 Github 的 Crash 捕获工具（https://github.com/iqiyi/xCrash）； xCrash 是一个安卓 APP 的崩溃捕获库，它支持捕获 Native 崩溃和 Java 异常； xCrash 能在 App 进程崩溃时，在你指定的目录中生成一个 tombstone 文件（格式与安卓系统的 tombstone 文件类似），并且，不需要 r">
+<meta name="twitter:image" content="https://cdn.wuhaojie.top/2019-09-09-120505.jpg">
+  <link rel="canonical" href="http://yoursite.com/2019/06/12/xcrash/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>xCrash 实现简析 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2019/06/12/xcrash/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">xCrash 实现简析
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2019-06-12 17:30:00" itemprop="dateCreated datePublished" datetime="2019-06-12T17:30:00+08:00">2019-06-12</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>xCrash 是爱奇艺最近开源在 Github 的 Crash 捕获工具（<a href="https://github.com/iqiyi/xCrash）；" target="_blank" rel="noopener">https://github.com/iqiyi/xCrash）；</a></p>
+<p>xCrash 是一个安卓 APP 的崩溃捕获库，它支持捕获 Native 崩溃和 Java 异常；</p>
+<p>xCrash 能在 App 进程崩溃时，在你指定的目录中生成一个 tombstone 文件（格式与安卓系统的 tombstone 文件类似），并且，不需要 root 权限或任何系统权限；</p>
+<p>本文将通过 Github 开源的代码，对其简要分析，它是如何实现如此强大的功能的。</p>
+<a id="more"></a>
+
+
+<h1 id="初始化"><a href="#初始化" class="headerlink" title="初始化"></a>初始化</h1><p>Java Handler 和 Native Handler</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//init java crash handler</span></span><br><span class="line"><span class="keyword">if</span> (params.enableJavaCrashHandler) &#123;</span><br><span class="line">    JavaCrashHandler.getInstance().initialize(...);</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="comment">//init native crash handler</span></span><br><span class="line"><span class="keyword">int</span> r = Errno.OK;</span><br><span class="line"><span class="keyword">if</span> (params.enableNativeCrashHandler) &#123;</span><br><span class="line">    r = NativeCrashHandler.getInstance().initialize(...);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Java-层面"><a href="#Java-层面" class="headerlink" title="Java 层面"></a>Java 层面</h1><p>Java 层主要是增加 DefaultHandler</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 取出之前的 Handler</span></span><br><span class="line">defaultHandler = Thread.getDefaultUncaughtExceptionHandler();</span><br><span class="line"></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    Thread.setDefaultUncaughtExceptionHandler(<span class="keyword">this</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">    XCrash.getLogger().e(Util.TAG, <span class="string">"JavaCrashHandler setDefaultUncaughtExceptionHandler failed"</span>, e);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>处理时打印文件，并交个上级 Handler 处理</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">uncaughtException</span><span class="params">(Thread thread, Throwable throwable)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        handleException(thread, throwable);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        XCrash.getLogger().e(Util.TAG, <span class="string">"JavaCrashHandler handleException failed"</span>, e);</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">  	<span class="comment">// 交给已有的 Handler 处理</span></span><br><span class="line">    <span class="keyword">if</span> (<span class="keyword">this</span>.rethrow &amp;&amp; defaultHandler != <span class="keyword">null</span>) &#123;</span><br><span class="line">        defaultHandler.uncaughtException(thread, throwable);</span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line">        android.os.Process.killProcess(<span class="keyword">this</span>.pid);</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>handleException 主要打印 Java 的崩溃信息</p>
+<p>（1）设备状态信息以及堆栈</p>
+<p>设备信息主要通过读系统文件实现；</p>
+<p><img src="https://cdn.wuhaojie.top/2019-09-09-120505.jpg" alt="设备信息"></p>
+<p>堆栈直接打印就 ok</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">PrintWriter pw = <span class="keyword">new</span> PrintWriter(sw);</span><br><span class="line">throwable.printStackTrace(pw);</span><br></pre></td></tr></table></figure>
+
+<p>其中的 Util 中有些工具类值得参考和学习，比如 root 的判断，/proc/meminfo 内存信息的获取，线程数进程数获取</p>
+<p>（2）Logcat 信息</p>
+<p>通过 shell 命令实现</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line">List&lt;String&gt; command = <span class="keyword">new</span> ArrayList&lt;String&gt;();</span><br><span class="line">command.add(<span class="string">"/system/bin/logcat"</span>);</span><br><span class="line">command.add(<span class="string">"-b"</span>);</span><br><span class="line">command.add(bufferName);</span><br><span class="line">command.add(<span class="string">"-d"</span>);</span><br><span class="line">command.add(<span class="string">"-v"</span>);</span><br><span class="line">command.add(<span class="string">"threadtime"</span>);</span><br><span class="line">command.add(<span class="string">"-t"</span>);</span><br><span class="line">command.add(Integer.toString(withPid ? lines : (<span class="keyword">int</span>) (lines * <span class="number">1.2</span>)));</span><br><span class="line"><span class="keyword">if</span> (withPid) &#123;</span><br><span class="line">    command.add(<span class="string">"--pid"</span>);</span><br><span class="line">    command.add(pidString);</span><br><span class="line">&#125;</span><br><span class="line">command.add(<span class="string">"*:"</span> + priority);</span><br></pre></td></tr></table></figure>
+
+<p>（3）内存信息</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line">Debug.MemoryInfo mi = <span class="keyword">new</span> Debug.MemoryInfo();</span><br><span class="line"><span class="comment">// Android SDK 的 API</span></span><br><span class="line"><span class="comment">// android.os.Debug#getMemoryInfo(android.os.Debug.MemoryInfo)</span></span><br><span class="line">Debug.getMemoryInfo(mi);</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span> (Build.VERSION.SDK_INT &gt;= <span class="number">23</span>) &#123;</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Java Heap:"</span>, mi.getMemoryStat(<span class="string">"summary.java-heap"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Native Heap:"</span>, mi.getMemoryStat(<span class="string">"summary.native-heap"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Code:"</span>, mi.getMemoryStat(<span class="string">"summary.code"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Stack:"</span>, mi.getMemoryStat(<span class="string">"summary.stack"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Graphics:"</span>, mi.getMemoryStat(<span class="string">"summary.graphics"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"Private Other:"</span>, mi.getMemoryStat(<span class="string">"summary.private-other"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt, <span class="string">"System:"</span>, mi.getMemoryStat(<span class="string">"summary.system"</span>)));</span><br><span class="line">    sb.append(String.format(Locale.US, memInfoFmt2, <span class="string">"TOTAL:"</span>, mi.getMemoryStat(<span class="string">"summary.total-pss"</span>), <span class="string">"TOTAL SWAP:"</span>, mi.getMemoryStat(<span class="string">"summary.total-swap"</span>)));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（4）其它线程的堆栈</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// 获取其它线程的栈</span></span><br><span class="line">Map&lt;Thread, StackTraceElement[]&gt; map = Thread.getAllStackTraces();</span><br><span class="line"><span class="keyword">for</span> (Map.Entry&lt;Thread, StackTraceElement[]&gt; entry : map.entrySet()) &#123;</span><br><span class="line">    Thread thd = entry.getKey();</span><br><span class="line">    StackTraceElement[] stacktrace = entry.getValue();</span><br><span class="line">    ...</span><br><span class="line">    sb.append(<span class="string">"pid: "</span>).append(pid).append(<span class="string">", tid: "</span>).append(thd.getId()).append(<span class="string">", name: "</span>).append(thd.getName()).append(<span class="string">"  &gt;&gt;&gt; "</span>).append(processName).append(<span class="string">" &lt;&lt;&lt;\n"</span>);</span><br><span class="line">    sb.append(<span class="string">"\n"</span>);</span><br><span class="line">    sb.append(<span class="string">"java stacktrace:\n"</span>);</span><br><span class="line">    <span class="keyword">for</span> (StackTraceElement element : stacktrace) &#123;</span><br><span class="line">        sb.append(<span class="string">"    at "</span>).append(element.toString()).append(<span class="string">"\n"</span>);</span><br><span class="line">    &#125;</span><br><span class="line">    sb.append(<span class="string">"\n"</span>);</span><br><span class="line"></span><br><span class="line">    thdDumped++;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h1 id="Native-层面"><a href="#Native-层面" class="headerlink" title="Native 层面"></a>Native 层面</h1><p>Native 的初始化</p>
+<p>（1）加载 so 库</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//load lib</span></span><br><span class="line"><span class="keyword">try</span> &#123;</span><br><span class="line">    System.loadLibrary(<span class="string">"xcrash"</span>);</span><br><span class="line">&#125; <span class="keyword">catch</span> (Throwable e) &#123;</span><br><span class="line">    XCrash.getLogger().e(Util.TAG, <span class="string">"NativeCrashHandler System.loadLibrary failed"</span>, e);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        <span class="comment">//for some unusual Android version</span></span><br><span class="line">        System.load(ctx.getFilesDir().getParent() + <span class="string">"/lib/libxcrash.so"</span>);</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Throwable e2) &#123;</span><br><span class="line">        XCrash.getLogger().e(Util.TAG, <span class="string">"NativeCrashHandler System.load failed"</span>, e);</span><br><span class="line">        <span class="keyword">return</span> Errno.LOAD_LIBRARY_FAILED;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>（2）调用 Native 方法</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">static</span> <span class="keyword">native</span> <span class="keyword">int</span> <span class="title">initEx</span><span class="params">(...)</span></span>;</span><br></pre></td></tr></table></figure>
+
+<p>来看 Native 层</p>
+<p>首先注册了 JNI 方法</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">static</span> JNINativeMethod xc_jni_methods[] = &#123;</span><br><span class="line">    ...</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="string">"initEx"</span>,</span><br><span class="line">        <span class="string">"("</span></span><br><span class="line">        <span class="string">"Landroid/content/Context;"</span></span><br><span class="line">        <span class="string">"Z"</span></span><br><span class="line">        ...</span><br><span class="line">        <span class="string">"I"</span>,</span><br><span class="line">        (<span class="keyword">void</span> *)xc_jni_init_ex</span><br><span class="line">    &#125;,</span><br><span class="line">  	...</span><br><span class="line">&#125;;</span><br><span class="line"><span class="comment">// 注册</span></span><br><span class="line"><span class="keyword">if</span>((*env)-&gt;RegisterNatives(env, clazz, xc_jni_methods, <span class="keyword">sizeof</span>(xc_jni_methods) / <span class="keyword">sizeof</span>(xc_jni_methods[<span class="number">0</span>]))) <span class="keyword">return</span> <span class="number">-1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>初始化方法中对信号 Handler 进行注册</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// handler 入参指向 static void xc_core_signal_handler(int sig, siginfo_t *si, void *uc) 函数</span></span><br><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">xcc_signal_register</span><span class="params">(<span class="keyword">xcc_signal_handler_t</span> handler)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">stack_t</span> ss;</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> == (ss.ss_sp = <span class="built_in">malloc</span>(XCC_SIGNAL_STACK_SIZE))) <span class="keyword">return</span> XCC_ERRNO_NOMEM;</span><br><span class="line">    ss.ss_size  = XCC_SIGNAL_STACK_SIZE;</span><br><span class="line">    ss.ss_flags = <span class="number">0</span>;</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != sigaltstack(&amp;ss, <span class="literal">NULL</span>)) <span class="keyword">return</span> XCC_ERRNO_SYS;</span><br><span class="line"></span><br><span class="line">    <span class="class"><span class="keyword">struct</span> <span class="title">sigaction</span> <span class="title">act</span>;</span></span><br><span class="line">    <span class="built_in">memset</span>(&amp;act, <span class="number">0</span>, <span class="keyword">sizeof</span>(act));</span><br><span class="line">    sigfillset(&amp;act.sa_mask);</span><br><span class="line">  	<span class="comment">// 创建的 sigaction</span></span><br><span class="line">    act.sa_sigaction = handler;</span><br><span class="line">    act.sa_flags = SA_RESTART | SA_SIGINFO | SA_ONSTACK;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">size_t</span> i;</span><br><span class="line">    <span class="keyword">for</span>(i = <span class="number">0</span>; i &lt; <span class="keyword">sizeof</span>(xcc_signal_info) / <span class="keyword">sizeof</span>(xcc_signal_info[<span class="number">0</span>]); i++)</span><br><span class="line">      	<span class="comment">// sigaction() 函数是 Linux 对信号捕捉的 API</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != sigaction(xcc_signal_info[i].signum, &amp;act, &amp;(xcc_signal_info[i].orig_act)))</span><br><span class="line">            <span class="keyword">return</span> XCC_ERRNO_SYS;</span><br><span class="line">        </span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>来看对异常信号捕捉的处理</p>
+<p>（1）文件的创建</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>((xc_core_log_fd = xc_recorder_create_and_open(xc_core_recorder)) &lt; <span class="number">0</span>) <span class="keyword">goto</span> end;</span><br><span class="line"></span><br><span class="line"><span class="comment">// create new file</span></span><br><span class="line">self-&gt;if_create_new_file = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>((fd = XCC_UTIL_TEMP_FAILURE_RETRY(open(self-&gt;log_pathname, new_file_flags, <span class="number">0644</span>))) &gt;= <span class="number">0</span>) <span class="keyword">return</span> fd;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(self-&gt;prepared_fd &gt;= <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">    close(self-&gt;prepared_fd);</span><br><span class="line">    self-&gt;prepared_fd = <span class="number">-1</span>;</span><br><span class="line">    <span class="keyword">if</span>((fd = XCC_UTIL_TEMP_FAILURE_RETRY(open(self-&gt;log_pathname, new_file_flags, <span class="number">0644</span>))) &gt;= <span class="number">0</span>) <span class="keyword">return</span> fd;</span><br><span class="line">&#125;</span><br><span class="line"></span><br><span class="line"><span class="keyword">return</span> <span class="number">-1</span>;</span><br></pre></td></tr></table></figure>
+
+<p>（2）配置程序允许 dump</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//set dumpable</span></span><br><span class="line">orig_dumpable = prctl(PR_GET_DUMPABLE);</span><br><span class="line">errno = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != prctl(PR_SET_DUMPABLE, <span class="number">1</span>))</span><br><span class="line">&#123;</span><br><span class="line">  xcc_util_write_format_safe(xc_core_log_fd, XC_CORE_ERR_TITLE<span class="string">"set dumpable failed, errno=%d\n\n"</span>, errno);</span><br><span class="line">  <span class="keyword">goto</span> end;</span><br><span class="line">&#125;</span><br><span class="line">restore_orig_dumpable = <span class="number">1</span>;</span><br><span class="line"></span><br><span class="line"><span class="comment">//set traceable (disable the ptrace restrictions introduced by Yama)</span></span><br><span class="line"><span class="comment">//https://www.kernel.org/doc/Documentation/security/Yama.txt</span></span><br><span class="line">errno = <span class="number">0</span>;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != prctl(PR_SET_PTRACER, PR_SET_PTRACER_ANY))</span><br><span class="line">  ...</span><br></pre></td></tr></table></figure>
+
+<p>（3）子进程进行 dump 收集</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">pid_t</span> dumper_pid = xc_core_fork(xc_core_exec_dumper);</span><br><span class="line"></span><br><span class="line"><span class="comment">// 父进程等待</span></span><br><span class="line"><span class="keyword">int</span> r = XCC_UTIL_TEMP_FAILURE_RETRY(waitpid(dumper_pid, &amp;status, __WALL));</span><br></pre></td></tr></table></figure>
+
+<p>有个重试的小技巧，宏定义</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"></span><br><span class="line">\<span class="meta">#<span class="meta-keyword">define</span> XCC_UTIL_TEMP_FAILURE_RETRY(exp) (&#123;         \</span></span><br><span class="line"></span><br><span class="line">            __typeof__(<span class="built_in">exp</span>) _rc;                    \</span><br><span class="line"></span><br><span class="line">            <span class="keyword">do</span> &#123;                                    \</span><br><span class="line"></span><br><span class="line">                errno = <span class="number">0</span>;                          \</span><br><span class="line"></span><br><span class="line">                _rc = (<span class="built_in">exp</span>);                        \</span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">while</span> (_rc == <span class="number">-1</span> &amp;&amp; errno == EINTR);  \</span><br><span class="line"></span><br><span class="line">            _rc; &#125;)</span><br></pre></td></tr></table></figure>
+
+<p>dump 的逻辑在 static int xc_core_exec_dumper(void *arg) 函数中</p>
+<p>对 /dev/null 设备进行重定向到标准输出</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">XCC_UTIL_TEMP_FAILURE_RETRY(dup2(devnull, STDOUT_FILENO));</span><br><span class="line">XCC_UTIL_TEMP_FAILURE_RETRY(dup2(devnull, STDERR_FILENO));</span><br></pre></td></tr></table></figure>
+
+<p>传递参数到管道的写端</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//write args to pipe</span></span><br><span class="line"><span class="class"><span class="keyword">struct</span> <span class="title">iovec</span> <span class="title">iovs</span>[5] = &#123;</span></span><br><span class="line">    &#123;.iov_base = &amp;xc_core_spot, .iov_len = <span class="keyword">sizeof</span>(<span class="keyword">xcc_spot_t</span>)&#125;,</span><br><span class="line">    &#123;.iov_base = xc_core_log_pathname, .iov_len = xc_core_spot.log_pathname_len&#125;,</span><br><span class="line">    &#123;.iov_base = xc_core_app_id, .iov_len = xc_core_spot.app_id_len&#125;,</span><br><span class="line">    &#123;.iov_base = xc_core_app_version, .iov_len = xc_core_spot.app_version_len&#125;,</span><br><span class="line">    &#123;.iov_base = xc_core_dump_all_threads_whitelist, .iov_len = xc_core_spot.dump_all_threads_whitelist_len&#125;</span><br><span class="line">&#125;;</span><br><span class="line"><span class="keyword">int</span> iovs_cnt = (<span class="number">0</span> == xc_core_spot.dump_all_threads_whitelist_len ? <span class="number">4</span> : <span class="number">5</span>);</span><br><span class="line">errno = <span class="number">0</span>;</span><br><span class="line"><span class="comment">// 写入管道</span></span><br><span class="line"><span class="keyword">ssize_t</span> ret = XCC_UTIL_TEMP_FAILURE_RETRY(writev(pipefd[<span class="number">1</span>], iovs, iovs_cnt));</span><br></pre></td></tr></table></figure>
+
+<p>接下来将管道的数据重定向到标准输入，相当于向控制台输入参数</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//copy the read-side of the args-pipe to stdin (fd: 0)</span></span><br><span class="line">XCC_UTIL_TEMP_FAILURE_RETRY(dup2(pipefd[<span class="number">0</span>], STDIN_FILENO));</span><br><span class="line"></span><br><span class="line">syscall(SYS_close, pipefd[<span class="number">0</span>]);</span><br><span class="line">syscall(SYS_close, pipefd[<span class="number">1</span>]);</span><br></pre></td></tr></table></figure>
+
+<p>为什么要向标准输入传递参数，是因为通过 execl 在新的进程执行 dump</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#<span class="meta-keyword">define</span> XCC_UTIL_XCRASH_DUMPER_FILENAME <span class="meta-string">"libxcrash_dumper.so"</span></span></span><br><span class="line"><span class="comment">// 执行 libxcrash_dumper.so</span></span><br><span class="line">execl(xc_core_dumper_pathname, XCC_UTIL_XCRASH_DUMPER_FILENAME, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+
+<p>具体 libxcrash_dumper.so 如何实现的 dump，稍后分析，先继续看</p>
+<p>检查输出的 log 文件是否包含正确的“回溯”</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">int</span> <span class="title">xc_recorder_check_backtrace_valid</span><span class="params">(<span class="keyword">xc_recorder_t</span> *self)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="keyword">if</span>((fd = XCC_UTIL_TEMP_FAILURE_RETRY(open(self-&gt;log_pathname, O_RDONLY | O_CLOEXEC))) &lt; <span class="number">0</span>) <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">    </span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">NULL</span> != xcc_util_gets(line, <span class="keyword">sizeof</span>(line), fd))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> == <span class="built_in">memcmp</span>(line, <span class="string">"backtrace:\n"</span>, <span class="number">11</span>))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="comment">//check the next line</span></span><br><span class="line">            <span class="keyword">if</span>(<span class="literal">NULL</span> != xcc_util_gets(line, <span class="keyword">sizeof</span>(line), fd) &amp;&amp; <span class="number">0</span> == <span class="built_in">memcmp</span>(line, <span class="string">"    #00 pc "</span>, <span class="number">11</span>))</span><br><span class="line">                r = <span class="number">1</span>; <span class="comment">//we found the backtrace</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(i++ &gt; <span class="number">200</span>) <span class="comment">//check the top 200 lines at most</span></span><br><span class="line">            <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line"></span><br><span class="line">    <span class="keyword">if</span>(fd &gt;= <span class="number">0</span>) close(fd);</span><br><span class="line">    <span class="keyword">return</span> r;    </span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>之后获取设备信息</p>
+<p><img src="https://cdn.wuhaojie.top/2019-09-09-120550.jpg" alt="获取设备信息"></p>
+<p>设备信息的大部分逻辑和 Java 层实现类似，基本依靠读取系统文件实现，只是翻译成 native 代码。</p>
+<p>可以关注的有几个点：</p>
+<p>（1）signal 信号</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> size_t <span class="title">xc_fallback_get_signal</span><span class="params">(<span class="keyword">char</span> *buf, <span class="keyword">size_t</span> len, <span class="keyword">siginfo_t</span> *si, <span class="keyword">pid_t</span> pid)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="comment">//fault addr</span></span><br><span class="line">    <span class="keyword">char</span> addr_desc[<span class="number">64</span>];</span><br><span class="line">    <span class="keyword">if</span>(xcc_util_signal_has_si_addr(si))</span><br><span class="line">        xcc_fmt_snprintf(addr_desc, <span class="keyword">sizeof</span>(addr_desc), <span class="string">"%p"</span>, si-&gt;si_addr);</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        xcc_fmt_snprintf(addr_desc, <span class="keyword">sizeof</span>(addr_desc), <span class="string">"--------"</span>);</span><br><span class="line"></span><br><span class="line">    <span class="comment">//from</span></span><br><span class="line">    <span class="keyword">char</span> sender_desc[<span class="number">64</span>] = <span class="string">""</span>;</span><br><span class="line">    <span class="keyword">if</span>(xcc_util_signal_has_sender(si, pid))</span><br><span class="line">        xcc_fmt_snprintf(sender_desc, <span class="keyword">sizeof</span>(sender_desc), <span class="string">" from pid %d, uid %d"</span>, si-&gt;si_pid, si-&gt;si_uid);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> xcc_fmt_snprintf(buf, len, <span class="string">"signal %d (%s), code %d (%s%s), fault addr %s\n"</span>,</span><br><span class="line">                            si-&gt;si_signo, xcc_util_get_signame(si),</span><br><span class="line">                            si-&gt;si_code, xcc_util_get_sigcodename(si), sender_desc, addr_desc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>其中，siginfo_t *si 是 signal_handler 的参数</p>
+</blockquote>
+<p><img src="https://cdn.wuhaojie.top/2019-09-09-120617.jpg" alt="siginfo_t"></p>
+<p>（2）寄存器信息</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">return</span> xcc_fmt_snprintf(buf, len, </span><br><span class="line">                        <span class="string">"    r0  %08x  r1  %08x  r2  %08x  r3  %08x\n"</span></span><br><span class="line">                        <span class="string">"    r4  %08x  r5  %08x  r6  %08x  r7  %08x\n"</span></span><br><span class="line">                        <span class="string">"    r8  %08x  r9  %08x  r10 %08x  r11 %08x\n"</span></span><br><span class="line">                        <span class="string">"    ip  %08x  sp  %08x  lr  %08x  pc  %08x\n\n"</span>,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r0,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r1,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r2,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r3,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r4,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r5,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r6,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r7,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r8,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r9,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_r10,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_fp,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_ip,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_sp,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_lr,</span><br><span class="line">                        uc-&gt;uc_mcontext.arm_pc);</span><br></pre></td></tr></table></figure>
+
+<p>（3）循环打印回溯栈</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// build line</span></span><br><span class="line">len = xcc_fmt_snprintf(line, <span class="keyword">sizeof</span>(line), <span class="string">"    #%02zu pc %0"</span>XCC_UTIL_FMT_ADDR<span class="string">"  %s"</span>, j, rel_pc, name);</span><br><span class="line"><span class="keyword">if</span>(<span class="literal">NULL</span> != symbol)</span><br><span class="line">&#123;</span><br><span class="line">    len += xcc_fmt_snprintf(line + len, <span class="keyword">sizeof</span>(line) - len, <span class="string">" (%s"</span>, symbol);</span><br><span class="line">    <span class="keyword">if</span>(offset &gt; <span class="number">0</span>)</span><br><span class="line">        len += xcc_fmt_snprintf(line + len, <span class="keyword">sizeof</span>(line) - len, <span class="string">"+%"</span>PRIuPTR, offset);</span><br><span class="line">    len += xcc_fmt_snprintf(line + len, <span class="keyword">sizeof</span>(line) - len, <span class="string">")"</span>);</span><br><span class="line">&#125;</span><br><span class="line">len += xcc_fmt_snprintf(line + len, <span class="keyword">sizeof</span>(line) - len, <span class="string">"\n"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>（4）logcat</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(pid_str)</span><br><span class="line">    execl(<span class="string">"/system/bin/logcat"</span>, <span class="string">"logcat"</span>, <span class="string">"-b"</span>, buffer, <span class="string">"-d"</span>, <span class="string">"-v"</span>, <span class="string">"threadtime"</span>,</span><br><span class="line">            <span class="string">"-t"</span>, lines_str, <span class="string">"--pid"</span>, pid_str, priority, (<span class="keyword">char</span> *)<span class="literal">NULL</span>);</span><br><span class="line"><span class="keyword">else</span></span><br><span class="line">    execl(<span class="string">"/system/bin/logcat"</span>, <span class="string">"logcat"</span>, <span class="string">"-b"</span>, buffer, <span class="string">"-d"</span>, <span class="string">"-v"</span>, <span class="string">"threadtime"</span>,</span><br><span class="line">            <span class="string">"-t"</span>, lines_str, priority, (<span class="keyword">char</span> *)<span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+
+<p>之后在子线程中回调 Java 层</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != pthread_create(&amp;thd, <span class="literal">NULL</span>, xc_jni_callback_do, <span class="literal">NULL</span>)) <span class="keyword">return</span>;</span><br><span class="line">pthread_join(thd, <span class="literal">NULL</span>);</span><br></pre></td></tr></table></figure>
+
+<p>回调前，记录 Java 堆栈</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//java.lang.Thread</span></span><br><span class="line">jclass class_Thread = (*env)-&gt;FindClass(env, <span class="string">"java/lang/Thread"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(class_Thread, err);</span><br><span class="line">jmethodID method_getAllStackTraces = (*env)-&gt;GetStaticMethodID(env, class_Thread, <span class="string">"getAllStackTraces"</span>, <span class="string">"()Ljava/util/Map;"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(method_getAllStackTraces, err);</span><br><span class="line">jmethodID method_getStackTrace = (*env)-&gt;GetMethodID(env, class_Thread, <span class="string">"getStackTrace"</span>, <span class="string">"()[Ljava/lang/StackTraceElement;"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(method_getStackTrace, err);</span><br><span class="line">jmethodID method_getName = (*env)-&gt;GetMethodID(env, class_Thread, <span class="string">"getName"</span>, <span class="string">"()Ljava/lang/String;"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(method_getName, err);</span><br><span class="line"></span><br><span class="line"><span class="comment">//java.lang.StackTraceElement</span></span><br><span class="line">jclass class_StackTraceElement = (*env)-&gt;FindClass(env, <span class="string">"java/lang/StackTraceElement"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(class_StackTraceElement, err);</span><br><span class="line">jmethodID method_toString = (*env)-&gt;GetMethodID(env, class_StackTraceElement, <span class="string">"toString"</span>, <span class="string">"()Ljava/lang/String;"</span>);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(method_toString, err);</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>循环调用并打印</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_str(log_fd, <span class="string">"java stacktrace:\n"</span>)) <span class="keyword">goto</span> err;</span><br><span class="line"></span><br><span class="line">jobjectArray stackTrace = (jobjectArray)(*env)-&gt;CallObjectMethod(env, thread, method_getStackTrace);</span><br><span class="line">XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(stackTrace, err);</span><br><span class="line"></span><br><span class="line">jsize stackTraceLen = (*env)-&gt;GetArrayLength(env, stackTrace);</span><br><span class="line">XC_JNI_CHECK_PENDING_EXCEPTION(err);</span><br><span class="line"></span><br><span class="line">jsize j;</span><br><span class="line"><span class="keyword">for</span>(j = <span class="number">0</span>; j &lt; stackTraceLen; j++)</span><br><span class="line">&#123;</span><br><span class="line">    jobject stackTraceElement = (*env)-&gt;GetObjectArrayElement(env, stackTrace, j);</span><br><span class="line">    XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(stackTraceElement, err);</span><br><span class="line"></span><br><span class="line">    jstring stackTraceElementStr = (*env)-&gt;CallObjectMethod(env, stackTraceElement, method_toString);</span><br><span class="line">    XC_JNI_CHECK_NULL_AND_PENDING_EXCEPTION(stackTraceElementStr, err);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">const</span> <span class="keyword">char</span> *c_stackTraceElementStr = (*env)-&gt;GetStringUTFChars(env, stackTraceElementStr, <span class="number">0</span>);</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_str(log_fd, <span class="string">"    at "</span>)) <span class="keyword">goto</span> err;</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_str(log_fd, c_stackTraceElementStr)) <span class="keyword">goto</span> err;</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_str(log_fd, <span class="string">"\n"</span>)) <span class="keyword">goto</span> err;</span><br><span class="line">    (*env)-&gt;ReleaseStringUTFChars(env, stackTraceElementStr, c_stackTraceElementStr);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>完成后回调 callback</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">(*env)-&gt;CallStaticVoidMethod(env, xc_jni_class_cb, xc_jni_method_cb, j_pathname, j_emergency);</span><br><span class="line">XC_JNI_CHECK_PENDING_EXCEPTION(err);</span><br></pre></td></tr></table></figure>
+
+<h1 id="Native-Dump"><a href="#Native-Dump" class="headerlink" title="Native Dump"></a>Native Dump</h1><p>回过头来看 Native 如何 Dump 的，入口在 xcd_core.c 文件中。</p>
+<p>首先是读取标准输入传递的参数：</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_core_read_stdin(<span class="string">"spot"</span>, (<span class="keyword">void</span> *)&amp;xcd_core_spot, <span class="keyword">sizeof</span>(<span class="keyword">xcc_spot_t</span>)))) <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> == xcd_core_spot.log_pathname_len) <span class="keyword">return</span> XCC_ERRNO_INVAL;</span><br><span class="line"><span class="keyword">if</span>(<span class="literal">NULL</span> == (xcd_core_log_pathname = <span class="built_in">calloc</span>(<span class="number">1</span>, xcd_core_spot.log_pathname_len + <span class="number">1</span>))) <span class="keyword">return</span> XCC_ERRNO_NOMEM;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_core_read_stdin(<span class="string">"path"</span>, (<span class="keyword">void</span> *)xcd_core_log_pathname, xcd_core_spot.log_pathname_len))) <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> == xcd_core_spot.app_id_len) <span class="keyword">return</span> XCC_ERRNO_INVAL;</span><br><span class="line"><span class="keyword">if</span>(<span class="literal">NULL</span> == (xcd_core_app_id = <span class="built_in">calloc</span>(<span class="number">1</span>, xcd_core_spot.app_id_len + <span class="number">1</span>))) <span class="keyword">return</span> XCC_ERRNO_NOMEM;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_core_read_stdin(<span class="string">"appid"</span>, (<span class="keyword">void</span> *)xcd_core_app_id, xcd_core_spot.app_id_len))) <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> == xcd_core_spot.app_version_len) <span class="keyword">return</span> XCC_ERRNO_INVAL;</span><br><span class="line"><span class="keyword">if</span>(<span class="literal">NULL</span> == (xcd_core_app_version = <span class="built_in">calloc</span>(<span class="number">1</span>, xcd_core_spot.app_version_len + <span class="number">1</span>))) <span class="keyword">return</span> XCC_ERRNO_NOMEM;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_core_read_stdin(<span class="string">"appver"</span>, (<span class="keyword">void</span> *)xcd_core_app_version, xcd_core_spot.app_version_len))) <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line">...</span><br></pre></td></tr></table></figure>
+
+<p>然后注册自身 crash 信号监听，防止 xCrash 自身的 crash</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(xcd_core_log_fd &gt;= <span class="number">0</span>)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//dump signal, code, backtrace</span></span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_format_safe(xcd_core_log_fd,</span><br><span class="line">                                        <span class="string">"\n\n"</span></span><br><span class="line">                                        <span class="string">"xcrash error debug:\n"</span></span><br><span class="line">                                        <span class="string">"dumper has crashed (signal: %d, code: %d)\n"</span>,</span><br><span class="line">                                        si-&gt;si_signo, si-&gt;si_code)) <span class="keyword">goto</span> err;</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_unwind_get(uc, <span class="literal">NULL</span>, buf, <span class="keyword">sizeof</span>(buf))) <span class="keyword">goto</span> err;</span><br><span class="line">    <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_write_str(xcd_core_log_fd, buf)) <span class="keyword">goto</span> err;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>查找 Crash 收集线程</p>
+<p>首先查找出所有的线程</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">static</span> <span class="keyword">int</span> <span class="title">xcd_process_load_threads</span><span class="params">(<span class="keyword">xcd_process_t</span> *self)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    ...</span><br><span class="line">    <span class="comment">// /proc/[PID]/task 目录下，每一个线程一个子目录</span></span><br><span class="line">    <span class="built_in">snprintf</span>(buf, <span class="keyword">sizeof</span>(buf), <span class="string">"/proc/%d/task"</span>, self-&gt;pid);</span><br><span class="line">    <span class="keyword">if</span>(<span class="literal">NULL</span> == (dir = opendir(buf))) <span class="keyword">return</span> XCC_ERRNO_SYS;</span><br><span class="line">    <span class="keyword">while</span>(<span class="literal">NULL</span> != (ent = readdir(dir)))</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> == <span class="built_in">strcmp</span>(ent-&gt;d_name, <span class="string">"."</span>)) <span class="keyword">continue</span>;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> == <span class="built_in">strcmp</span>(ent-&gt;d_name, <span class="string">".."</span>)) <span class="keyword">continue</span>;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != xcc_util_atoi(ent-&gt;d_name, &amp;tid)) <span class="keyword">continue</span>;</span><br><span class="line">        </span><br><span class="line">        <span class="keyword">if</span>(<span class="literal">NULL</span> == (thd = <span class="built_in">malloc</span>(<span class="keyword">sizeof</span>(<span class="keyword">xcd_thread_info_t</span>)))) <span class="keyword">return</span> XCC_ERRNO_NOMEM;</span><br><span class="line">        xcd_thread_init(&amp;(thd-&gt;t), self-&gt;pid, tid);</span><br><span class="line">        </span><br><span class="line">        TAILQ_INSERT_TAIL(&amp;(self-&gt;thds), thd, link);</span><br><span class="line">        self-&gt;nthds++;</span><br><span class="line">    &#125;</span><br><span class="line">    closedir(dir);</span><br><span class="line"></span><br><span class="line">    <span class="keyword">return</span> <span class="number">0</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>再遍历线程找出 Crash 收集线程是否存在</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br></pre></td><td class="code"><pre><span class="line">TAILQ_FOREACH(thd, &amp;((*self)-&gt;thds), link)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(thd-&gt;t.tid == (*self)-&gt;crash_tid)</span><br><span class="line">        <span class="keyword">return</span> <span class="number">0</span>; <span class="comment">//OK</span></span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>暂停进程中搜集的所有线程，以便 dump</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">xcd_process_suspend_threads</span><span class="params">(<span class="keyword">xcd_process_t</span> *self)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    <span class="keyword">xcd_thread_info_t</span> *thd;</span><br><span class="line">    TAILQ_FOREACH(thd, &amp;(self-&gt;thds), link)</span><br><span class="line">        xcd_thread_suspend(&amp;(thd-&gt;t));</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>加载 /system/build.prop 文件内容</p>
+<p><img src="https://cdn.wuhaojie.top/2019-09-09-120658.jpg" alt="/system/build.prop"></p>
+<h1 id="加载进程信息"><a href="#加载进程信息" class="headerlink" title="加载进程信息"></a>加载进程信息</h1><p>读取所有线程的信息</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line">TAILQ_FOREACH(thd, &amp;(self-&gt;thds), link)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="comment">//load thread info</span></span><br><span class="line">    xcd_thread_load_info(&amp;(thd-&gt;t));</span><br><span class="line">    </span><br><span class="line">    <span class="comment">//load thread regs</span></span><br><span class="line">    <span class="keyword">if</span>(thd-&gt;t.tid != self-&gt;crash_tid)</span><br><span class="line">        xcd_thread_load_regs(&amp;(thd-&gt;t));</span><br><span class="line">    <span class="keyword">else</span></span><br><span class="line">        xcd_thread_load_regs_from_ucontext(&amp;(thd-&gt;t), self-&gt;uc);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>其中，读取每个线程寄存器的信息</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">void</span> <span class="title">xcd_regs_load_from_ucontext</span><span class="params">(<span class="keyword">xcd_regs_t</span> *self, <span class="keyword">ucontext_t</span> *uc)</span></span></span><br><span class="line"><span class="function"></span>&#123;</span><br><span class="line">    self-&gt;r[XCD_REGS_X0]  = uc-&gt;uc_mcontext.regs[<span class="number">0</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X1]  = uc-&gt;uc_mcontext.regs[<span class="number">1</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X2]  = uc-&gt;uc_mcontext.regs[<span class="number">2</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X3]  = uc-&gt;uc_mcontext.regs[<span class="number">3</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X4]  = uc-&gt;uc_mcontext.regs[<span class="number">4</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X5]  = uc-&gt;uc_mcontext.regs[<span class="number">5</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X6]  = uc-&gt;uc_mcontext.regs[<span class="number">6</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X7]  = uc-&gt;uc_mcontext.regs[<span class="number">7</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X8]  = uc-&gt;uc_mcontext.regs[<span class="number">8</span>];</span><br><span class="line">    self-&gt;r[XCD_REGS_X9]  = uc-&gt;uc_mcontext.regs[<span class="number">9</span>];</span><br><span class="line">    ...</span><br><span class="line">    self-&gt;r[XCD_REGS_SP]  = uc-&gt;uc_mcontext.sp;</span><br><span class="line">    self-&gt;r[XCD_REGS_PC]  = uc-&gt;uc_mcontext.pc;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>然后加载每个线程的 maps 信息</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//load maps</span></span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_maps_create(&amp;(self-&gt;maps), self-&gt;pid)))</span><br><span class="line">    XCD_LOG_ERROR(<span class="string">"PROCESS: create maps failed, errno=%d"</span>, r);</span><br></pre></td></tr></table></figure>
+
+<h1 id="记录系统信息"><a href="#记录系统信息" class="headerlink" title="记录系统信息"></a>记录系统信息</h1><figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Tombstone maker: '%s'\n"</span>,    XCC_VERSION_STR))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Crash type: '%s'\n"</span>,         XCC_UTIL_CRASH_TYPE))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_sys_record_time  (log_fd, <span class="string">"Start time"</span>,                 start_time))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_sys_record_time  (log_fd, <span class="string">"Crash time"</span>,                 crash_time))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"App ID: '%s'\n"</span>,             app_id))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"App version: '%s'\n"</span>,        app_version))) <span class="keyword">return</span> r;</span><br><span class="line">...</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"ABI list: '%s'\n"</span>,           props-&gt;abi_list))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Manufacturer: '%s'\n"</span>,       props-&gt;manufacturer))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Brand: '%s'\n"</span>,              props-&gt;brand))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Model: '%s'\n"</span>,              props-&gt;model))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Build fingerprint: '%s'\n"</span>,  props-&gt;build_fingerprint))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"Revision: '%s'\n"</span>,           props-&gt;revision))) <span class="keyword">return</span> r;</span><br><span class="line"><span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_format(log_fd, <span class="string">"ABI: '%s'\n"</span>,                XCC_UTIL_ABI_STRING))) <span class="keyword">return</span> r;</span><br></pre></td></tr></table></figure>
+
+<h1 id="记录进程信息"><a href="#记录进程信息" class="headerlink" title="记录进程信息"></a>记录进程信息</h1><p>打印 Crash 进程</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br></pre></td><td class="code"><pre><span class="line">TAILQ_FOREACH(thd, &amp;(self-&gt;thds), link)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(thd-&gt;t.tid == self-&gt;crash_tid)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_info(&amp;(thd-&gt;t), log_fd, self-&gt;pname))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_process_record_signal_info(self, log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_process_record_abort_message(self, log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_regs(&amp;(thd-&gt;t), log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> == xcd_thread_load_frames(&amp;(thd-&gt;t), self-&gt;maps))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_backtrace(&amp;(thd-&gt;t), log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_buildid(&amp;(thd-&gt;t), log_fd, xcc_util_signal_has_si_addr(self-&gt;si) ? (<span class="keyword">uintptr_t</span>)self-&gt;si-&gt;si_addr : <span class="number">0</span>))) <span class="keyword">return</span> r;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_stack(&amp;(thd-&gt;t), log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_memory(&amp;(thd-&gt;t), log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        &#125;</span><br><span class="line">        <span class="keyword">if</span>(dump_map) <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_maps_record(self-&gt;maps, log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_process_record_logcat(self, log_fd, logcat_system_lines, logcat_events_lines, logcat_main_lines, api_level))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(dump_fds) <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_process_record_fds(self, log_fd))) <span class="keyword">return</span> r;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_meminfo_record(log_fd, self-&gt;pid))) <span class="keyword">return</span> r;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">break</span>;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>以及非 Crash 进程</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br></pre></td><td class="code"><pre><span class="line">TAILQ_FOREACH(thd, &amp;(self-&gt;thds), link)</span><br><span class="line">&#123;</span><br><span class="line">    <span class="keyword">if</span>(thd-&gt;t.tid != self-&gt;crash_tid)</span><br><span class="line">    &#123;</span><br><span class="line">        <span class="comment">//check regex for thread name</span></span><br><span class="line">        <span class="keyword">if</span>(<span class="literal">NULL</span> != re &amp;&amp; re_cnt &gt; <span class="number">0</span> &amp;&amp; !xcd_process_if_need_dump(thd-&gt;t.tname, re, re_cnt))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line">        thd_matched_regex++;</span><br><span class="line"></span><br><span class="line">        <span class="comment">//check dump count limit</span></span><br><span class="line">        <span class="keyword">if</span>(dump_all_threads_count_max &gt; <span class="number">0</span> &amp;&amp; thd_dumped &gt;= dump_all_threads_count_max)</span><br><span class="line">        &#123;</span><br><span class="line">            thd_ignored_by_limit++;</span><br><span class="line">            <span class="keyword">continue</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcc_util_write_str(log_fd, XCC_UTIL_THREAD_SEP))) <span class="keyword">goto</span> end;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_info(&amp;(thd-&gt;t), log_fd, self-&gt;pname))) <span class="keyword">goto</span> end;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_regs(&amp;(thd-&gt;t), log_fd))) <span class="keyword">goto</span> end;</span><br><span class="line">        <span class="keyword">if</span>(<span class="number">0</span> == xcd_thread_load_frames(&amp;(thd-&gt;t), self-&gt;maps))</span><br><span class="line">        &#123;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_backtrace(&amp;(thd-&gt;t), log_fd))) <span class="keyword">goto</span> end;</span><br><span class="line">            <span class="keyword">if</span>(<span class="number">0</span> != (r = xcd_thread_record_stack(&amp;(thd-&gt;t), log_fd))) <span class="keyword">goto</span> end;</span><br><span class="line">        &#125;</span><br><span class="line">        thd_dumped++;</span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>最后重新启动所有线程</p>
+<figure class="highlight c++"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">//resume all threads in the process</span></span><br><span class="line">xcd_process_resume_threads(xcd_core_proc);</span><br></pre></td></tr></table></figure>
+
+<h1 id="小结"><a href="#小结" class="headerlink" title="小结"></a>小结</h1><p>That’s all. 可见，xCrash 的实现是很精简、清晰的，通过将 Crash 信息直接写入文件能够大概率成功捕获到我们需要的有用信息。</p>
+<p>在日常开发中，xCrash 确实帮助到自己解决一些疑难的 Native 层 Crash，通过阅读源码也更能理解到 Crash 捕获的整个机制，希望本文对读者也有所帮助和启发。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2019/03/14/SQLite/" rel="next" title="临到 “坑” 时方恨少的 SQLite 细节知识">
+                  <i class="fa fa-chevron-left"></i> 临到 “坑” 时方恨少的 SQLite 细节知识
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2019/07/15/AndroidNativeClassLoad/" rel="prev" title="看 Android 是如何加载 Class 的">
+                  看 Android 是如何加载 Class 的 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#初始化"><span class="nav-number">1.</span> <span class="nav-text">初始化</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Java-层面"><span class="nav-number">2.</span> <span class="nav-text">Java 层面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Native-层面"><span class="nav-number">3.</span> <span class="nav-text">Native 层面</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Native-Dump"><span class="nav-number">4.</span> <span class="nav-text">Native Dump</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#加载进程信息"><span class="nav-number">5.</span> <span class="nav-text">加载进程信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#记录系统信息"><span class="nav-number">6.</span> <span class="nav-text">记录系统信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#记录进程信息"><span class="nav-number">7.</span> <span class="nav-text">记录进程信息</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#小结"><span class="nav-number">8.</span> <span class="nav-text">小结</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

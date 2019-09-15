@@ -1,0 +1,621 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言最近在做一个与地图有关项目，需要用到自定义现场地图。在使用激光测距仪测量后并使用AutoCAD绘制出地图后却发现一个严重问题，AutoCAD不能将图形保存为带透明度的Png格式图像文件，经过搜索引擎搜索和细细琢磨，最后使用Photoshop配合AutoCAD达到目的。不多说，具体方法请看正文。">
+<meta name="keywords" content="经验,项目,Windows">
+<meta property="og:type" content="article">
+<meta property="og:title" content="AutoCAD生成png透明图像">
+<meta property="og:url" content="http://yoursite.com/2016/02/29/AutoCAD2PNG/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="前言最近在做一个与地图有关项目，需要用到自定义现场地图。在使用激光测距仪测量后并使用AutoCAD绘制出地图后却发现一个严重问题，AutoCAD不能将图形保存为带透明度的Png格式图像文件，经过搜索引擎搜索和细细琢磨，最后使用Photoshop配合AutoCAD达到目的。不多说，具体方法请看正文。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229cad.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229printer.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229command.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229cad1.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229cad2.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps1.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps2.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps3.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps4.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160229ps5.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.767Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="AutoCAD生成png透明图像">
+<meta name="twitter:description" content="前言最近在做一个与地图有关项目，需要用到自定义现场地图。在使用激光测距仪测量后并使用AutoCAD绘制出地图后却发现一个严重问题，AutoCAD不能将图形保存为带透明度的Png格式图像文件，经过搜索引擎搜索和细细琢磨，最后使用Photoshop配合AutoCAD达到目的。不多说，具体方法请看正文。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160229ps.png">
+  <link rel="canonical" href="http://yoursite.com/2016/02/29/AutoCAD2PNG/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>AutoCAD生成png透明图像 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/02/29/AutoCAD2PNG/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">AutoCAD生成png透明图像
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-02-29 20:00:00" itemprop="dateCreated datePublished" datetime="2016-02-29T20:00:00+08:00">2016-02-29</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Windows/" itemprop="url" rel="index"><span itemprop="name">Windows</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>最近在做一个与地图有关项目，需要用到自定义现场地图。在使用激光测距仪测量后并使用AutoCAD绘制出地图后却发现一个严重问题，AutoCAD不能将图形保存为带透明度的Png格式图像文件，经过搜索引擎搜索和细细琢磨，最后使用Photoshop配合AutoCAD达到目的。不多说，具体方法请看正文。</p>
+<a id="more"></a>
+<h1 id="准备工作"><a href="#准备工作" class="headerlink" title="准备工作"></a>准备工作</h1><p>既然配合着用，那么CAD和PS两款软件就不可少了，笔者使用的是以下版本: </p>
+<ul>
+<li>AutoCAD 2016</li>
+<li>PhotoShop CS6</li>
+</ul>
+<p><img src="http://cdn.wuhaojie.top/160229ps.png" alt="PhotoShop"> <img src="http://cdn.wuhaojie.top/160229cad.png" alt="AutoCAD"></p>
+<h1 id="经典方法"><a href="#经典方法" class="headerlink" title="经典方法"></a>经典方法</h1><p>在AutoCAD上，保存成JPG或PNG格式图像网上可以搜到一大堆方法，大致可归为以下方法：</p>
+<ul>
+<li><strong>打印方法：</strong><br>在菜单或是使用 <code>Ctrl+P</code>快捷键打开打印面板，在其中可以选择不同种“虚拟打印机”，保存成不同格式的图片，如图所示:<br><img src="http://cdn.wuhaojie.top/160229printer.png" alt="打印选项"></li>
+<li><strong>命令方法：</strong><br>使用 <code>ctrl+9</code>快捷键打开命题栏，输入 <code>PNGOUT</code>命令保存图像<br><img src="http://cdn.wuhaojie.top/160229command.png" alt="命令栏"></li>
+</ul>
+<p>但它们<strong>都将失去透明度</strong>，也就是纯黑色或是纯白色背景，而并非我们所期待的栅格化背景，所以这些方法都是被淘汰的，当然如果你对透明度损失不在意，也可以使用这些经典方法。</p>
+<h1 id="AutoCAD端"><a href="#AutoCAD端" class="headerlink" title="AutoCAD端"></a>AutoCAD端</h1><p>既然AutoCAD不能导出保留透明度的PNG图像，那为何不交给处理图像功能十分强大的Photoshop来专门处理图像呢？<br>好，那就交给Photoshop来处理，交给PS做当然得在AutoCAD端将图像保存为PS支持的格式吧。</p>
+<p><strong>1.打开菜单，选择输出，选择其它格式:</strong> </p>
+<p><img src="http://cdn.wuhaojie.top/160229cad1.png" alt="菜单"></p>
+<p><strong>2.在弹出的文件保存对话框中选择Photoshop也同时兼容的 <code>eps</code>格式:</strong></p>
+<p><img src="http://cdn.wuhaojie.top/160229cad2.png" alt="文件保存对话框"></p>
+<h1 id="Photoshop端"><a href="#Photoshop端" class="headerlink" title="Photoshop端"></a>Photoshop端</h1><p>Photoshop端的操作也很简单，打开图像栅格化即可。<br><strong>1. 文件-&gt;打开刚刚保存的eps文件即可</strong><br><img src="http://cdn.wuhaojie.top/160229ps1.png" alt="打开文件"><br><strong>2. 打开后提示栅格化EPS格式，点击确认即可</strong><br><img src="http://cdn.wuhaojie.top/160229ps2.png" alt="栅格化"><br><strong>3. 这时可以发现图像已经变成透明</strong><br><img src="http://cdn.wuhaojie.top/160229ps3.png" alt="样例"><br><strong>4. 再次打开文件-&gt;存储为Web所用格式，选择PNG格式保存即可</strong><br><img src="http://cdn.wuhaojie.top/160229ps4.png" alt="存储为Web所用格式"></p>
+<p><img src="http://cdn.wuhaojie.top/160229ps5.png" alt="PNG格式"></p>
+<p>至此，就得到了一张包含透明度的完美PNG图像。</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+              <a href="/tags/项目/" rel="tag"># 项目</a>
+            
+              <a href="/tags/Windows/" rel="tag"># Windows</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/02/17/SelectorNoUse/" rel="next" title="Selector无效的几种情况">
+                  <i class="fa fa-chevron-left"></i> Selector无效的几种情况
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/03/12/HandlerToast/" rel="prev" title="Handler中不能操作Toast的解决方案">
+                  Handler中不能操作Toast的解决方案 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#准备工作"><span class="nav-number">2.</span> <span class="nav-text">准备工作</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#经典方法"><span class="nav-number">3.</span> <span class="nav-text">经典方法</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#AutoCAD端"><span class="nav-number">4.</span> <span class="nav-text">AutoCAD端</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Photoshop端"><span class="nav-number">5.</span> <span class="nav-text">Photoshop端</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

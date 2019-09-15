@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="本文为《HTTP 权威指南》阅读笔记，主要包括 HTTP 概述、URL 与资源、HTTP 报文、连接管理、缓存、HTTP-NG、客户端识别与 Cookie 机制 几大内容。">
+<meta name="keywords" content="笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="HTTP 协议揭秘">
+<meta property="og:url" content="http://yoursite.com/2017/07/15/HTTPQWZN/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="本文为《HTTP 权威指南》阅读笔记，主要包括 HTTP 概述、URL 与资源、HTTP 报文、连接管理、缓存、HTTP-NG、客户端识别与 Cookie 机制 几大内容。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.785Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="HTTP 协议揭秘">
+<meta name="twitter:description" content="本文为《HTTP 权威指南》阅读笔记，主要包括 HTTP 概述、URL 与资源、HTTP 报文、连接管理、缓存、HTTP-NG、客户端识别与 Cookie 机制 几大内容。">
+  <link rel="canonical" href="http://yoursite.com/2017/07/15/HTTPQWZN/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>HTTP 协议揭秘 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/07/15/HTTPQWZN/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">HTTP 协议揭秘
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-07-15 17:00:00" itemprop="dateCreated datePublished" datetime="2017-07-15T17:00:00+08:00">2017-07-15</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/计算机/" itemprop="url" rel="index"><span itemprop="name">计算机</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>本文为《HTTP 权威指南》阅读笔记，主要包括 <code>HTTP 概述</code>、<code>URL 与资源</code>、<code>HTTP 报文</code>、<code>连接管理</code>、<code>缓存</code>、<code>HTTP-NG</code>、<code>客户端识别与 Cookie 机制</code> 几大内容。</p>
+<a id="more"></a>
+
+<h1 id="HTTP-概述"><a href="#HTTP-概述" class="headerlink" title="HTTP 概述"></a>HTTP 概述</h1><ol>
+<li><p><code>HTTP</code> 使用的是可靠的数据传输协议，确保数据在传输过程中不会被损坏或产生混乱</p>
+</li>
+<li><p>媒体类型(MIME type): 一种文本标记，表示一种主要的对象类型和一个特定的子类型，中间由一条斜杠来分隔:</p>
+<ul>
+<li>text/html</li>
+<li>text/plain</li>
+<li>image/jpeg</li>
+<li>image/gif</li>
+<li>video/quicktime</li>
+<li>application/vnd.ms-powerpoint<br>常见的 <code>MIME</code> 类型有数百个，实验性或用途有限的则更多</li>
+</ul>
+</li>
+<li><p>统一资源标识符(URI): 在世界范围内唯一标识并定位信息资源，有两种形式，分别称为 <code>URL</code> 和 <code>URN</code></p>
+<ul>
+<li>统一资源定位符(URL): 描述了一台特定服务器上某资源的特定位置，包含三个部分:<br>a. <code>方案(scheme)</code>: 说明协议类型，如 http://<br>b. <code>服务器地址</code>: 如 <a href="http://www.baidu.com" target="_blank" rel="noopener">www.baidu.com</a><br>c. <code>资源</code>: 如 /specials/saw.gif</li>
+<li>统一资源名(URN): 作为特定内容的唯一名称使用的，与目前的资源所在地无关，可以将资源四处搬移，仍然处于试验阶段，命名如 rn:ietf:rfc:2141</li>
+</ul>
+</li>
+<li><p><code>Telnet</code> 程序可以将键盘连接到某个目标 <code>TCP</code> 端口，并将此端口的输出回送到显示屏上，<code>Telnet</code> 常用于远程终端会话，但它几乎可以连接所有的 <code>TCP</code> 服务器，包括 <code>HTTP</code> 服务器，使用以下命令即可进入:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">telnet 主机名 端口号</span><br></pre></td></tr></table></figure>
+</li>
+<li><p><code>HTTP</code> 协议版本:</p>
+<ul>
+<li><code>HTTP/0.9</code> 1991年原型版本，严重设计缺陷，只支持 GET，不支持许多首部</li>
+<li><code>HTTP/1.0</code> 广泛使用的 HTTP 版本</li>
+<li><code>HTTP/1.0+</code> 为满足需求，非官方添加许多新特性，如持久化连接、虚拟主机支持、代理支持等</li>
+<li><code>HTTP/1.1</code> 校正结构性缺陷，明确语义，引入重要的性能优化措施，删除不好的特性，是当前使用的 HTTP 版本</li>
+<li><code>HTTP-NG(又名 HTTP/2.0)</code> 是 HTTP/1.1 后继结构的原型建议，重点关注性能大幅优化，以及更强大的服务逻辑远程执行框架</li>
+</ul>
+</li>
+<li><p>Web 结构组件</p>
+<ul>
+<li><code>代理</code> 位于客户端和服务器之间的 HTTP 中间实体</li>
+<li><code>缓存</code> HTTP 的仓库，使常用页面的副本可以保存在离客户端更近的地方</li>
+<li><code>网关</code> 连接其他应用程序的特殊 Web 服务器，通常用于将 HTTP 流量转换成其他的协议</li>
+<li><code>隧道</code> 对 HTTP 通信报文进行盲转发的特殊代理，如 SSL</li>
+<li><code>Agent 代理</code> 发起自动 HTTP 请求的半智能 Web 客户端，所有发布 Web 请求的应用程序都是 HTTP Agent 代理</li>
+</ul>
+</li>
+</ol>
+<h1 id="URL-与资源"><a href="#URL-与资源" class="headerlink" title="URL 与资源"></a>URL 与资源</h1><ol>
+<li><p><code>URL</code> 也可以通过 <code>HTTP</code> 之外的其他协议来访问资源，如个人邮箱: mailto:<a href="mailto:w19961009@126.com" target="_blank" rel="noopener">w19961009@126.com</a>，再如文件传输协议: <a href="ftp://xxx.xxx.com/pub/xxx.xls" target="_blank" rel="noopener">ftp://xxx.xxx.com/pub/xxx.xls</a></p>
+</li>
+<li><p><code>URL</code> 语法:</p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br></pre></td><td class="code"><pre><span class="line">&lt;scheme&gt;://&lt;user&gt;:&lt;password&gt;@&lt;host&gt;:&lt;port&gt;/&lt;path&gt;;&lt;params&gt;?&lt;query&gt;#&lt;frag&gt;</span><br></pre></td></tr></table></figure>
+
+<ul>
+<li>scheme 大小写无关，即 HTTP:// 与 http:// 等价</li>
+<li>每个路径段都可以有自己的 params</li>
+</ul>
+</li>
+<li><p><code>相对 URL</code>: 相对 URL 是 URL 的一种便捷缩略记法，处理 URL 的应用程序将它转换成绝对 URL 才可以使用，由以下步骤完成:</p>
+<ul>
+<li><code>基础 URL</code>: 可以选择从资源中获取显式指定的基础 URL，如 HTML 中的 <base> 标签，还可以将所属资源的 URL 作为基础 URL</li>
+<li><code>解析相对引用</code>: 划分组件，并继承基础组件(方案、主机、端口等)</li>
+</ul>
+</li>
+<li><p><code>转义表示法</code> 用来表示不安全字符(变体字符、一些二进制数据)，包含一个百分号，后面跟着两个表示字符 ASCII 码的十六进制数，如 %20 表示一个空格</p>
+</li>
+</ol>
+<h1 id="HTTP-报文"><a href="#HTTP-报文" class="headerlink" title="HTTP 报文"></a>HTTP 报文</h1><ol>
+<li><p><code>HTTP</code> 报文是在 HTTP 应用程序之间发送的数据块，这些数据块以一些文本形式的元信息开头，这些信息描述了报文的内容及含义，后面跟着可选的数据部分</p>
+</li>
+<li><p>HTTP 报文的行终止序列有两个字符组成: <code>回车符</code>和<code>换行符</code>(CRLF)，注意有些 HTTP 应用程序并不总是既发送回车符也发送换行符</p>
+</li>
+<li><p>报文的语法</p>
+<ul>
+<li><p>请求报文: </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;method&gt; &lt;request-url&gt; &lt;version&gt;</span><br><span class="line">&lt;headers&gt;</span><br><span class="line"></span><br><span class="line">&lt;entity-body&gt;</span><br></pre></td></tr></table></figure>
+</li>
+<li><p>响应报文: </p>
+<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">&lt;version&gt; &lt;status&gt; &lt;reason-phrase&gt;</span><br><span class="line">&lt;headers&gt;</span><br><span class="line"></span><br><span class="line">&lt;entity-body&gt;</span><br></pre></td></tr></table></figure>
+
+</li>
+</ul>
+<blockquote>
+</blockquote>
+<ul>
+<li>首部可以有零个或多个可选，每个首部都包含一个名字，后面跟着一个冒号(:)，然后是一个可选的空格，接着是一个值，最后是一个 CRLF，有些 HTTP 版本，如 HTTP/1.1，要求报文中必须包含特定的首部</li>
+<li>一组 HTTP 首部总是应该以一个空行(单个 CRLF)结束，甚至即使没有首部和实体的主体部分也应如此</li>
+</ul>
+</li>
+<li><p>常用的 HTTP 方法</p>
+<ul>
+<li><code>GET</code></li>
+<li><code>HEAD</code> 与 GET 类似，但服务器在响应中只返回首部，可用于了解资源情况（如判断类型、查看资源是否存在）</li>
+<li><code>POST</code></li>
+<li><code>PUT</code> 向服务器写入文档，如有些发布系统允许用户创建 Web 页面</li>
+<li><code>TRACE</code> 对可能经过代理服务器传送到服务器上去的报文进行追踪，客户端发出的请求在经过传递中可能会被更改，TRACE 环回诊断可以查看报文最终变化后的结果（在响应体中携带服务器收到的请求报文）</li>
+<li><code>OPTIONS</code> 决定可以在服务器上执行哪些方法</li>
+<li><code>DELETE</code></li>
+</ul>
+<blockquote>
+<ul>
+<li>只有 <code>POST</code> 和 <code>PUT</code> 方法包含主体部分</li>
+<li>并不是所有服务器都实现了这些方法，且由于 HTTP 设计得易于扩展，所以其他服务器可能还会实现一些自己的请求方法</li>
+<li>TRACE 方法用于诊断并不一定可靠，因为中间经过的代理服务器可能只对 POST 等请求做修改，而对 TRACE 不作处理</li>
+</ul>
+</blockquote>
+</li>
+<li><p>首部: 首部和方法配合工作，共同决定客户端和服务器做什么事情，首部可分为五个主要的类型:</p>
+<ul>
+<li><code>通用首部</code> 请求报文和响应报文都可以使用的，如 Date 首部</li>
+<li><code>请求首部</code> 为服务器提供一些额外信息，如客户端希望接收什么类型的数据用 Accept 首部</li>
+<li><code>响应首部</code> 为客户端提供信息，如告知客户端服务器的信息用 Server 首部</li>
+<li><code>实体首部</code> 用于对实体主体部分的首部，如 Content-Type</li>
+<li><code>扩展首部</code> 非标准的首部，由应用程序开发者创建</li>
+</ul>
+</li>
+</ol>
+<h1 id="连接管理"><a href="#连接管理" class="headerlink" title="连接管理"></a>连接管理</h1><ol>
+<li><p>浏览器与服务器交互典型流程:</p>
+<ul>
+<li>浏览器解析出主机名</li>
+<li>浏览器查询这个主机的 IP 地址</li>
+<li>浏览器获取端口号</li>
+<li>浏览器发起 TCP 连接</li>
+<li>浏览器发起请求报文</li>
+<li>浏览器读取响应报文</li>
+<li>浏览器关闭连接</li>
+</ul>
+</li>
+<li><p>每个 TCP 段都是由 IP 分组承载，从一个 IP 地址发送到另一个 IP 地址的，每个 IP 分则中都包括:</p>
+<ul>
+<li>一个 IP 分组首部（通常为 20 字节）</li>
+<li>一个 TCP 段首部（通常为 20 字节）</li>
+<li>一个 TCP 数据块（0个或多个字节）</li>
+</ul>
+</li>
+<li><p>HTTP 事务的性能在很大程度上取决于底层 TCP 通道的性能，HTTP 事务的时延有以下几种主要原因:</p>
+<ul>
+<li>客户端首先需要根据 URI 确定 Web 服务器的 IP 地址和端口号。如果最近没有对 URI 中的主机名进行访问，<strong>通过 DNS 解析系统</strong>将 URI 中的主机名转换成一个 IP 地址可能要花费数十秒的时间。幸运的是，大多数 HTTP 客户端都有一个小的 DNS 缓存，用来保存近期所访问站点的 IP 地址</li>
+<li>接下来，是 <strong>TCP 连接的建立时延</strong>，通常最多只有一两秒，但如果有数百个 HTTP 事务的话，这个值会快速地叠加上去</li>
+<li>连接建立起来后，会通过 TCP 管道发送 HTTP 请求，服务器对其处理，然后回送 HTTP 响应，需要花费一些时间</li>
+</ul>
+</li>
+<li><p>性能聚焦区域包括:</p>
+<ul>
+<li><code>TCP 连接建立握手</code> 通常 HTTP 事务都不会交换太多数据，小的 HTTP 事务可能会在 TCP 建立上花费 50%，可以通过重用现存连接，来减少这种建立时延</li>
+<li><code>延迟确认</code> 很多 TCP 栈都实现了一种延迟确认算法，存放在缓冲区中，以寻找能够捎带它的输出数据分组一并发送，但 HTTP 具有双峰特征的请求-应答行为降低了捎带信息的可能，可以对该算法进行调整或禁止</li>
+<li><code>TCP 慢启动拥塞控制</code> 由于慢启动特性，所以要尽量重用现存连接</li>
+<li><code>数据聚集的 Nagle 算法</code> 该算法试图在发送一个分组之前，将大量的 TCP 数据绑定在一起，以提高网络效率，一般会设置参数 TCP_NODELAY 来禁用</li>
+<li><code>用于捎带确认的 TCP 延迟确认算法</code> </li>
+<li><code>TIME_WAIT 时延和端口耗尽</code> 可用客户端源端口有限，可能会产生端口耗尽问题</li>
+</ul>
+</li>
+<li><p><code>Connection 首部</code> 可以承载 3 种不同类型的标签:</p>
+<ul>
+<li>HTTP 首部字段名，列出了只与此连接有关的首部，这些首部将会被删除，而不会被转发，可以防止无意中对本地首部的转发</li>
+<li>任意标签值，用于描述此连接的非标准选项</li>
+<li>值 close，说明操作完成之后需关闭这条持久连接</li>
+</ul>
+</li>
+<li><p><code>持久连接</code> 有一些比 <code>并行连接</code> 更好的地方，持久连接降低了时延和连接建立的开销，将连接保持在已调谐状态，而且减少了打开连接的潜在数量，但是，管理持久连接要特别小心，不然就会累积出大量的空闲连接，耗费本地以及远程客户端和服务器上的资源。<br><code>持久连接</code> 与 <code>并行连接</code> <strong>配合使用</strong>可能是最高效的方式，现在，很多 Web 应用程序都会打开少量的并行连接，其中的每一个都是持久连接。持久连接有两种类型: </p>
+<ul>
+<li>比较老的 HTTP/1.0+”keep-alive” 连接</li>
+<li>现代的 HTTP/1.1+”persistent” 连接</li>
+</ul>
+</li>
+<li><p>Keep-Alive 参数:</p>
+<ul>
+<li><code>timeout</code> 响应首部发送的，估计了服务器希望将连接保持在活跃状态的时间，并不是一个承诺值</li>
+<li><code>max</code> 响应首部发送的，估计了服务器还希望为多少个事务保持此连接的活跃状态，并不是一个承诺值</li>
+<li><code>未经处理的属性</code> 可支持任意未经处理的属性，主要用于诊断和调试，语法为 name [=value]</li>
+</ul>
+</li>
+<li><p>如果一个代理收到了一个 Connection: Keep-Alive 首部，是不应该转发 Connection 首部，或所有名为 Keep-Alive 的首部的，另外还有几个不能作为 Connection 首部值列出，也不能被代理转发或作为缓存响应使用的首部，其中包括 Proxy-Authenticate、Proxy-Connection、Transfer-Encoding 和 Upgrade</p>
+</li>
+<li><p>HTTP/1.1 持久连接在默认情况下是激活的，除非特别指明，否则 HTTP/1.1 假定所有连接都是持久的，要在事务处理结束后将连接关闭，HTTP/1.1 应用必须向报文中显式添加一个 Connection: close 首部</p>
+</li>
+<li><p><code>管道化连接</code> HTTP/1.1 在持久连接上可选地使用请求管道，这是在 Keep-Alive 连接上的进一步性能优化，在响应到达时，可以将多条请求放入队列，按序发送，将得到与请求相同的顺序回送的 HTTP 响应</p>
+</li>
+</ol>
+<h1 id="缓存"><a href="#缓存" class="headerlink" title="缓存"></a>缓存</h1><ol>
+<li><p>可以用已有的副本为某些到达缓存的请求提供服务，称为 <code>缓存命中</code>，其他一些到达缓存的请求可能会因为由于没有副本可用，而被转发给原始服务器，称为 <code>缓存未命中</code></p>
+</li>
+<li><p>原始服务器的内容会发生变化，缓存要不时对其进行检测，看看它们保存的副本是否仍是服务器上最新的版本，称为 <code>HTTP 再验证</code>，即发送一个小的再验证请求（如 If-Modified-Since），如果没有发生变化，服务器会以一个小的 304 Not Modified 进行响应；否则向客户端发送一条普通的、带有完整内容的 HTTP 200 OK 响应</p>
+<blockquote>
+<p>缓存可以在任意时刻，以任意频率对副本进行再验证，但由于缓存中通常会包含数百万的文档，而且网络带宽是很珍贵的，所以大部分缓存只有在客户端发起请求，并且副本旧得足以需要检测时，才会对副本进行再验证</p>
+</blockquote>
+</li>
+<li><p><code>缓存命中率</code> 是由缓存提供服务的请求所占的比例，命中率在 0 到 1 之间，但通常是用百分数来描述的</p>
+<blockquote>
+<p>命中率很难预测，但对现在中等规模的 Web 缓存来说，40% 的命中率是很合理的</p>
+</blockquote>
+</li>
+<li><p>由于文档并不全是同一尺寸的，所以文档命中率并不能说明一切，有些大型对象被访问的次数可能较少，但由于尺寸的原因，对整个数据流量的贡献却更大，因此 <code>字节命中率</code> 某些时候作为度量值显得更为恰当</p>
+<blockquote>
+<p><code>文档命中率</code> 说明阻止了多少通往外部网络的 Web 事务，事务有一个通常都很大的固定时间成分（比如，建立一条到服务器的 TCP 连接），提高文档命中率对降低整体延迟（时延）很有好处；字节命中率说明阻止了多少字节传向因特网，提高字节命中率对节省带宽很有利</p>
+</blockquote>
+</li>
+<li><p>缓存的拓扑结构</p>
+<ul>
+<li><code>私有缓存</code> 个人的缓存，包含单个用户最常用的页面，如浏览器磁盘缓存</li>
+<li><code>公有缓存</code> 包含某个用户团体的常用页面，是特殊的共享代理服务器，称为”缓存代理服务器”或”代理缓存”，可以降低网络流量</li>
+<li><code>代理缓存的层次结构</code> 实现层次化缓存，在较小缓存中未命中的请求会被导向较大的父缓存，基本思想是: 在靠近客户端的地方使用小型廉价缓存，而更高层次中，则逐步采用更大、功能更强的缓存来装载多用户共享的文档</li>
+<li><code>网状缓存</code> 网状缓存中的代理缓存之间会以更加负责的方式进行对话，做出动态的缓存通信决策，决定与那个父缓存进行对话，或者决定彻底绕开缓存，直接连接原始服务器</li>
+</ul>
+</li>
+<li><p>服务端对缓存的处理步骤: （对一条 HTTP GET 报文）</p>
+<ul>
+<li><code>接收</code> 缓存接收报文</li>
+<li><code>解析</code> 缓存解析首部字段</li>
+<li><code>查询</code> 缓存查看是否有本地副本可用，如果没有就获取一份副本，并保存在本地</li>
+<li><code>新鲜度检测</code> 缓存查看已缓存副本是否足够新鲜，如果不是，就询问服务器是否有任何更新</li>
+<li><code>创建响应</code> 缓存会用新的首部和已缓存的主体来构建一条响应报文，缓存会向其中插入新鲜度信息（Cache-Control、Age以及Expires首部），而且通常会包含一个Via首部来说明请求是由一个代理缓存提供的</li>
+<li><code>发送</code> 缓存通过网络将响应发回给客户端</li>
+<li><code>日志</code> 缓存可选地创建一个日志文件条目来描述这个事务</li>
+</ul>
+</li>
+<li><p>HTTP 有一些简单的机制可以在不要求服务器记住有哪些缓存拥有其文档副本的情况下，保持已缓存数据与服务器数据之间充分一致，HTTP 将这些简单的机制称为 <code>文档过期</code> 和 <code>服务器再验证</code></p>
+</li>
+<li><p>通过特殊的 HTTP <code>Cache-Control</code> 首部和 <code>Expires</code> 首部，HTTP 让原始服务器向每个文档附加了一个”过期日期”，在缓存文档过期之前，缓存可以以任意频率使用这些副本，而无需与服务器联系——当然，除非客户端请求中包含有阻止提供已缓存或未验证资源的首部。但一旦已缓存文档过期，缓存就必须与服务器进行核对，询问文档是否被修改过，如果被修改过，就要获取一份新鲜（带有新的过期日期）的副本</p>
+</li>
+<li><p>服务器用 HTTP/1.0+ 的 <code>Expires</code> 首部或 HTTP/1.1 的 <code>Cache-Control: max-age</code> 响应首部来指定过期日期，同时还会带有响应主体。<code>Expires</code> 首部和 <code>Cache-Control: max-age</code> 首部所做的事情本质上是一样的，但由于 <code>Cache-Control</code> 首部使用的是相对时间而不是绝对日期，所以倾向于使用 <code>Cache-Control</code> 首部，因为绝对日期依赖于计算机时钟的正确设置</p>
+<blockquote>
+<p><code>Cache-Control:max-age</code> 定义了文档的最大使用期——从第一次生成文档到文档不再新鲜、无法使用为止，最大的合法生存时间（以秒为单位）</p>
+</blockquote>
+</li>
+<li><p><code>服务器再验证</code> 仅仅是已缓存文档过期了并不意味着它和原始服务器上目前处于活跃状态的文档有实际的区别；这只是意味着到了要进行核对的时间了，这种情况被称为”服务器再验证”，说明缓存需要询问原始服务器文档是否发生了变化</p>
+<ul>
+<li>如果变化，则获取新文档覆盖旧文档</li>
+<li>如果没有发生变化，缓存只需要获取新的首部，包括一个新的过期日期，并对缓存中的首部进行更新就行了</li>
+</ul>
+<blockquote>
+<p>HTTP 协议要求行为正确的缓存返回下列内容之一:</p>
+<ul>
+<li>“足够新鲜”的已缓存副本</li>
+<li>与服务器进行过再验证，确认其仍然新鲜的已缓存副本</li>
+<li>如果需要与之进行再验证的原始服务器出故障了，就返回一条错误报文</li>
+<li>附有警告信息说明内容可能不正确的已缓存版本</li>
+</ul>
+</blockquote>
+</li>
+<li><p><code>用条件方法进行再验证</code> HTTP 的条件方法可以高效地实现再验证，HTTP 允许缓存向原始服务器发送一个”条件 GET”，请求服务器只有在文档与缓存中现有的副本不同时，才回送对象主体，通过这种方式，将新鲜度检测和对象获取结合成了单个条件 GET。向 GET 请求报文中添加一些特殊的条件首部，就可以发起条件 GET，只有条件为真时，Web 服务器才会返回对象</p>
+</li>
+<li><p>HTTP 定义了 5个条件请求首部，对缓存再验证来首最有用的 2个首部是 <code>If-Modified-Since</code> 和 <code>If-None-Match</code>，所有的条件首部都以前缀”If-“开头</p>
+<ul>
+<li><code>If-Modified-Since:&lt;date&gt;</code> 发生变化，返回 200，未发生变化，返回 304</li>
+<li><code>If-None-Match:&lt;tags&gt;</code> 用于防止日期不同，但文件内容一致的情况。HTTP 允许用户对被称为 <code>实体标签 ETAG</code> 的版本标识符进行比较，实体标签是附加到文档上的任意标签（引用字符串），它们可能包含了文档的序列号或版本名，或者是文档内容的校验和，及其他指纹信息</li>
+</ul>
+</li>
+<li><p>HTTP/1.1 支持 <code>弱验证器</code>，如果只对内容进行了少量修改，就允许服务器声明那是”足够好”的等价体</p>
+</li>
+<li><p>什么时候应该使用实体标签和最近修改时间？<br>如果服务器回送了一个实体标签，HTTP/1.1 客户端就必须使用实体标签验证器；如果服务器只回送了一个 Last-Modified 值，客户端就可以使用 If-Modified-Since 验证；如果实体标签和最后修改日期都提供了，客户端就应该使用这两种再验证方案，这样 HTTP/1.0 和 HTTP/1.1 缓存就都可以正确响应了。</p>
+</li>
+<li><p>服务器可以通过 HTTP 定义的几种方式来指定在文档过期之前可以将其缓存多长时间，按优先级递减的顺序，服务器可以指定:</p>
+<ul>
+<li><code>Cache-Control:no-store</code> 禁止缓存对响应进行复制，直接向客户端转发一条 no-store 响应</li>
+<li><code>Cache-Control:no-cache</code> 可以存储在本地缓存区，只是在与原始服务器进行新鲜度再验证之前，缓存不能将其提供给客户端使用</li>
+<li><code>Cache-Control:must-revalidate</code> 可以配置缓存使其提供陈旧版本，该首部禁止这种配置，在实现没有跟原始服务器再验证的情况下，不能提供这个对象的陈旧版本，缓存仍然可以随意提供新鲜的副本</li>
+<li><code>Cache-Control:max-age</code> 新鲜状态的秒数</li>
+<li><code>Expires</code> 过期时间</li>
+<li>不附加信息，让缓存确定自己的过期时间</li>
+</ul>
+</li>
+<li><p>如果响应中没有 <code>Cache-Control:max-age</code> 首部，也没有 <code>Expires</code> 首部，缓存可以计算出一个试探性最大使用期，如 <code>LM-Factor</code> 算法使用中很常用的 <code>试探性过期</code> 算法</p>
+</li>
+<li><p>客户端可以用 <code>Cache-Control</code> 请求首部来强化或放松对过期时间的限制:</p>
+<ul>
+<li><code>Cache-Control: max-stale = &lt;s&gt;</code> 缓存可以随意提供过期的文件，如果指定参数 <s>，在这段时间内，文档就不能过期</s></li>
+<li><code>Cache-Control: min-fresh = &lt;s&gt;</code> 至少在未来 <s> 秒内文档要保持需不需新鲜</s></li>
+<li><code>Cache-Control: max-age = &lt;s&gt;</code> 缓存无法返回缓存时间长于 <s> 秒的文档</s></li>
+<li><code>Cache-Control: no-cache</code> <code>Pragma: no-cache</code> 除非资源进行了再验证，否则这个客户端不会接受已缓存的资源</li>
+<li><code>Cache-Control: no-store</code> 缓存应该尽快从存储器中删除文档的所有痕迹，因为其中可能会包含敏感信息</li>
+<li><code>Cache-Control: only-if-cached</code> 只有当缓存中有副本存在时，客户端才会获取一份副本</li>
+</ul>
+</li>
+</ol>
+<h1 id="HTTP-NG"><a href="#HTTP-NG" class="headerlink" title="HTTP-NG"></a>HTTP-NG</h1><ol>
+<li><p><code>HTTP-NG</code> 协议化为三层:</p>
+<ul>
+<li><code>报文传输层</code> WebMUX 协议，此层负责端点间报文的不透明传输，管道化、重用连接、并行复用、有效分段</li>
+<li><code>远程调用层</code> 二进制连接协议，定义请求、响应的功能，提供一种标准的方法来调用服务器上所有的操作，只关心允许客户端远程调用服务器操作的接口</li>
+<li><code>Web 应用层</code> 提供大部分的内容管理逻辑，所有的 HTTP/1.1 请求方法以及首部参数都是在这里定义的，同时将其映射到一个可扩展的分布式框架中去</li>
+</ul>
+</li>
+<li><p><code>WebMUX 协议</code> 高性能保温系统，可以在一个复用的 TCP 连接上并行地传输报文，可以对以不同速度产生和消耗的独立报文流进行高效的分组，将其复用到一条或少数几条 TCP 连接上去</p>
+</li>
+<li><p><code>二进制连接协议</code> 通过一条有状态的连接承载了从客户端发往服务器的操作调用请求，以及从服务器发往客户端的操作结果应答，有状态的连接可以提供更高的效率。请求报文中包含操作、目标对象和可选的数据值，应答报文带回了操作的最终状态、所对应请求的序列号（允许以任意顺序传递并行的请求和响应），以及可选的返回值。除了请求和应答报文以外，这个协议还定义了几种内部控制报文，用来提高连接的效率和健壮性</p>
+</li>
+</ol>
+<h1 id="客户端识别与-Cookie-机制"><a href="#客户端识别与-Cookie-机制" class="headerlink" title="客户端识别与 Cookie 机制"></a>客户端识别与 Cookie 机制</h1><ol>
+<li><p><code>承载用户身份信息的 HTTP 首部</code> 主要有以下几种:</p>
+<ul>
+<li><code>From</code> 用户的 E-mail 地址，一般不会发送</li>
+<li><code>User-Agent</code> 用户的浏览器软件，包括程序的名称和版本，通常还包含操作系统的相关信息</li>
+<li><code>Referer</code> 用户是从这个页面上依照链接跳转过来的</li>
+<li><code>Authorization</code> 用户名和密码</li>
+<li><code>Client-IP</code> 客户端的 IP 地址</li>
+<li><code>X-Forwarded-For</code> 客户端的 IP 地址</li>
+<li><code>Cookie</code> 服务器产生的 ID 标签</li>
+</ul>
+</li>
+<li><p><code>客户端的 IP 地址</code> 用来识别用户存在着很多缺点，限制了将其作为用户识别技术的效能:</p>
+<ul>
+<li>IP 地址描述的是所用的机器，而不是用户，如果多个用户共享同一台计算机，就无法对其进行区分了</li>
+<li>很多因特网服务提供商都会在用户登录时为其动态分配 IP 地址</li>
+<li>为提高安全性，并对稀缺的地址资源进行管理，很多用户都是通过网络地址转换（NAT）防火墙来浏览网络内容的，这些 NAT 设备隐藏了防火墙后面那些实际客户端的 IP 地址，将实际的客户端 IP 地址转换成了一个共享的防火墙 IP 地址（和不同的端口号）</li>
+<li>HTTP 代理和网关通常会打开一些新的、到原始服务器的 TCP 连接。Web 服务器看到的将是代理服务器的 IP 地址，而不是客户端的。有些代理为了绕过这个问题会添加特殊的 Client-IP 或 X-Forwarded-For 扩展首部来保存原始的 IP 地址，但并不是所有的代理都支持这种行为</li>
+</ul>
+</li>
+<li><p><code>用户登录</code> 可以通过 WWW-Authenticate 首部和 Authorization 首部向 Web 站点传送用户的 相关信息。一旦登录，浏览器就可以不断地在每条发往这个站点的请求中发送这个登录信息了（Authorization），这样，就总是有登录信息可用了。（服务器会发送 401 Login Required 请求用户登录后访问）</p>
+</li>
+<li><p><code>胖 URL</code> 有些 Web 站点会为每个用户生成特定版本的 URL 来追踪用户的身份，通常，会对真正的 URL 进行扩展，在 URL 路径开始或结束的地方添加一些状态信息。用户浏览站点时，Web 服务器会<strong>动态</strong>（在首次访问时，生成一个 ID，服务器重写 HTML 扩展带 ID 的 URL）生成一些超链，继续维护 URL 中的状态信息</p>
+</li>
+<li><p><code>Cookie</code> 是当前识别用户，实现持久会话的最好方式；Cookie 的存在也影响了缓存，大多数缓存和浏览器都不允许对任何 Cookie 的内容进行缓存；Cookie 可以笼统地分为两类:</p>
+<ul>
+<li><code>会话 Cookie</code> 临时，记录用户访问站点时的设置和偏好，退出浏览器时就被删除</li>
+<li><code>持久 Cookie</code> 生存时间更长，存储在硬盘上，重启时仍然存在，通常维护某个用户会中期访问的站点的配置文件或登录名</li>
+</ul>
+</li>
+<li><p><code>Cookie</code> 中包含了一个由 <code>名字=值</code> （name=value）这样的信息构成的任意列表，并通过 <code>Set-Cookie</code> 或 <code>Set-Cookie2</code> HTTP 响应（扩展）首部将其贴到用户身上去，浏览器会记住从服务器返回的 <code>Set-Cookie</code> 或 <code>Set-Cookie2</code> 首部中的 Cookie 内容，并将 Cookie 集存储在浏览器的 Cookie 数据库中</p>
+</li>
+<li><p>不同的站点使用不同的 Cookie</p>
+<ul>
+<li><code>Cookie 的域属性</code> Set-Cookie 响应首部可以添加 domain 属性来指定域</li>
+<li><code>Cookie 路径属性</code> 可通过 path 属性来将 Cookie 与部分 Web 站点关联起来</li>
+</ul>
+</li>
+</ol>
+<ol start="8">
+<li>cookies版本0（Netscape）<figure class="highlight plain"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line">Set-Cookie: name=value [; expires=date] [; path=path] [; domain=domain] [; secure]</span><br><span class="line">Cookie: name1=value1 [; name2=value2] ...</span><br></pre></td></tr></table></figure>
+
+</li>
+</ol>
+<blockquote>
+</blockquote>
+<ul>
+<li><p>键值对除非包括在双引号内，否则不包括分号、逗号、等号和空格</p>
+</li>
+<li><p>Domain 指定的域至少要有两个或三个句号，以防止出现 .com 等形式的域，如果没有指定域，默认为产生 Set-Cookie 响应的服务器的主机名</p>
+</li>
+<li><p>Path 如果未指定，默认为产生 Set-Cookie 响应的 URL 路径</p>
+</li>
+<li><p>Secure 只有一个单词，没有值，包含该属性则只有在 HTTP 使用 SSL 安全连接时才会发送 Cookie</p>
+<p>在发送请求时，会将所有与域、路径和安全过滤器相匹配的未过期 Cookie 都发送给这个站点。所有  Cookie 都被组合到一个 Cookie 首部中</p>
+</li>
+</ul>
+<ol start="9">
+<li><p>cookies版本1（RFC 2965）<br>该标准引入 Set-Cookie2 首部和 Cookie2 首部，但它也能与版本0 系统进行互操作，主要改动如下: </p>
+<ul>
+<li>为每个 Cookie 关联上解释性文本，对其目的进行解释</li>
+<li>允许在浏览器退出时，不考虑过期时间，将 Cookie 强制销毁</li>
+<li>用相对秒数，而不是绝对日期表示 Cookie 的 Max-Age</li>
+<li>通过 URL 端口号，而不仅仅是域和路径来控制 Cookie 的能力</li>
+<li>为实现互操作性使用的版本号</li>
+<li>在 Cookie 首部从名字中区分出附加关键字的 $ 前缀</li>
+</ul>
+<p>发送 Cookie 首部的时候会连同过滤器（关键字附上 $ 前缀）一同与键值对传输</p>
+</li>
+<li><p>Cookie 版本协商<br>如果服务器理解新形式的 Cookie，就能够识别出 Cookie2 首部，并在响应首部发送 Set-Cookie2（而不是 Set-Cookie）。如果客户端从同一个响应中即获得了 Set-Cookie 首部，又获得了 Set-Cookie2 首部，就会忽略老的 Set-Cookie 首部<br>如果客户端既支持版本 0，又支持版本 1，但从服务器获得的是版本 0 的 Set-Cookie 首部，就应该带着版本 0 的 Cookie 首部发送 Cookie。但客户端还应该发送 Cookie2: $Version=”1” 来告知服务器它是可以升级的</p>
+</li>
+<li><p>Cookie 与缓存</p>
+<ul>
+<li>如果无法缓存文档，要将其标示出来，如除了 Set-Cookie 首部之外文档是可缓存的，就使用 Cache-Control:no-cache=”Set-Cookie”</li>
+<li>缓存 Set-Cookie 首部时要小心，主体内容通常会被缓存，但 Set-Cookie 首部不被缓存，但服务器预期不希望 Cookie 丢失</li>
+<li>小心处理带有 Cookie 首部的请求，因为服务器可能没有将此内容标记为不可缓存</li>
+</ul>
+</li>
+<li><p>实际应用中，可以通过提供一个标准的审查方法在远程数据库中保存个人信息，并将匿名 Cookie 作为键值，在数据库中查找，以避免网络中传输的 Cookie 是敏感数据</p>
+</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/06/01/NetworkAndOS/" rel="next" title="深入计算机网络、操作系统细节知识点">
+                  <i class="fa fa-chevron-left"></i> 深入计算机网络、操作系统细节知识点
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2017/12/19/VueLearning/" rel="prev" title="渐进式 JavaScript 框架——Vue">
+                  渐进式 JavaScript 框架——Vue <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#HTTP-概述"><span class="nav-number">1.</span> <span class="nav-text">HTTP 概述</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#URL-与资源"><span class="nav-number">2.</span> <span class="nav-text">URL 与资源</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HTTP-报文"><span class="nav-number">3.</span> <span class="nav-text">HTTP 报文</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#连接管理"><span class="nav-number">4.</span> <span class="nav-text">连接管理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#缓存"><span class="nav-number">5.</span> <span class="nav-text">缓存</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#HTTP-NG"><span class="nav-number">6.</span> <span class="nav-text">HTTP-NG</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#客户端识别与-Cookie-机制"><span class="nav-number">7.</span> <span class="nav-text">客户端识别与 Cookie 机制</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

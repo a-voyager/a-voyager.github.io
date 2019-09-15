@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言大家好！欢迎继续来访我的网站。从今天起，我将在这个专题记录我的一个安卓项目实战，我将在此中分享一些个人经验见解，希望能带给大家一点帮助，这个项目将帮助学习安卓SQLite的使用、反射工程、广播服务等等，甚至一些设计模式相关知识（其实目前我也不太懂，只是在读《设计之禅》中形成一点意识，另外也强烈推荐此书）OK，就这样不多说，开始吧！">
+<meta name="keywords" content="Android,项目">
+<meta property="og:type" content="article">
+<meta property="og:title" content="安卓项目实战----收集用户信息(一)">
+<meta property="og:url" content="http://yoursite.com/2015/11/16/AndroidProject151116(1)/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="前言大家好！欢迎继续来访我的网站。从今天起，我将在这个专题记录我的一个安卓项目实战，我将在此中分享一些个人经验见解，希望能带给大家一点帮助，这个项目将帮助学习安卓SQLite的使用、反射工程、广播服务等等，甚至一些设计模式相关知识（其实目前我也不太懂，只是在读《设计之禅》中形成一点意识，另外也强烈推荐此书）OK，就这样不多说，开始吧！">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.783Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="安卓项目实战----收集用户信息(一)">
+<meta name="twitter:description" content="前言大家好！欢迎继续来访我的网站。从今天起，我将在这个专题记录我的一个安卓项目实战，我将在此中分享一些个人经验见解，希望能带给大家一点帮助，这个项目将帮助学习安卓SQLite的使用、反射工程、广播服务等等，甚至一些设计模式相关知识（其实目前我也不太懂，只是在读《设计之禅》中形成一点意识，另外也强烈推荐此书）OK，就这样不多说，开始吧！">
+  <link rel="canonical" href="http://yoursite.com/2015/11/16/AndroidProject151116(1)/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>安卓项目实战----收集用户信息(一) | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2015/11/16/AndroidProject151116(1)/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">安卓项目实战----收集用户信息(一)
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2015-11-16 00:00:00" itemprop="dateCreated datePublished" datetime="2015-11-16T00:00:00+08:00">2015-11-16</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>大家好！欢迎继续来访我的网站。从今天起，我将在这个专题记录我的一个安卓项目实战，我将在此中分享一些个人经验见解，希望能带给大家一点帮助，这个项目将帮助学习安卓SQLite的使用、反射工程、广播服务等等，甚至一些设计模式相关知识（其实目前我也不太懂，只是在读《设计之禅》中形成一点意识，另外也强烈推荐此书）OK，就这样不多说，开始吧！</p>
+<a id="more"></a>
+<h1 id="项目简介"><a href="#项目简介" class="headerlink" title="项目简介"></a>项目简介</h1><p>首先介绍一下整个项目，这个项目是关于信息安全方面的，主要是后台悄悄采集用户的程序使用情况，然后将采集到的数据上传到服务器，以供服务器端分析利用数据。难点在于如何隐蔽在后台采集数据，具体需求如下：</p>
+<h4 id="需求"><a href="#需求" class="headerlink" title="需求"></a>需求</h4><blockquote>
+<ol>
+<li>实时检测程序（包括一部分系统程序和所有的用户程序    ）是否在运行，获取程序的运行信息</li>
+<li>获取手机短信并以文件形式储存在SD卡等待上传</li>
+<li>控制手机一些设备的开启关闭，比如蓝牙</li>
+</ol>
+</blockquote>
+<hr>
+<h1 id="项目框架"><a href="#项目框架" class="headerlink" title="项目框架"></a>项目框架</h1><p>动工第一步便是搭建整个项目的框架，首先工程大体分为两大类，一个是引擎类，主要包含用于获取程序使用情况和获取短信等的操作类，另一个是服务类，包含广播接收者服务和管理各服务运行的服务。这两个大类都需要抽象出接口，便于后期维护扩展。笔者使用的是Android Studio开发，工程视图如下图所示：<br>![image](AP151116/1-PS.jpg 工程视图)</p>
+<h1 id="获取短信操作类"><a href="#获取短信操作类" class="headerlink" title="获取短信操作类"></a>获取短信操作类</h1><p>工程的框架搭好之后，我们先从简单的开始，就是获取短信的操作。这个类的工作分为两步，第一步获取短信，第二步则是保存数据。那么如何获取短信呢？学完安卓基础的都知道，安卓的通讯录、短信都是储存在SQLite数据的，所以获取短信就是简单的查询数据库操作。ok，开始吧。<br>首先提一下短信收件箱的URI，通过这个URI才可以连接上我们所需要的数据库表单：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment">    * 短信收件箱数据库 URI</span></span><br><span class="line"><span class="comment">    */</span></span><br><span class="line">   <span class="keyword">private</span> <span class="keyword">final</span> String SMS_INBOX_URI = <span class="string">"content://sms/inbox"</span>;</span><br></pre></td></tr></table></figure>
+
+<p>以下是数据库查询操作：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line">Uri smsUri = Uri.parse(SMS_INBOX_URI);</span><br><span class="line">ContentResolver resolver = mContext.getContentResolver();</span><br><span class="line">String[] projection = &#123;<span class="string">"_id"</span>, <span class="string">"address"</span>, <span class="string">"person"</span>, <span class="string">"body"</span>, <span class="string">"date"</span>, <span class="string">"type"</span>&#125;;</span><br><span class="line">Cursor cursor = resolver.query(smsUri, projection, <span class="keyword">null</span>, <span class="keyword">null</span>, <span class="string">"date desc"</span>);</span><br></pre></td></tr></table></figure>
+
+<p>PS：在这里提一下，我在博客只是粘贴一些关键部分的代码，大家可以去我的[github](<a href="https://github.com/a-voyager/MoniterDemo" target="_blank" rel="noopener">https://github.com/a-voyager/MoniterDemo</a> github)网站上去看所有源码<br>数据库查询没什么讲的，就是查询{“_id”, “address”, “person”, “body”, “date”, “type”}这几列的内容，查询完成之后返回一个游标集cursor。<br>接下来便要遍历游标集，在此之前需要准备工作：建立一个实例类SmsEntity，用于保存每一个短信短信实例。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">public</span> <span class="class"><span class="keyword">class</span> <span class="title">SmsEntity</span> </span>&#123;</span><br><span class="line">    <span class="keyword">private</span> String name;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> id;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> person;</span><br><span class="line">    <span class="keyword">private</span> String body;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">long</span> date;</span><br><span class="line">    <span class="keyword">private</span> <span class="keyword">int</span> type;</span><br><span class="line">    ...</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>准备工作做好之后就可以开始遍历并保存在List列表中了。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">int</span> i = <span class="number">1</span>;</span><br><span class="line">SmsEntity sms = <span class="keyword">null</span>;</span><br><span class="line">List&lt;SmsEntity&gt; list = <span class="keyword">new</span> ArrayList&lt;&gt;();</span><br><span class="line"><span class="keyword">while</span> (cursor.moveToNext()) &#123;</span><br><span class="line">    sms = <span class="keyword">new</span> SmsEntity();</span><br><span class="line">    sms.setId(i++);</span><br><span class="line">    sms.setBody(cursor.getString(<span class="number">3</span>));</span><br><span class="line">    sms.setDate(cursor.getLong(<span class="number">4</span>));</span><br><span class="line">    sms.setType(cursor.getInt(<span class="number">5</span>));</span><br><span class="line">    sms.setName(cursor.getString(<span class="number">2</span>));</span><br><span class="line">    sms.setPerson(cursor.getLong(<span class="number">1</span>));</span><br><span class="line">    Log.i(TAG, sms.toString());</span><br><span class="line">    list.add(sms);</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>遍历完成之后当然就是保存文件咯，xml解析保存到SD卡就好了，见代码：</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br><span class="line">27</span><br><span class="line">28</span><br><span class="line">29</span><br><span class="line">30</span><br><span class="line">31</span><br><span class="line">32</span><br><span class="line">33</span><br><span class="line">34</span><br><span class="line">35</span><br><span class="line">36</span><br><span class="line">37</span><br><span class="line">38</span><br><span class="line">39</span><br><span class="line">40</span><br><span class="line">41</span><br><span class="line">42</span><br><span class="line">43</span><br><span class="line">44</span><br><span class="line">45</span><br><span class="line">46</span><br><span class="line">47</span><br><span class="line">48</span><br><span class="line">49</span><br><span class="line">50</span><br><span class="line">51</span><br><span class="line">52</span><br><span class="line">53</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">/**</span></span><br><span class="line"><span class="comment"> * 将获取到的短信数据保存到文件</span></span><br><span class="line"><span class="comment"> *</span></span><br><span class="line"><span class="comment"> * <span class="doctag">@param</span> list 短信列表</span></span><br><span class="line"><span class="comment"> */</span></span><br><span class="line"><span class="function"><span class="keyword">private</span> <span class="keyword">boolean</span> <span class="title">saveToFile</span><span class="params">(List&lt;SmsEntity&gt; list)</span> </span>&#123;</span><br><span class="line">    FileOutputStream fos = <span class="keyword">null</span>;</span><br><span class="line">    XmlSerializer xmlSerializer = Xml.newSerializer();</span><br><span class="line">    File fileDir = <span class="keyword">new</span> File(Environment.getExternalStorageDirectory().getAbsolutePath() + Constants.SMS_SAVE_FILE_DIR);</span><br><span class="line">    <span class="keyword">if</span> (!fileDir.exists()) fileDir.mkdirs();</span><br><span class="line">    File file = <span class="keyword">new</span> File(fileDir, Constants.SMS_SAVE_FILE);</span><br><span class="line">    <span class="keyword">try</span> &#123;</span><br><span class="line">        fos = <span class="keyword">new</span> FileOutputStream(file);</span><br><span class="line">        xmlSerializer.setOutput(fos, <span class="string">"utf-8"</span>);</span><br><span class="line">        <span class="comment">//开始解析</span></span><br><span class="line">        xmlSerializer.startDocument(<span class="string">"utf-8"</span>, <span class="keyword">true</span>);</span><br><span class="line">        xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"SMSs"</span>);</span><br><span class="line">        xmlSerializer.attribute(<span class="keyword">null</span>, <span class="string">"num"</span>, String.valueOf(list.size()));</span><br><span class="line">        <span class="keyword">for</span> (SmsEntity sms : list) &#123;</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"sms"</span>);</span><br><span class="line">            xmlSerializer.attribute(<span class="keyword">null</span>, <span class="string">"id"</span>, String.valueOf(sms.getId()));</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"type"</span>);</span><br><span class="line">            xmlSerializer.text(String.valueOf(sms.getType()));</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"type"</span>);</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"name"</span>);</span><br><span class="line">            xmlSerializer.text(sms.getName() == <span class="keyword">null</span> ? <span class="string">""</span> : sms.getName());</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"name"</span>);</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"person"</span>);</span><br><span class="line">            xmlSerializer.text(String.valueOf(sms.getPerson()));</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"person"</span>);</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"date"</span>);</span><br><span class="line">            xmlSerializer.text(String.valueOf(sms.getDate()));</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"date"</span>);</span><br><span class="line">            xmlSerializer.startTag(<span class="keyword">null</span>, <span class="string">"body"</span>);</span><br><span class="line">            xmlSerializer.text(sms.getBody());</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"body"</span>);</span><br><span class="line">            xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"sms"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">        xmlSerializer.endTag(<span class="keyword">null</span>, <span class="string">"SMSs"</span>);</span><br><span class="line">        xmlSerializer.endDocument();</span><br><span class="line">    &#125; <span class="keyword">catch</span> (Exception e) &#123;</span><br><span class="line">        Log.e(TAG, <span class="string">"saveToFile() failed"</span>, e);</span><br><span class="line">        <span class="keyword">return</span> <span class="keyword">false</span>;</span><br><span class="line">    &#125; <span class="keyword">finally</span> &#123;</span><br><span class="line">        <span class="keyword">try</span> &#123;</span><br><span class="line">            <span class="keyword">if</span> (fos != <span class="keyword">null</span>)</span><br><span class="line">                fos.close();</span><br><span class="line">        &#125; <span class="keyword">catch</span> (IOException e) &#123;</span><br><span class="line">            Log.e(TAG, <span class="string">"fos close failed"</span>);</span><br><span class="line">        &#125;</span><br><span class="line">    &#125;</span><br><span class="line">    <span class="keyword">return</span> <span class="keyword">true</span>;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<p>Bingo！就这样，实现了查询短信并保存到文件的功能。</p>
+<h4 id="期间注意几个问题："><a href="#期间注意几个问题：" class="headerlink" title="期间注意几个问题："></a>期间注意几个问题：</h4><ul>
+<li>读取短信权限问题，记得加入<uses-permission android:name="android.permission.READ_SMS">和<uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE">权限</uses-permission></uses-permission></li>
+<li>安卓单元测试中，不能够直接在Test类中直接执行测试代码，因为此时Test类还没有构造完成，一些功能尚不完整，比如this.getContext()</li>
+<li>xml解析过程start..()/end..()函数建议和打括号一样成对地写</li>
+<li>特别注意由于IDE的自动补全功能太过智能，有可能会把安卓权限给大写，导致权限存在但不正确，也不会报错，只是无法执行相关操作，笔者表示在这里被害惨了-_-||<h1 id="待续…"><a href="#待续…" class="headerlink" title="待续…"></a>待续…</h1></li>
+</ul>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/项目/" rel="tag"># 项目</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2015/11/14/Activity(1)/" rel="next" title="深入理解Activity(一)">
+                  <i class="fa fa-chevron-left"></i> 深入理解Activity(一)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2015/12/27/AndroidProject151227(2)/" rel="prev" title="安卓项目实战----收集用户信息(二)">
+                  安卓项目实战----收集用户信息(二) <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#项目简介"><span class="nav-number">2.</span> <span class="nav-text">项目简介</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#需求"><span class="nav-number">2.0.0.1.</span> <span class="nav-text">需求</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#项目框架"><span class="nav-number">3.</span> <span class="nav-text">项目框架</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#获取短信操作类"><span class="nav-number">4.</span> <span class="nav-text">获取短信操作类</span></a><ol class="nav-child"><li class="nav-item nav-level-4"><a class="nav-link" href="#期间注意几个问题："><span class="nav-number">4.0.0.1.</span> <span class="nav-text">期间注意几个问题：</span></a></li></ol></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#待续…"><span class="nav-number">5.</span> <span class="nav-text">待续…</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

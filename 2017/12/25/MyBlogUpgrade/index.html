@@ -1,0 +1,664 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="我的个人博客网站始于 2015 年 11 月 11 日，当时迈入大二不久，还不太懂前后端相关技术，搭建了个比较粗糙、简单的个人博客网站。两年后的现在，趁实习期间工作之余，是时候赶在 2017 年结束前来一波大升级了，让我的网站 2018 年也迎来一个崭新的自己…">
+<meta name="keywords" content="经验,笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="我的博客网站大升级">
+<meta property="og:url" content="http://yoursite.com/2017/12/25/MyBlogUpgrade/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="我的个人博客网站始于 2015 年 11 月 11 日，当时迈入大二不久，还不太懂前后端相关技术，搭建了个比较粗糙、简单的个人博客网站。两年后的现在，趁实习期间工作之余，是时候赶在 2017 年结束前来一波大升级了，让我的网站 2018 年也迎来一个崭新的自己…">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/sequence171220.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/component171220.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/qiniu20171220.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/problem20171220.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/new20171220.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/stack20171222.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/web171229.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/blog_old171226.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/article20171229.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/bash171230.png">
+<meta property="og:image" content="http://cdn.wuhaojie.top/github171230.png">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.768Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="我的博客网站大升级">
+<meta name="twitter:description" content="我的个人博客网站始于 2015 年 11 月 11 日，当时迈入大二不久，还不太懂前后端相关技术，搭建了个比较粗糙、简单的个人博客网站。两年后的现在，趁实习期间工作之余，是时候赶在 2017 年结束前来一波大升级了，让我的网站 2018 年也迎来一个崭新的自己…">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/sequence171220.png">
+  <link rel="canonical" href="http://yoursite.com/2017/12/25/MyBlogUpgrade/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>我的博客网站大升级 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2017/12/25/MyBlogUpgrade/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">我的博客网站大升级
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2017-12-25 00:00:00" itemprop="dateCreated datePublished" datetime="2017-12-25T00:00:00+08:00">2017-12-25</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/经验/" itemprop="url" rel="index"><span itemprop="name">经验</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <p>我的个人博客网站始于 2015 年 11 月 11 日，当时迈入大二不久，还不太懂前后端相关技术，搭建了个比较粗糙、简单的个人博客网站。两年后的现在，趁实习期间工作之余，是时候赶在 2017 年结束前来一波大升级了，让我的网站 2018 年也迎来一个崭新的自己…</p>
+<a id="more"></a>
+
+<h1 id="1-原始架构"><a href="#1-原始架构" class="headerlink" title="# 1. 原始架构"></a># 1. 原始架构</h1><p>15 年的时候，<code>HEXO</code> 博客框架就已经比较流行了，主打快速、简洁和高效，全站静态网页，支持 <code>MarkDown</code> 语法，同时有许多惊艳的主题可供选择，这便是当时选择 <code>HEXO</code> 的原因。在这里，此部分将讲解本博客网站当时的原始架构模型，对 <code>HEXO</code> 很熟悉的读者也可跳过此部分。</p>
+<h2 id="1-1-工作流程"><a href="#1-1-工作流程" class="headerlink" title="1.1 工作流程"></a>1.1 工作流程</h2><p>使用 <code>HEXO</code> 的发表一篇博文由 5 个步骤组成: </p>
+<p><img src="http://cdn.wuhaojie.top/sequence171220.png" alt="sequence171220"></p>
+<p>没错，是比较繁琐，2 年来，虽然已经熟悉这个繁琐的流程，但仍希望能够通过技术来进一步简化这个流程。</p>
+<h2 id="1-2-组件"><a href="#1-2-组件" class="headerlink" title="1.2 组件"></a>1.2 组件</h2><p><img src="http://cdn.wuhaojie.top/component171220.png" alt="component171220"></p>
+<p>博客的原始架构很简单，如图所示几大部分组成，下面分点简述: </p>
+<h3 id="1-2-1-七牛云存储"><a href="#1-2-1-七牛云存储" class="headerlink" title="1.2.1 七牛云存储"></a>1.2.1 七牛云存储</h3><p>负责博文中引用的静态图片资源。在 <code>Chrome</code> 浏览器中安装了七牛云图床插件，使用中只需将图片拖入页面，便会返回给你图片引用链接，将此链接插入到你的博文中就可以了。</p>
+<p><img src="http://cdn.wuhaojie.top/qiniu20171220.png" alt="qiniu20171220"></p>
+<p>但有一大遗憾，博文中的图片大多是截图或者自己做的图片，而且为了管理图片，不得不以一个统一的形式为文件重命名，然后再将图片拖入浏览器上传，这样一来，博文中插入一张图片还真是麻烦。</p>
+<h3 id="1-2-2-阿里云"><a href="#1-2-2-阿里云" class="headerlink" title="1.2.2 阿里云"></a>1.2.2 阿里云</h3><p>用来安装 <code>HEXO</code> 的客户端，负责解析内容目录的博文并生成静态页面，然后 deploy 给 GitHub。明明 <code>HEXO</code> 可以本地运行，为什么选择阿里云呢？坑就坑在当时自己电脑主力系统还是 <code>Windows</code> 系统， 只好 <code>PUTTY</code> 连阿里云发博客，也算是给自己买的阿里云提高一点利用率。别问我为什么不在 <code>Windows</code> 下倒腾 <code>HEXO</code>。</p>
+<h3 id="1-2-3-GitHub"><a href="#1-2-3-GitHub" class="headerlink" title="1.2.3 GitHub"></a>1.2.3 GitHub</h3><p>免费的静态页面托管服务很棒，配置好 <code>CNAME</code> 还可以重定向自己的域名地址，在当时访问速度也没什么问题，现在看来，不科学上网好像还没法进去看博客了，吐血…</p>
+<h3 id="1-2-3-个人电脑"><a href="#1-2-3-个人电脑" class="headerlink" title="1.2.3 个人电脑"></a>1.2.3 个人电脑</h3><p>个人电脑用来干嘛，还能干嘛，就是用来写文章呗。</p>
+<h2 id="1-3-痛点"><a href="#1-3-痛点" class="headerlink" title="1.3 痛点"></a>1.3 痛点</h2><p>讲了原始模型的组件架构，差不多有一个印象了。这里就提出所遇到的痛点吧: </p>
+<p><img src="http://cdn.wuhaojie.top/problem20171220.png" alt="problem20171220"></p>
+<h1 id="2-改进计划"><a href="#2-改进计划" class="headerlink" title="# 2. 改进计划"></a># 2. 改进计划</h1><p>新的博客系统架构如图所示: </p>
+<p><img src="http://cdn.wuhaojie.top/new20171220.png" alt="new20171220"></p>
+<p>从左到右分为三层结构: 持久层、控制层、展示层，没错，神似大名鼎鼎的 <code>MVC</code> 软件架构设计模式。</p>
+<h2 id="2-1-模块简述"><a href="#2-1-模块简述" class="headerlink" title="2.1 模块简述"></a>2.1 模块简述</h2><ul>
+<li><code>GitHub</code> 不再用作静态内容页面的托管，而真正回归本真用途，用于对博文原稿进行版本管理</li>
+<li>数据库用来对博文进行结构化存储，便于以后扩展更强的用途</li>
+<li><code>HEXO</code> 客户端用途不变，仍然放在阿里云主机上用作静态页面的生成</li>
+<li>处理层提供 <code>Restful</code> 接口，为用户终端提供 <code>HTTP</code> 服务接口</li>
+<li>原本单独托管的图片资源和静态页面资源现一并托管（可能暂时会依然存储在七牛），置于服务器或国内静态页面托管平台</li>
+</ul>
+<h2 id="2-2-技术栈"><a href="#2-2-技术栈" class="headerlink" title="2.2 技术栈"></a>2.2 技术栈</h2><p>各个部分均选择最易于快速实现的微服务架构，此次改进的技术栈涉及如下: </p>
+<p><img src="http://cdn.wuhaojie.top/stack20171222.png" alt="技术栈"></p>
+<h2 id="2-3-迁移旧博客"><a href="#2-3-迁移旧博客" class="headerlink" title="2.3 迁移旧博客"></a>2.3 迁移旧博客</h2><p>新的博客将会自动存储在 <code>MySQL</code> 数据库，而旧的博客仍在原有的 <code>HEXO</code> 客户端目录，需要使用脚本对原有的博文进行解析，将其存储至数据库。</p>
+<h1 id="3-动工实践"><a href="#3-动工实践" class="headerlink" title="# 3. 动工实践"></a># 3. 动工实践</h1><h2 id="3-1-数据库"><a href="#3-1-数据库" class="headerlink" title="3.1 数据库"></a>3.1 数据库</h2><p>首先要做的是分析文章结构，然后构建出合适的数据库表，最终创建出的数据库表如下:</p>
+<figure class="highlight sql"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br></pre></td><td class="code"><pre><span class="line"><span class="keyword">CREATE</span> <span class="keyword">TABLE</span> <span class="string">`posts`</span> (</span><br><span class="line">  <span class="string">`id`</span> <span class="built_in">INT</span> <span class="keyword">UNSIGNED</span> <span class="keyword">NOT</span> <span class="literal">NULL</span> AUTO_INCREMENT,</span><br><span class="line">  <span class="string">`title`</span> <span class="built_in">VARCHAR</span>(<span class="number">45</span>) <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`file_name`</span> <span class="built_in">VARCHAR</span>(<span class="number">45</span>) <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`file_uri`</span> <span class="built_in">VARCHAR</span>(<span class="number">45</span>) <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`tags`</span> <span class="built_in">TINYINT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>,</span><br><span class="line">  <span class="string">`categories`</span> <span class="built_in">TINYINT</span> <span class="literal">NULL</span> <span class="keyword">DEFAULT</span> <span class="number">0</span>,</span><br><span class="line">  <span class="string">`created_at`</span> DATETIME <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`updated_at`</span> DATETIME <span class="literal">NULL</span>,</span><br><span class="line">  <span class="string">`content`</span> LONGTEXT <span class="keyword">NOT</span> <span class="literal">NULL</span>,</span><br><span class="line">  PRIMARY <span class="keyword">KEY</span> (<span class="string">`id`</span>),</span><br><span class="line">  <span class="keyword">UNIQUE</span> <span class="keyword">INDEX</span> <span class="string">`id_UNIQUE`</span> (<span class="string">`id`</span> <span class="keyword">ASC</span>));</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-2-后端"><a href="#3-2-后端" class="headerlink" title="3.2 后端"></a>3.2 后端</h2><p>服务端采用 Kotlin + Spring Boot + Gradle 栈开发，实现功能包括: </p>
+<ul>
+<li>用户验证，验证是否为管理员操作，采用 token 验证机制</li>
+<li>文章的录入，包括文件复制、解析并插入数据库、执行发布脚本子步骤</li>
+</ul>
+<p><img src="http://cdn.wuhaojie.top/web171229.png" alt="文件目录"></p>
+<h2 id="3-3-前端"><a href="#3-3-前端" class="headerlink" title="3.3 前端"></a>3.3 前端</h2><p>精力暂时有限，充当客户端的前端就暂时使用 Python 脚本完成，大致流程就是登录后调用后端提供的 HTTP 接口上传文件，部分代码如下所示（请原谅我为了保障我博客系统的安全稳定地运行不能贴出更多代码）:</p>
+<figure class="highlight python"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br></pre></td><td class="code"><pre><span class="line"><span class="function"><span class="keyword">def</span> <span class="title">run</span><span class="params">()</span>:</span></span><br><span class="line">    response = requests.post(base_url + <span class="string">'/login'</span>, params=&#123;&#125;)</span><br><span class="line">    token = json.loads(response.text)[<span class="string">''</span>]</span><br><span class="line">    args = sys.argv</span><br><span class="line">    <span class="keyword">if</span> len(args) &lt;= <span class="number">1</span>:</span><br><span class="line">        <span class="keyword">return</span></span><br><span class="line">    path = args[<span class="number">1</span>]</span><br><span class="line">    <span class="keyword">with</span> open(path, <span class="string">'rb'</span>) <span class="keyword">as</span> f:</span><br><span class="line">        name = os.path.splitext(os.path.basename(path))[<span class="number">0</span>]</span><br><span class="line">        res = requests.request(<span class="string">''</span>, base_url + <span class="string">'/***/'</span>)</span><br></pre></td></tr></table></figure>
+
+<h2 id="3-4-脚本"><a href="#3-4-脚本" class="headerlink" title="3.4 脚本"></a>3.4 脚本</h2><p>最后，需要准备好发布博文和 Git 提交的脚本，用来对每一篇文章上传后的 Git 备份和 Hexo 发布。</p>
+<p>其中要注意的就是向国内托管 Git 和 GitHub 都注册公钥，采用 ssh 访问，以便方便脚本自动化执行:</p>
+<figure class="highlight shell"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">#</span><span class="bash"> 生成密钥</span></span><br><span class="line">root@iZ28rekyw61Z:~# ssh-keygen </span><br><span class="line"><span class="meta">#</span><span class="bash"> 查看密钥</span></span><br><span class="line">root@iZ28rekyw61Z:~# cat ~/.ssh/id_rsa.pub</span><br></pre></td></tr></table></figure>
+
+<p>如此一来，便可以免去输入密码，直接 push 到仓库。</p>
+<p>同时，还需要一些脚本用来帮助迁移旧博文到新博客系统，这些使用 Python 完成足矣。</p>
+<h2 id="3-5-还差一点"><a href="#3-5-还差一点" class="headerlink" title="3.5 还差一点"></a>3.5 还差一点</h2><p>用了两年的主题也是看腻了，换上 next 主题，简单配置下 _config.yml，变换了套新衣服，此处展出旧版博客主页:</p>
+<p><img src="http://cdn.wuhaojie.top/blog_old171226.png" alt="博客老样子"></p>
+<h1 id="4-最终效果"><a href="#4-最终效果" class="headerlink" title="# 4. 最终效果"></a># 4. 最终效果</h1><p>其实读者和我也许一样好奇，到底经过这么一番折腾后有啥效果，接下来我们就模拟撰写一篇博文后发生的事情来就看看效果吧！</p>
+<p>（1）和以往一样，使用 Typora 软件（良心推荐）写博文</p>
+<p><img src="http://cdn.wuhaojie.top/article20171229.png" alt="article20171229"></p>
+<p>（2）写完后保存，然后打开终端执行写好的上传脚本，参数直接将文件拖入窗口即可:</p>
+<p><img src="http://cdn.wuhaojie.top/bash171230.png" alt="bash171230"></p>
+<p>（3）回车后，键入密码，稍等片刻，博文将自动发布。其中自动化操作包括以下流程: </p>
+<ul>
+<li>用户权限验证</li>
+<li>博文原稿上传至阿里云 HEXO 发布目录</li>
+<li>解析博文并存储至 MySQL 数据库，位于阿里云</li>
+<li>博文新版本在 GitHub 版本管理上提交新纪录</li>
+<li>渲染发布博文并推送至静态页面托管平台（coding 平台）</li>
+</ul>
+<p><img src="http://cdn.wuhaojie.top/github171230.png" alt="在版本管理下的博文原稿"></p>
+<h1 id="5-结语"><a href="#5-结语" class="headerlink" title="# 5. 结语"></a># 5. 结语</h1><p>写这篇博客的结语时，已经是 2017 年 12 月 30 日了，改造计划前前后后差不多用了一周多的下班后时间，还算赶在了 2017 年末。</p>
+<p>本文主要讲解我是如何实现博客的自动化发布和备份管理的，这对于个人来说也算是用技术力量来解放自己的双手，却又保障系统的安全和稳定，也希望本文能给有同样想法的读者提供一点思路或启发。</p>
+<p>最后，年末之际，祝大家新年快乐，一起迎接更好的 2018！</p>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/经验/" rel="tag"># 经验</a>
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2017/12/19/VueLearning/" rel="next" title="渐进式 JavaScript 框架——Vue">
+                  <i class="fa fa-chevron-left"></i> 渐进式 JavaScript 框架——Vue
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2018/01/04/JavaScriptHTMLDOM/" rel="prev" title="JavaScript 处理 HTML DOM">
+                  JavaScript 处理 HTML DOM <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#1-原始架构"><span class="nav-number">1.</span> <span class="nav-text"># 1. 原始架构</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#1-1-工作流程"><span class="nav-number">1.1.</span> <span class="nav-text">1.1 工作流程</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-2-组件"><span class="nav-number">1.2.</span> <span class="nav-text">1.2 组件</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-1-七牛云存储"><span class="nav-number">1.2.1.</span> <span class="nav-text">1.2.1 七牛云存储</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-2-阿里云"><span class="nav-number">1.2.2.</span> <span class="nav-text">1.2.2 阿里云</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-GitHub"><span class="nav-number">1.2.3.</span> <span class="nav-text">1.2.3 GitHub</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#1-2-3-个人电脑"><span class="nav-number">1.2.4.</span> <span class="nav-text">1.2.3 个人电脑</span></a></li></ol></li><li class="nav-item nav-level-2"><a class="nav-link" href="#1-3-痛点"><span class="nav-number">1.3.</span> <span class="nav-text">1.3 痛点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#2-改进计划"><span class="nav-number">2.</span> <span class="nav-text"># 2. 改进计划</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#2-1-模块简述"><span class="nav-number">2.1.</span> <span class="nav-text">2.1 模块简述</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-2-技术栈"><span class="nav-number">2.2.</span> <span class="nav-text">2.2 技术栈</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#2-3-迁移旧博客"><span class="nav-number">2.3.</span> <span class="nav-text">2.3 迁移旧博客</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#3-动工实践"><span class="nav-number">3.</span> <span class="nav-text"># 3. 动工实践</span></a><ol class="nav-child"><li class="nav-item nav-level-2"><a class="nav-link" href="#3-1-数据库"><span class="nav-number">3.1.</span> <span class="nav-text">3.1 数据库</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-2-后端"><span class="nav-number">3.2.</span> <span class="nav-text">3.2 后端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-3-前端"><span class="nav-number">3.3.</span> <span class="nav-text">3.3 前端</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-4-脚本"><span class="nav-number">3.4.</span> <span class="nav-text">3.4 脚本</span></a></li><li class="nav-item nav-level-2"><a class="nav-link" href="#3-5-还差一点"><span class="nav-number">3.5.</span> <span class="nav-text">3.5 还差一点</span></a></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#4-最终效果"><span class="nav-number">4.</span> <span class="nav-text"># 4. 最终效果</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#5-结语"><span class="nav-number">5.</span> <span class="nav-text"># 5. 结语</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>

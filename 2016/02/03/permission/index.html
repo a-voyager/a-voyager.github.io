@@ -1,0 +1,625 @@
+<!DOCTYPE html>
+
+
+
+
+
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=2">
+<meta name="theme-color" content="#222">
+<meta name="generator" content="Hexo 3.9.0">
+
+<link rel="stylesheet" href="/css/main.css?v=7.4.0">
+
+
+<link rel="stylesheet" href="/lib/font-awesome/css/font-awesome.min.css?v=4.7.0">
+
+
+<script id="hexo-configurations">
+  var NexT = window.NexT || {};
+  var CONFIG = {
+    root: '/',
+    scheme: 'Muse',
+    version: '7.4.0',
+    exturl: false,
+    sidebar: {"position":"right","display":"post","offset":12,"onmobile":false},
+    copycode: {"enable":false,"show_result":false,"style":null},
+    back2top: {"enable":true,"sidebar":false,"scrollpercent":false},
+    bookmark: {"enable":false,"color":"#222","save":"auto"},
+    fancybox: false,
+    mediumzoom: false,
+    lazyload: false,
+    pangu: false,
+    algolia: {
+      appID: '',
+      apiKey: '',
+      indexName: '',
+      hits: {"per_page":10},
+      labels: {"input_placeholder":"Search for Posts","hits_empty":"We didn't find any results for the search: ${query}","hits_stats":"${hits} results found in ${time} ms"}
+    },
+    localsearch: {"enable":false,"trigger":"auto","top_n_per_article":1,"unescape":false,"preload":false},
+    path: '',
+    motion: {"enable":true,"async":false,"transition":{"post_block":"fadeIn","post_header":"slideDownIn","post_body":"slideDownIn","coll_header":"slideLeftIn","sidebar":"slideUpIn"}},
+    translation: {
+      copy_button: '复制',
+      copy_success: '复制成功',
+      copy_failure: '复制失败'
+    },
+    sidebarPadding: 40
+  };
+</script>
+
+  <meta name="description" content="前言农历腊月二十五，年味也愈加浓重了，在新年到来之前争取再多更新几篇博客。此文讲解安卓的权限管理，主要是针对Android 6.0新增加的动态权限获取的使用方法。">
+<meta name="keywords" content="Android,笔记">
+<meta property="og:type" content="article">
+<meta property="og:title" content="Android权限管理">
+<meta property="og:url" content="http://yoursite.com/2016/02/03/permission/index.html">
+<meta property="og:site_name" content="一路前行">
+<meta property="og:description" content="前言农历腊月二十五，年味也愈加浓重了，在新年到来之前争取再多更新几篇博客。此文讲解安卓的权限管理，主要是针对Android 6.0新增加的动态权限获取的使用方法。">
+<meta property="og:locale" content="zh-CN">
+<meta property="og:image" content="http://cdn.wuhaojie.top/160203permission.jpg">
+<meta property="og:updated_time" content="2019-09-15T07:18:06.773Z">
+<meta name="twitter:card" content="summary">
+<meta name="twitter:title" content="Android权限管理">
+<meta name="twitter:description" content="前言农历腊月二十五，年味也愈加浓重了，在新年到来之前争取再多更新几篇博客。此文讲解安卓的权限管理，主要是针对Android 6.0新增加的动态权限获取的使用方法。">
+<meta name="twitter:image" content="http://cdn.wuhaojie.top/160203permission.jpg">
+  <link rel="canonical" href="http://yoursite.com/2016/02/03/permission/">
+
+
+<script id="page-configurations">
+  // https://hexo.io/docs/variables.html
+  CONFIG.page = {
+    sidebar: "",
+    isHome: false,
+    isPost: true,
+    isPage: false,
+    isArchive: false
+  };
+</script>
+
+  <title>Android权限管理 | 一路前行</title>
+  
+
+
+
+
+
+
+
+
+  <noscript>
+  <style>
+  .use-motion .brand,
+  .use-motion .menu-item,
+  .sidebar-inner,
+  .use-motion .post-block,
+  .use-motion .pagination,
+  .use-motion .comments,
+  .use-motion .post-header,
+  .use-motion .post-body,
+  .use-motion .collection-header { opacity: initial; }
+
+  .use-motion .logo,
+  .use-motion .site-title,
+  .use-motion .site-subtitle {
+    opacity: initial;
+    top: initial;
+  }
+
+  .use-motion .logo-line-before i { left: initial; }
+  .use-motion .logo-line-after i { right: initial; }
+  </style>
+</noscript>
+
+</head>
+
+<body itemscope itemtype="http://schema.org/WebPage" lang="zh-CN">
+  <div class="container use-motion">
+    <div class="headband"></div>
+
+    <header id="header" class="header" itemscope itemtype="http://schema.org/WPHeader">
+      <div class="header-inner"><div class="site-brand-container">
+  <div class="site-meta">
+
+    <div>
+      <a href="/" class="brand" rel="start">
+        <span class="logo-line-before"><i></i></span>
+        <span class="site-title">一路前行</span>
+        <span class="logo-line-after"><i></i></span>
+      </a>
+    </div>
+        <p class="site-subtitle">Always believe that some thing wonderful is about to happen.</p>
+      
+  </div>
+
+  <div class="site-nav-toggle">
+    <button aria-label="切换导航栏">
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+      <span class="btn-bar"></span>
+    </button>
+  </div>
+</div>
+
+
+<nav class="site-nav">
+  
+  <ul id="menu" class="menu">
+      
+      
+      
+        
+        <li class="menu-item menu-item-home">
+      
+    
+
+    <a href="/" rel="section"><i class="menu-item-icon fa fa-fw fa-home"></i> <br>首页</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-categories">
+      
+    
+
+    <a href="/categories/" rel="section"><i class="menu-item-icon fa fa-fw fa-th"></i> <br>分类</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-archives">
+      
+    
+
+    <a href="/archives/" rel="section"><i class="menu-item-icon fa fa-fw fa-archive"></i> <br>归档</a>
+
+  </li>
+      
+      
+      
+        
+        <li class="menu-item menu-item-about">
+      
+    
+
+    <a href="/about/" rel="section"><i class="menu-item-icon fa fa-fw fa-user"></i> <br>关于</a>
+
+  </li>
+  </ul>
+
+    
+
+</nav>
+</div>
+    </header>
+
+    
+  <div class="back-to-top">
+    <i class="fa fa-arrow-up"></i>
+    <span>0%</span>
+  </div>
+
+
+    <main id="main" class="main">
+      <div class="main-inner">
+        <div class="content-wrap">
+          <div id="content" class="content">
+            
+
+  <div id="posts" class="posts-expand">
+      <article itemscope itemtype="http://schema.org/Article">
+  
+  
+  
+  <div class="post-block post">
+    <link itemprop="mainEntityOfPage" href="http://yoursite.com/2016/02/03/permission/">
+
+    <span hidden itemprop="author" itemscope itemtype="http://schema.org/Person">
+      <meta itemprop="name" content="Voyager">
+      <meta itemprop="description" content="Android Developer">
+      <meta itemprop="image" content="https://cdn.wuhaojie.top/avatar.png">
+    </span>
+
+    <span hidden itemprop="publisher" itemscope itemtype="http://schema.org/Organization">
+      <meta itemprop="name" content="一路前行">
+    </span>
+      <header class="post-header">
+        <h1 class="post-title" itemprop="name headline">Android权限管理
+
+          
+        </h1>
+
+        <div class="post-meta">
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-calendar-o"></i>
+              </span>
+              <span class="post-meta-item-text">发表于</span>
+
+              
+                
+              
+
+              <time title="创建时间：2016-02-03 23:30:00" itemprop="dateCreated datePublished" datetime="2016-02-03T23:30:00+08:00">2016-02-03</time>
+            </span>
+          
+            <span class="post-meta-item">
+              <span class="post-meta-item-icon">
+                <i class="fa fa-folder-o"></i>
+              </span>
+              <span class="post-meta-item-text">分类于</span>
+              
+                <span itemprop="about" itemscope itemtype="http://schema.org/Thing"><a href="/categories/Android/" itemprop="url" rel="index"><span itemprop="name">Android</span></a></span>
+
+                
+                
+              
+            </span>
+          
+
+          
+
+        </div>
+      </header>
+
+    
+    
+    
+    <div class="post-body" itemprop="articleBody">
+
+      
+        <h1 id="前言"><a href="#前言" class="headerlink" title="前言"></a>前言</h1><p>农历腊月二十五，年味也愈加浓重了，在新年到来之前争取再多更新几篇博客。此文讲解安卓的权限管理，主要是针对Android 6.0新增加的动态权限获取的使用方法。</p>
+<a id="more"></a>
+<h1 id="两种权限管理"><a href="#两种权限管理" class="headerlink" title="两种权限管理"></a>两种权限管理</h1><p>什么是权限管理大家也一定都知道，想必不需要笔者多说了，笔者在此只提一下目前的两种权限管理机制: </p>
+<ul>
+<li><strong>安装时权限管理:</strong><br>这是在安卓5.1及以下采用的方案，指的是安装应用完成时，应用可以获得系统权限</li>
+<li><strong>运行时权限管理:</strong><br>安卓6.0之后增加了这种方案，使得应用可以在运行过程中动态地获取和释放系统权限<br><img src="http://cdn.wuhaojie.top/160203permission.jpg" alt="安卓6.0动态权限获取"></li>
+</ul>
+<h1 id="Manifest声明权限的使用"><a href="#Manifest声明权限的使用" class="headerlink" title="Manifest声明权限的使用"></a>Manifest声明权限的使用</h1><p>对于安卓5.1及以下的版本，不能采用运行时动态获取权限，所以只能够在Manifest中配置权限，这个大家一定都会使用，就不做过多讲解，贴上代码即可。</p>
+<figure class="highlight xml"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br></pre></td><td class="code"><pre><span class="line"><span class="tag">&lt;<span class="name">manifest</span> <span class="attr">xmlns:android</span>=<span class="string">"http://schemas.android.com/apk/res/android"</span></span></span><br><span class="line"><span class="tag">        <span class="attr">package</span>=<span class="string">"com.example.snazzyapp"</span>&gt;</span></span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">uses-permission</span> <span class="attr">android:name</span>=<span class="string">"android.permission.SEND_SMS"</span>/&gt;</span></span><br><span class="line">    </span><br><span class="line"></span><br><span class="line">    <span class="tag">&lt;<span class="name">application</span> <span class="attr">...</span>&gt;</span></span><br><span class="line">        ...</span><br><span class="line">    <span class="tag">&lt;/<span class="name">application</span>&gt;</span></span><br><span class="line"></span><br><span class="line"><span class="tag">&lt;/<span class="name">manifest</span>&gt;</span></span><br></pre></td></tr></table></figure>
+
+<h1 id="动态获取权限的使用"><a href="#动态获取权限的使用" class="headerlink" title="动态获取权限的使用"></a>动态获取权限的使用</h1><p>在讲解之前，先说明一下系统权限的分类。</p>
+<blockquote>
+<p>系统权限分为常规权限和敏感权限: </p>
+<ul>
+<li>常规权限: 常规权限不涉及用户隐私，在Manifest中声明这些权限，系统默认许可</li>
+<li>敏感权限: 敏感权限会涉及到用户个人数据，这些权限的决定权则必须交付给用户</li>
+</ul>
+</blockquote>
+<p>所以，这样一来，在安卓5.1及一下，只有用户在安装应用时同意了该应用需要的敏感权限，该应用才能被安装，否则直接退出安装; 在安卓6.0以上，应用可以在运行过程中获取权限，请求用户的许可，便于用户自由地选择可以许可的权限。</p>
+<blockquote>
+<p>此文使用SupportLibrary来操作，以便略去判断系统版本的繁琐过程。</p>
+</blockquote>
+<h3 id="第一步-检查权限状态"><a href="#第一步-检查权限状态" class="headerlink" title="第一步: 检查权限状态"></a><strong><em>第一步: 检查权限状态</em></strong></h3><p>调用 <code>ContextCompat.checkSelfPermission()</code>方法，返回 <code>PackageManager.PERMISSION_GRANTED</code>说明已有权限， <code>PERMISSION_DENIED</code>说明权限失效。</p>
+<figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Assume thisActivity is the current activity</span></span><br><span class="line"><span class="keyword">int</span> permissionCheck = ContextCompat.checkSelfPermission(thisActivity, Manifest.permission.WRITE_CALENDAR);</span><br></pre></td></tr></table></figure>
+
+<h3 id="第二步-请求权限"><a href="#第二步-请求权限" class="headerlink" title="第二步: 请求权限"></a><strong><em>第二步: 请求权限</em></strong></h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br><span class="line">25</span><br><span class="line">26</span><br></pre></td><td class="code"><pre><span class="line"><span class="comment">// Here, thisActivity is the current activity</span></span><br><span class="line"><span class="keyword">if</span> (ContextCompat.checkSelfPermission(thisActivity,</span><br><span class="line">                Manifest.permission.READ_CONTACTS)</span><br><span class="line">        != PackageManager.PERMISSION_GRANTED) &#123;</span><br><span class="line"></span><br><span class="line">    <span class="comment">// Should we show an explanation?</span></span><br><span class="line">    <span class="keyword">if</span> (ActivityCompat.shouldShowRequestPermissionRationale(thisActivity,</span><br><span class="line">            Manifest.permission.READ_CONTACTS)) &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// Show an expanation to the user *asynchronously* -- don't block</span></span><br><span class="line">        <span class="comment">// this thread waiting for the user's response! After the user</span></span><br><span class="line">        <span class="comment">// sees the explanation, try again to request the permission.</span></span><br><span class="line"></span><br><span class="line">    &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// No explanation needed, we can request the permission.</span></span><br><span class="line"></span><br><span class="line">        ActivityCompat.requestPermissions(thisActivity,</span><br><span class="line">                <span class="keyword">new</span> String[]&#123;Manifest.permission.READ_CONTACTS&#125;,</span><br><span class="line">                MY_PERMISSIONS_REQUEST_READ_CONTACTS);</span><br><span class="line"></span><br><span class="line">        <span class="comment">// MY_PERMISSIONS_REQUEST_READ_CONTACTS is an</span></span><br><span class="line">        <span class="comment">// app-defined int constant. The callback method gets the</span></span><br><span class="line">        <span class="comment">// result of the request.</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<h3 id="第三步-处理回应"><a href="#第三步-处理回应" class="headerlink" title="第三步: 处理回应"></a><strong><em>第三步: 处理回应</em></strong></h3><figure class="highlight java"><table><tr><td class="gutter"><pre><span class="line">1</span><br><span class="line">2</span><br><span class="line">3</span><br><span class="line">4</span><br><span class="line">5</span><br><span class="line">6</span><br><span class="line">7</span><br><span class="line">8</span><br><span class="line">9</span><br><span class="line">10</span><br><span class="line">11</span><br><span class="line">12</span><br><span class="line">13</span><br><span class="line">14</span><br><span class="line">15</span><br><span class="line">16</span><br><span class="line">17</span><br><span class="line">18</span><br><span class="line">19</span><br><span class="line">20</span><br><span class="line">21</span><br><span class="line">22</span><br><span class="line">23</span><br><span class="line">24</span><br></pre></td><td class="code"><pre><span class="line"><span class="meta">@Override</span></span><br><span class="line"><span class="function"><span class="keyword">public</span> <span class="keyword">void</span> <span class="title">onRequestPermissionsResult</span><span class="params">(<span class="keyword">int</span> requestCode,</span></span></span><br><span class="line"><span class="function"><span class="params">        String permissions[], <span class="keyword">int</span>[] grantResults)</span> </span>&#123;</span><br><span class="line">    <span class="keyword">switch</span> (requestCode) &#123;</span><br><span class="line">        <span class="keyword">case</span> MY_PERMISSIONS_REQUEST_READ_CONTACTS: &#123;</span><br><span class="line">            <span class="comment">// If request is cancelled, the result arrays are empty.</span></span><br><span class="line">            <span class="keyword">if</span> (grantResults.length &gt; <span class="number">0</span></span><br><span class="line">                &amp;&amp; grantResults[<span class="number">0</span>] == PackageManager.PERMISSION_GRANTED) &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// permission was granted, yay! Do the</span></span><br><span class="line">                <span class="comment">// contacts-related task you need to do.</span></span><br><span class="line"></span><br><span class="line">            &#125; <span class="keyword">else</span> &#123;</span><br><span class="line"></span><br><span class="line">                <span class="comment">// permission denied, boo! Disable the</span></span><br><span class="line">                <span class="comment">// functionality that depends on this permission.</span></span><br><span class="line">            &#125;</span><br><span class="line">            <span class="keyword">return</span>;</span><br><span class="line">        &#125;</span><br><span class="line"></span><br><span class="line">        <span class="comment">// other 'case' lines to check for other</span></span><br><span class="line">        <span class="comment">// permissions this app might request</span></span><br><span class="line">    &#125;</span><br><span class="line">&#125;</span><br></pre></td></tr></table></figure>
+
+<blockquote>
+<p>注意: 当在Manifest中声明一系列权限后，仍然需要再次单独申请每个该权限。</p>
+</blockquote>
+<h1 id="权限使用的最佳实践"><a href="#权限使用的最佳实践" class="headerlink" title="权限使用的最佳实践"></a>权限使用的最佳实践</h1><ol>
+<li>使用 <code>Intent</code>调用系统资源代替获取系统权限</li>
+<li>每次请求权限时请求最少的权限</li>
+<li>在合适的时机请求权限，尽量让用户明白为什么需要这些权限</li>
+<li>测试应用的权限是否正常工作</li>
+</ol>
+
+    </div>
+
+    
+    
+    
+        
+      
+        <div id="reward-container">
+  <div></div>
+  <button id="reward-button" disable="enable" onclick="var qr = document.getElementById(&quot;qr&quot;); qr.style.display = (qr.style.display === 'none') ? 'block' : 'none';">
+    打赏
+  </button>
+  <div id="qr" style="display: none;">
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_weixin.png" alt="Voyager 微信支付">
+        <p>微信支付</p>
+      </div>
+        
+      
+      <div style="display: inline-block">
+        <img src="http://cdn.wuhaojie.top/pay_alipay.jpg" alt="Voyager 支付宝">
+        <p>支付宝</p>
+      </div>
+
+  </div>
+</div>
+
+      
+
+      <footer class="post-footer">
+          
+            
+          
+          <div class="post-tags">
+            
+              <a href="/tags/Android/" rel="tag"># Android</a>
+            
+              <a href="/tags/笔记/" rel="tag"># 笔记</a>
+            
+          </div>
+        
+
+        
+
+          <div class="post-nav">
+            <div class="post-nav-next post-nav-item">
+              
+                <a href="/2016/02/02/Activity(2)/" rel="next" title="深入理解Activity(二)">
+                  <i class="fa fa-chevron-left"></i> 深入理解Activity(二)
+                </a>
+              
+            </div>
+
+            <span class="post-nav-divider"></span>
+
+            <div class="post-nav-prev post-nav-item">
+              
+                <a href="/2016/02/07/happy/" rel="prev" title="新年快乐">
+                  新年快乐 <i class="fa fa-chevron-right"></i>
+                </a>
+              
+            </div>
+          </div>
+        
+      </footer>
+    
+  </div>
+  
+  
+  
+  </article>
+
+  </div>
+
+
+          </div>
+          
+    
+    
+  <div class="comments" id="comments">
+    <div id="lv-container" data-id="city" data-uid="MTAyMC8zMjg2Ny85NDI4"></div>
+  </div>
+  
+  
+
+        </div>
+          
+  
+  <div class="sidebar-toggle">
+    <div class="sidebar-toggle-line-wrap">
+      <span class="sidebar-toggle-line sidebar-toggle-line-first"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-middle"></span>
+      <span class="sidebar-toggle-line sidebar-toggle-line-last"></span>
+    </div>
+  </div>
+
+  <aside class="sidebar">
+    <div class="sidebar-inner">
+        
+        
+        
+        
+      
+
+      <ul class="sidebar-nav motion-element">
+        <li class="sidebar-nav-toc">
+          文章目录
+        </li>
+        <li class="sidebar-nav-overview">
+          站点概览
+        </li>
+      </ul>
+
+      <!--noindex-->
+      <div class="post-toc-wrap sidebar-panel">
+          <div class="post-toc motion-element"><ol class="nav"><li class="nav-item nav-level-1"><a class="nav-link" href="#前言"><span class="nav-number">1.</span> <span class="nav-text">前言</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#两种权限管理"><span class="nav-number">2.</span> <span class="nav-text">两种权限管理</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#Manifest声明权限的使用"><span class="nav-number">3.</span> <span class="nav-text">Manifest声明权限的使用</span></a></li><li class="nav-item nav-level-1"><a class="nav-link" href="#动态获取权限的使用"><span class="nav-number">4.</span> <span class="nav-text">动态获取权限的使用</span></a><ol class="nav-child"><li class="nav-item nav-level-3"><a class="nav-link" href="#第一步-检查权限状态"><span class="nav-number">4.0.1.</span> <span class="nav-text">第一步: 检查权限状态</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第二步-请求权限"><span class="nav-number">4.0.2.</span> <span class="nav-text">第二步: 请求权限</span></a></li><li class="nav-item nav-level-3"><a class="nav-link" href="#第三步-处理回应"><span class="nav-number">4.0.3.</span> <span class="nav-text">第三步: 处理回应</span></a></li></ol></li></ol></li><li class="nav-item nav-level-1"><a class="nav-link" href="#权限使用的最佳实践"><span class="nav-number">5.</span> <span class="nav-text">权限使用的最佳实践</span></a></li></ol></div>
+        
+      </div>
+      <!--/noindex-->
+
+      <div class="site-overview-wrap sidebar-panel">
+        <div class="site-author motion-element" itemprop="author" itemscope itemtype="http://schema.org/Person">
+    <img class="site-author-image" itemprop="image"
+      src="https://cdn.wuhaojie.top/avatar.png"
+      alt="Voyager">
+  <p class="site-author-name" itemprop="name">Voyager</p>
+  <div class="site-description" itemprop="description">Android Developer</div>
+</div>
+  <nav class="site-state motion-element">
+      <div class="site-state-item site-state-posts">
+        
+          <a href="/archives/">
+        
+          <span class="site-state-item-count">57</span>
+          <span class="site-state-item-name">日志</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-categories">
+        
+          
+            <a href="/categories/">
+          
+        
+        <span class="site-state-item-count">14</span>
+        <span class="site-state-item-name">分类</span>
+        </a>
+      </div>
+    
+      
+      
+      <div class="site-state-item site-state-tags">
+        
+        <span class="site-state-item-count">13</span>
+        <span class="site-state-item-name">标签</span>
+        
+      </div>
+    
+  </nav>
+  <div class="links-of-author motion-element">
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://github.com/a-voyager" title="GitHub &rarr; https://github.com/a-voyager" rel="noopener" target="_blank"><i class="fa fa-fw fa-github"></i>GitHub</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://weibo.com/u/2306071720" title="微博 &rarr; https://weibo.com/u/2306071720" rel="noopener" target="_blank"><i class="fa fa-fw fa-weibo"></i>微博</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://www.zhihu.com/people/wu_haojie" title="知乎 &rarr; https://www.zhihu.com/people/wu_haojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-globe"></i>知乎</a>
+      </span>
+    
+      <span class="links-of-author-item">
+      
+      
+        
+      
+      
+        
+      
+        <a href="https://stackoverflow.com/users/5850303/wuhaojie" title="StackOverflow &rarr; https://stackoverflow.com/users/5850303/wuhaojie" rel="noopener" target="_blank"><i class="fa fa-fw fa-stack-overflow"></i>StackOverflow</a>
+      </span>
+    
+  </div>
+
+
+
+      </div>
+
+    </div>
+  </aside>
+  <div id="sidebar-dimmer"></div>
+
+
+      </div>
+    </main>
+
+    <footer id="footer" class="footer">
+      <div class="footer-inner">
+        <div class="copyright">&copy; 2015 – <span itemprop="copyrightYear">2019</span>
+  <span class="with-love" id="animate">
+    <i class="fa fa-user"></i>
+  </span>
+  <span class="author" itemprop="copyrightHolder">Voyager</span>
+</div>
+
+<div>Hosted by <a href="https://pages.coding.me" style="font-weight: bold">Coding Pages</a></div>
+
+        
+
+
+
+
+
+
+
+
+
+
+
+
+        
+      </div>
+    </footer>
+  </div>
+
+  
+
+
+    
+  
+  <script color='0,0,0' opacity='0.5' zIndex='-1' count='99' src="/lib/canvas-nest/canvas-nest.min.js"></script>
+  <script src="/lib/anime.min.js?v=3.1.0"></script>
+  <script src="/lib/velocity/velocity.min.js?v=1.2.1"></script>
+  <script src="/lib/velocity/velocity.ui.min.js?v=1.2.1"></script>
+<script src="/js/utils.js?v=7.4.0"></script><script src="/js/motion.js?v=7.4.0"></script>
+<script src="/js/schemes/muse.js?v=7.4.0"></script>
+<script src="/js/next-boot.js?v=7.4.0"></script>
+
+
+
+  
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+  
+
+  
+
+  
+
+<script>
+  window.livereOptions = {
+    refer: location.pathname.replace(CONFIG.root, '').replace('index.html', '')
+  };
+  (function(d, s) {
+    var j, e = d.getElementsByTagName(s)[0];
+    if (typeof LivereTower === 'function') { return; }
+    j = d.createElement(s);
+    j.src = 'https://cdn-city.livere.com/js/embed.dist.js';
+    j.async = true;
+    e.parentNode.insertBefore(j, e);
+  })(document, 'script');
+</script>
+
+</body>
+</html>
